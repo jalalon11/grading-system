@@ -21,6 +21,8 @@ class Attendance extends Model
         'status',
         'remarks',
         'teacher_id',
+        'section_id',
+        'attendance_data',
     ];
 
     /**
@@ -30,6 +32,7 @@ class Attendance extends Model
      */
     protected $casts = [
         'date' => 'date',
+        'attendance_data' => 'array',
     ];
 
     /**
@@ -46,5 +49,13 @@ class Attendance extends Model
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+    
+    /**
+     * Get the section this attendance belongs to
+     */
+    public function section(): BelongsTo
+    {
+        return $this->belongsTo(Section::class);
     }
 }

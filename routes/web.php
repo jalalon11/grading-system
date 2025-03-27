@@ -60,6 +60,8 @@ Route::middleware(['auth'])->group(function () {
     // Teacher Routes
     Route::prefix('teacher')->middleware(['auth', 'check.role:teacher'])->name('teacher.')->group(function () {
         Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/attendance-data', [TeacherDashboardController::class, 'getAttendanceData'])->name('dashboard.attendance-data');
+        Route::get('/dashboard/performance-data', [TeacherDashboardController::class, 'getPerformanceData'])->name('dashboard.performance-data');
         Route::get('/profile', function() {
             return view('teacher.profile');
         })->name('profile');

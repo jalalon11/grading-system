@@ -75,8 +75,8 @@
                                         <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
                                         <select class="form-select @error('gender') is-invalid @enderror" id="gender" name="gender" required>
                                             <option value="">Select Gender</option>
-                                            <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
-                                            <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                                            <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
+                                            <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
                                         </select>
                                         @error('gender')
                                             <div class="invalid-feedback">{{ $message }}</div>

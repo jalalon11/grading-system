@@ -39,7 +39,7 @@ class AttendanceController extends Controller
         // Group attendance by date and section
         $attendances = [];
         foreach ($attendanceRecords as $record) {
-            $date = $record->date;
+            $date = $record->date->format('Y-m-d'); // Convert Carbon date to string
             $sectionId = $record->section_id;
             
             if (!isset($attendances[$date])) {
@@ -51,12 +51,15 @@ class AttendanceController extends Controller
                 $attendances[$date][$sectionId] = [
                     'section_name' => $sectionName,
                     'present_count' => 0,
+                    'late_count' => 0,
                     'absent_count' => 0
                 ];
             }
             
             if ($record->status === 'present') {
                 $attendances[$date][$sectionId]['present_count']++;
+            } elseif ($record->status === 'late') {
+                $attendances[$date][$sectionId]['late_count']++;
             } else {
                 $attendances[$date][$sectionId]['absent_count']++;
             }
@@ -83,7 +86,7 @@ class AttendanceController extends Controller
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
             'attendance' => 'required|array',
-            'attendance.*' => 'required|in:present,absent',
+            'attendance.*' => 'required|in:present,absent,late',
         ]);
         
         // Check if the section belongs to this teacher
@@ -92,9 +95,9 @@ class AttendanceController extends Controller
                           ->firstOrFail();
         
         // Check if attendance for this date and section already exists
-        $existingAttendance = Attendance::whereHas('student', function ($query) use ($validated) {
-            $query->where('section_id', $validated['section_id']);
-        })->where('date', $validated['date'])->exists();
+        $existingAttendance = Attendance::where('section_id', $validated['section_id'])
+                                        ->where('date', $validated['date'])
+                                        ->exists();
         
         if ($existingAttendance) {
             return redirect()->back()->with('error', 'Attendance for this date and section already exists. Please edit the existing record.');
@@ -104,19 +107,27 @@ class AttendanceController extends Controller
         DB::beginTransaction();
         
         try {
+            // Prepare attendance data
+            $attendanceData = [];
             foreach ($validated['attendance'] as $studentId => $status) {
                 // Verify student belongs to the section
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
                                   ->firstOrFail();
                 
-                Attendance::create([
+                $attendanceData[] = [
                     'student_id' => $studentId,
-                    'date' => $validated['date'],
-                    'status' => $status,
-                    'teacher_id' => Auth::id(),
-                ]);
+                    'status' => $status
+                ];
             }
+            
+            // Create a single attendance record with JSON data
+            Attendance::create([
+                'section_id' => $validated['section_id'],
+                'date' => $validated['date'],
+                'teacher_id' => Auth::id(),
+                'attendance_data' => $attendanceData
+            ]);
             
             DB::commit();
             return redirect()->route('teacher.attendances.index')
@@ -160,16 +171,19 @@ class AttendanceController extends Controller
         }
         
         $presentCount = 0;
+        $lateCount = 0;
         foreach ($attendanceRecords as $record) {
             $attendanceData[$record->student_id] = $record->status;
             if ($record->status === 'present') {
                 $presentCount++;
+            } elseif ($record->status === 'late') {
+                $lateCount++;
             }
         }
         
-        $absentCount = count($students) - $presentCount;
+        $absentCount = count($students) - ($presentCount + $lateCount);
         
-        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'absentCount'));
+        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'lateCount', 'absentCount'));
     }
 
     /**
@@ -219,7 +233,7 @@ class AttendanceController extends Controller
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
             'attendance' => 'required|array',
-            'attendance.*' => 'required|in:present,absent',
+            'attendance.*' => 'required|in:present,absent,late',
         ]);
         
         // Check if the section belongs to this teacher
@@ -231,24 +245,30 @@ class AttendanceController extends Controller
         DB::beginTransaction();
         
         try {
+            // Find existing attendance record or create new one
+            $attendance = Attendance::firstOrNew([
+                'section_id' => $validated['section_id'],
+                'date' => $validated['date'],
+            ]);
+            
+            $attendance->teacher_id = Auth::id();
+            
+            // Prepare attendance data
+            $attendanceData = [];
             foreach ($validated['attendance'] as $studentId => $status) {
                 // Verify student belongs to the section
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
                                   ->firstOrFail();
                 
-                // Update or create attendance record
-                Attendance::updateOrCreate(
-                    [
-                        'student_id' => $studentId,
-                        'date' => $validated['date']
-                    ],
-                    [
-                        'status' => $status,
-                        'teacher_id' => Auth::id(),
-                    ]
-                );
+                $attendanceData[] = [
+                    'student_id' => $studentId,
+                    'status' => $status
+                ];
             }
+            
+            $attendance->attendance_data = $attendanceData;
+            $attendance->save();
             
             DB::commit();
             return redirect()->route('teacher.attendances.index')
