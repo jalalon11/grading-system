@@ -22,6 +22,7 @@ class Grade extends Model
         'score',
         'max_score',
         'grade_type',
+        'assessment_name',
         'remarks',
     ];
 

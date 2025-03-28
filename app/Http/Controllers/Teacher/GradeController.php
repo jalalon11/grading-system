@@ -412,6 +412,7 @@ class GradeController extends Controller
                 'subject_id' => $request->subject_id,
                 'term' => $request->term,
                 'grade_type' => $request->grade_type,
+                'assessment_name' => $request->assessment_name,
                 'score' => $request->score,
                 'max_score' => $request->max_score,
                 'remarks' => $request->remarks,
@@ -574,6 +575,7 @@ class GradeController extends Controller
             'term' => 'required|in:Q1,Q2,Q3,Q4',
             'grade_type' => 'required|in:written_work,performance_task,quarterly',
             'max_score' => 'required|numeric|min:1',
+            'assessment_name' => 'required|string|max:255',
             'scores' => 'required|array',
             'scores.*' => 'required|numeric|min:0',
             'student_ids' => 'required|array',
@@ -585,7 +587,8 @@ class GradeController extends Controller
             Log::info('Batch storing grades', [
                 'teacher_id' => $teacher,
                 'subject_id' => $request->subject_id,
-                'section_id' => $request->section_id
+                'section_id' => $request->section_id,
+                'assessment_name' => $request->assessment_name
             ]);
             
             // Check if the teacher teaches this subject in this section
@@ -629,7 +632,8 @@ class GradeController extends Controller
                         'grade_type' => $request->grade_type,
                         'score' => $request->scores[$index],
                         'max_score' => $request->max_score,
-                        'assessment_name' => $request->assessment_name ?? null,
+                        'assessment_name' => $request->assessment_name,
+                        'remarks' => isset($request->remarks[$index]) ? $request->remarks[$index] : null
                     ]);
                     $gradesAdded++;
                 }

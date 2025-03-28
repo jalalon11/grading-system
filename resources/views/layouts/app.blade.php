@@ -263,6 +263,7 @@
     <div class="wrapper">
         <!-- Sidebar  -->
         @auth
+        @if(!Request::is('login'))
         <nav id="sidebar" class="{{ Request::is('login') || Request::is('register') ? 'd-none' : '' }}">
             <div class="sidebar-header">
                 <h4><i class="fas fa-graduation-cap me-2"></i>Grading System</h4>
@@ -350,10 +351,12 @@
                 </li>
             </ul>
         </nav>
+        @endif
         @endauth
 
         <!-- Page Content  -->
         <div id="content">
+            @if(!Request::is('login'))
             <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
                 <div class="container-fluid">
                     @auth
@@ -419,6 +422,7 @@
                     </div>
                 </div>
             </nav>
+            @endif
 
             <main class="py-4">
                 @yield('content')

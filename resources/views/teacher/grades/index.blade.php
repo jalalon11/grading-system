@@ -790,4 +790,238 @@ function printStudentReport(studentId) {
 }
 </script>
 @endpush
+
+<!-- Student Details Modals -->
+@if(isset($students) && count($students) > 0)
+    @foreach($students as $studentData)
+        @php
+            $student = $studentData['student'];
+            $writtenWorks = $studentData['written_works'];
+            $performanceTasks = $studentData['performance_tasks'];
+            $quarterlyAssessment = $studentData['quarterly_assessment'];
+        @endphp
+
+        <div class="modal fade" id="studentDetailsModal{{ $student->id }}" tabindex="-1" aria-labelledby="studentDetailsModalLabel{{ $student->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="studentDetailsModalLabel{{ $student->id }}">
+                            <i class="fas fa-user-graduate me-2"></i> {{ $student->first_name }} {{ $student->last_name }}'s Grades
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Student Info -->
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ $student->first_name }} {{ $student->last_name }}</h5>
+                                <div class="text-muted">
+                                    ID: {{ $student->student_id }} | 
+                                    Section: {{ $student->section->name ?? 'Unassigned' }} |
+                                    Grade {{ $student->section->grade_level ?? 'Unassigned' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grades by Type -->
+                        <ul class="nav nav-tabs mb-3" id="gradesTab{{ $student->id }}" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="writtenWorks-tab{{ $student->id }}" data-bs-toggle="tab" 
+                                    data-bs-target="#writtenWorks{{ $student->id }}" type="button" role="tab" aria-selected="true">
+                                    Written Works
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="performanceTasks-tab{{ $student->id }}" data-bs-toggle="tab" 
+                                    data-bs-target="#performanceTasks{{ $student->id }}" type="button" role="tab" aria-selected="false">
+                                    Performance Tasks
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="quarterly-tab{{ $student->id }}" data-bs-toggle="tab" 
+                                    data-bs-target="#quarterly{{ $student->id }}" type="button" role="tab" aria-selected="false">
+                                    Quarterly Assessment
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="gradesTabContent{{ $student->id }}">
+                            <!-- Written Works Tab -->
+                            <div class="tab-pane fade show active" id="writtenWorks{{ $student->id }}" role="tabpanel">
+                                @if(count($writtenWorks) > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Assessment</th>
+                                                    <th class="text-center">Score</th>
+                                                    <th>Date</th>
+                                                    <th>Remarks</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($writtenWorks as $grade)
+                                                    <tr>
+                                                        <td>{{ $grade->assessment_name }}</td>
+                                                        <td class="text-center">
+                                                            <span class="badge bg-primary">{{ $grade->score }}/{{ $grade->max_score }}</span>
+                                                            <div class="small text-muted">{{ number_format(($grade->score / $grade->max_score) * 100, 1) }}%</div>
+                                                        </td>
+                                                        <td>{{ $grade->created_at->format('M d, Y') }}</td>
+                                                        <td>{{ $grade->remarks ?? 'No remarks' }}</td>
+                                                        <td class="text-end">
+                                                            <a href="{{ route('teacher.grades.edit', $grade->id) }}" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-edit"></i> Edit
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-center py-4">
+                                        <div class="avatar bg-light rounded-circle p-3 mx-auto mb-3">
+                                            <i class="fas fa-file-alt text-muted fa-2x"></i>
+                                        </div>
+                                        <h6 class="text-muted">No Written Works Recorded</h6>
+                                        <p class="small text-muted mb-3">Add assessments to track student's performance</p>
+                                        <a href="{{ route('teacher.grades.create', [
+                                            'student_id' => $student->id, 
+                                            'subject_id' => $selectedSubject->id, 
+                                            'term' => $selectedTerm,
+                                            'grade_type' => 'written_work'
+                                        ]) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus-circle me-1"></i> Add Assessment
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <!-- Performance Tasks Tab -->
+                            <div class="tab-pane fade" id="performanceTasks{{ $student->id }}" role="tabpanel">
+                                @if(count($performanceTasks) > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Assessment</th>
+                                                    <th class="text-center">Score</th>
+                                                    <th>Date</th>
+                                                    <th>Remarks</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($performanceTasks as $grade)
+                                                    <tr>
+                                                        <td>{{ $grade->assessment_name }}</td>
+                                                        <td class="text-center">
+                                                            <span class="badge bg-success">{{ $grade->score }}/{{ $grade->max_score }}</span>
+                                                            <div class="small text-muted">{{ number_format(($grade->score / $grade->max_score) * 100, 1) }}%</div>
+                                                        </td>
+                                                        <td>{{ $grade->created_at->format('M d, Y') }}</td>
+                                                        <td>{{ $grade->remarks ?? 'No remarks' }}</td>
+                                                        <td class="text-end">
+                                                            <a href="{{ route('teacher.grades.edit', $grade->id) }}" class="btn btn-sm btn-outline-success">
+                                                                <i class="fas fa-edit"></i> Edit
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-center py-4">
+                                        <div class="avatar bg-light rounded-circle p-3 mx-auto mb-3">
+                                            <i class="fas fa-project-diagram text-muted fa-2x"></i>
+                                        </div>
+                                        <h6 class="text-muted">No Performance Tasks Recorded</h6>
+                                        <p class="small text-muted mb-3">Add performance tasks to track student's practical skills</p>
+                                        <a href="{{ route('teacher.grades.create', [
+                                            'student_id' => $student->id, 
+                                            'subject_id' => $selectedSubject->id, 
+                                            'term' => $selectedTerm,
+                                            'grade_type' => 'performance_task'
+                                        ]) }}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-plus-circle me-1"></i> Add Task
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <!-- Quarterly Assessment Tab -->
+                            <div class="tab-pane fade" id="quarterly{{ $student->id }}" role="tabpanel">
+                                @if($quarterlyAssessment)
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Assessment</th>
+                                                    <th class="text-center">Score</th>
+                                                    <th>Date</th>
+                                                    <th>Remarks</th>
+                                                    <th class="text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>{{ $quarterlyAssessment->assessment_name }}</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-warning">{{ $quarterlyAssessment->score }}/{{ $quarterlyAssessment->max_score }}</span>
+                                                        <div class="small text-muted">{{ number_format(($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100, 1) }}%</div>
+                                                    </td>
+                                                    <td>{{ $quarterlyAssessment->created_at->format('M d, Y') }}</td>
+                                                    <td>{{ $quarterlyAssessment->remarks ?? 'No remarks' }}</td>
+                                                    <td class="text-end">
+                                                        <a href="{{ route('teacher.grades.edit', $quarterlyAssessment->id) }}" class="btn btn-sm btn-outline-warning">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-center py-4">
+                                        <div class="avatar bg-light rounded-circle p-3 mx-auto mb-3">
+                                            <i class="fas fa-file-alt text-muted fa-2x"></i>
+                                        </div>
+                                        <h6 class="text-muted">No Quarterly Assessment Recorded</h6>
+                                        <p class="small text-muted mb-3">Add quarterly assessment to evaluate overall performance</p>
+                                        <a href="{{ route('teacher.grades.create', [
+                                            'student_id' => $student->id, 
+                                            'subject_id' => $selectedSubject->id, 
+                                            'term' => $selectedTerm,
+                                            'grade_type' => 'quarterly'
+                                        ]) }}" class="btn btn-sm btn-warning">
+                                            <i class="fas fa-plus-circle me-1"></i> Add Assessment
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                        <a href="{{ route('teacher.grades.create', [
+                                'student_id' => $student->id, 
+                                'subject_id' => $selectedSubject->id, 
+                                'term' => $selectedTerm
+                            ]) }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Add New Grade
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+@endif
+
 @endsection 
