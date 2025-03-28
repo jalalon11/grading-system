@@ -155,6 +155,12 @@
             <form action="{{ route('teacher-admin.sections.assign-subjects', $section) }}" method="POST">
                 @csrf
                 <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> You can assign multiple subjects to this section. Existing subject assignments will be preserved.
+                        If you assign a subject that's already in this section, only the teacher assignment will be updated.
+                    </div>
+                    
                     <p class="mb-3">Select subjects and assign teachers to this section.</p>
                     
                     <div class="table-responsive">
@@ -276,6 +282,9 @@
             if ($('.subject-row').length > 1) {
                 $('.remove-subject').prop('disabled', false);
             }
+            
+            // Update subject selections to prevent duplicates
+            preventDuplicateSubjects();
         });
         
         // Remove subject row
@@ -286,7 +295,46 @@
             if ($('.subject-row').length == 1) {
                 $('.remove-subject').prop('disabled', true);
             }
+            
+            // Update subject selections after removal
+            preventDuplicateSubjects();
         });
+        
+        // Prevent selecting the same subject twice
+        function preventDuplicateSubjects() {
+            $('.subject-select').on('change', function() {
+                let selectedValues = [];
+                
+                // Get all currently selected values
+                $('.subject-select').each(function() {
+                    if ($(this).val()) {
+                        selectedValues.push($(this).val());
+                    }
+                });
+                
+                // Disable selected options in all other dropdowns
+                $('.subject-select').each(function() {
+                    let currentSelect = $(this);
+                    let currentVal = currentSelect.val();
+                    
+                    // Reset options
+                    currentSelect.find('option').not(':first').prop('disabled', false);
+                    
+                    // Disable options selected in other dropdowns
+                    $.each(selectedValues, function(index, value) {
+                        if (value !== currentVal) {
+                            currentSelect.find('option[value="' + value + '"]').prop('disabled', true);
+                        }
+                    });
+                });
+            });
+        }
+        
+        // Initialize duplicate prevention
+        preventDuplicateSubjects();
+        
+        // Trigger change on page load to set initial state
+        $('.subject-select').first().trigger('change');
     });
 </script>
 @endpush

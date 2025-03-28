@@ -187,29 +187,71 @@ class GradeController extends Controller
             // Get students and their grades for the selected subject and section
             $students = [];
             if ($selectedSubject && $selectedSectionId) {
-                $sectionStudents = Student::where('section_id', $selectedSectionId)
-                    ->with(['grades' => function ($query) use ($selectedSubject, $selectedTerm) {
-                        $query->where('subject_id', $selectedSubject->id)
-                              ->where('term', $selectedTerm);
-                    }])
-                    ->get();
+                $viewAll = $request->has('view_all') && $request->view_all == 'true';
                 
-                Log::info('Students found in section', [
-                    'section_id' => $selectedSectionId,
-                    'count' => $sectionStudents->count()
-                ]);
-                
-                foreach ($sectionStudents as $student) {
-                    $writtenWorks = $student->grades->where('grade_type', 'written_work')->all();
-                    $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
-                    $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
+                if ($viewAll) {
+                    // Get all subjects assigned to this section
+                    $sectionSubjectIds = DB::table('section_subject')
+                        ->where('section_id', $selectedSectionId)
+                        ->pluck('subject_id')
+                        ->unique()
+                        ->toArray();
                     
-                    $students[] = [
-                        'student' => $student,
-                        'written_works' => $writtenWorks,
-                        'performance_tasks' => $performanceTasks,
-                        'quarterly_assessment' => $quarterlyAssessment,
-                    ];
+                    $sectionStudents = Student::where('section_id', $selectedSectionId)
+                        ->with(['grades' => function ($query) use ($sectionSubjectIds, $selectedTerm) {
+                            $query->whereIn('subject_id', $sectionSubjectIds)
+                                  ->where('term', $selectedTerm)
+                                  ->with('subject'); // Eager load the subject relation
+                        }])
+                        ->get();
+                    
+                    foreach ($sectionStudents as $student) {
+                        // Group grades by subject
+                        $subjectGrades = [];
+                        
+                        foreach ($sectionSubjectIds as $subjectId) {
+                            $subjectName = Subject::find($subjectId)->name ?? "Unknown Subject";
+                            $subjectGrades[$subjectId] = [
+                                'subject_name' => $subjectName,
+                                'written_works' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'written_work')->all(),
+                                'performance_tasks' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'performance_task')->all(),
+                                'quarterly_assessment' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'quarterly')->first(),
+                            ];
+                        }
+                        
+                        $students[] = [
+                            'student' => $student,
+                            'view_all' => true,
+                            'subject_grades' => $subjectGrades,
+                        ];
+                    }
+                } else {
+                    // Original code for viewing a single subject
+                    $sectionStudents = Student::where('section_id', $selectedSectionId)
+                        ->with(['grades' => function ($query) use ($selectedSubject, $selectedTerm) {
+                            $query->where('subject_id', $selectedSubject->id)
+                                  ->where('term', $selectedTerm);
+                        }])
+                        ->get();
+                    
+                    Log::info('Students found in section', [
+                        'section_id' => $selectedSectionId,
+                        'count' => $sectionStudents->count()
+                    ]);
+                    
+                    foreach ($sectionStudents as $student) {
+                        $writtenWorks = $student->grades->where('grade_type', 'written_work')->all();
+                        $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
+                        $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
+                        
+                        $students[] = [
+                            'student' => $student,
+                            'written_works' => $writtenWorks,
+                            'performance_tasks' => $performanceTasks,
+                            'quarterly_assessment' => $quarterlyAssessment,
+                            'view_all' => false,
+                        ];
+                    }
                 }
             }
             
