@@ -41,6 +41,12 @@
             margin-top: 0.5rem;
             right: 0;
             left: auto;
+            position: absolute;
+            z-index: 1060;
+        }
+        
+        .nav-item.dropdown {
+            position: relative;
         }
         
         /* Modern Sidebar Styling */
@@ -58,6 +64,11 @@
             top: 0;
             height: 100%;
             overflow-y: auto;
+            will-change: transform;
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            perspective: 1000px;
         }
         
         #sidebar::-webkit-scrollbar {
@@ -131,12 +142,14 @@
             transform: translateY(-50%);
         }
         
+        /* Main content positioning */
         #content {
             width: 100%;
             min-height: 100vh;
             transition: all 0.3s;
             margin-left: 0;
             position: relative;
+            padding-top: 60px; /* Match navbar height */
         }
         
         .wrapper {
@@ -148,6 +161,26 @@
         
         body.sidebar-open #content {
             margin-left: 260px;
+        }
+        
+        /* Fixed navbar */
+        .navbar {
+            padding: 12px 20px;
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            z-index: 990;
+            height: 60px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        body.sidebar-open .navbar {
+            left: 260px;
+            width: calc(100% - 260px);
         }
         
         @media (min-width: 769px) {
@@ -162,19 +195,85 @@
             body.sidebar-collapsed #content {
                 margin-left: 0;
             }
+            
+            body.sidebar-collapsed .navbar {
+                left: 0;
+                width: 100%;
+            }
         }
         
         @media (max-width: 768px) {
             #sidebar {
                 margin-left: -260px;
+                z-index: 1050;
+                width: 260px;
+                max-width: 80%;
+                background: linear-gradient(180deg, #1e3a5c 0%, #0f2033 100%);
             }
             
             #sidebar.active {
                 margin-left: 0;
+                box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            }
+            
+            #content {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+            
+            body.sidebar-open #content {
+                margin-left: 0;
+            }
+            
+            /* Hide user dropdown when sidebar is active on mobile */
+            body.sidebar-open .navbar .nav-item.dropdown {
+                display: none;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            
+            body.sidebar-collapsed .navbar .nav-item.dropdown {
+                display: block;
+                opacity: 1;
+                transition: opacity 0.3s;
             }
             
             #sidebarCollapse span {
                 display: none;
+            }
+            
+            /* Improve sidebar header on mobile */
+            #sidebar .sidebar-header {
+                padding: 15px;
+                background: rgba(0,0,0,0.3);
+            }
+            
+            /* Enhance sidebar menu items on mobile */
+            #sidebar ul li {
+                margin: 4px 8px;
+            }
+            
+            #sidebar ul li a {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            /* Overlay background when sidebar is active on mobile */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1040;
+                transition: all 0.3s;
+                backdrop-filter: blur(2px);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
             }
         }
         
@@ -248,14 +347,6 @@
         
         body.sidebar-collapsed #sidebarCollapse i {
             transform: rotate(180deg);
-        }
-        
-        /* Adjusted navbar to work with fixed sidebar */
-        .navbar {
-            padding: 12px 20px;
-            background: white;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-            z-index: 990;
         }
     </style>
 </head>
@@ -373,11 +464,8 @@
                     <!-- <a class="navbar-brand ms-3" href="{{ url('/') }}">
                         <span class="fw-bold">Grading System</span>
                     </a> -->
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    
+                    <div class="d-flex justify-content-end flex-grow-1" id="navbarSupportedContent">
                         <!-- Left Side Of Navbar -->
                         <ul class="navbar-nav me-auto">
 
@@ -405,7 +493,7 @@
                                         <i class="fas fa-chevron-down ms-2 small"></i>
                                     </a>
 
-                                    <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown" style="min-width: 200px;">
+                                    <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown" style="min-width: 200px; position: absolute; top: 100%;">
                                         <a class="dropdown-item d-flex align-items-center" href="{{ auth()->user()->role === 'admin' ? route('admin.profile') : (auth()->user()->is_teacher_admin ? route('teacher-admin.profile') : route('teacher.profile')) }}">
                                             <i class="fas fa-user-circle me-2"></i>
                                             <span>{{ __('My Profile') }}</span>
@@ -453,9 +541,38 @@
                 }
             });
             
+            // Add overlay div to the body
+            $('body').append('<div class="sidebar-overlay"></div>');
+            
             $('#sidebarCollapse').on('click', function () {
                 $('#sidebar').toggleClass('active');
                 $('body').toggleClass('sidebar-collapsed sidebar-open');
+                $('.sidebar-overlay').toggleClass('active');
+                
+                // On mobile, hide user dropdown when sidebar is opened
+                if ($(window).width() <= 768) {
+                    if ($('#sidebar').hasClass('active')) {
+                        $('.navbar .nav-item.dropdown').fadeOut(300);
+                    } else {
+                        setTimeout(function() {
+                            $('.navbar .nav-item.dropdown').fadeIn(300);
+                        }, 100);
+                    }
+                }
+            });
+            
+            // Close sidebar when clicking on overlay
+            $('.sidebar-overlay').on('click', function() {
+                $('#sidebar').removeClass('active');
+                $('body').removeClass('sidebar-open').addClass('sidebar-collapsed');
+                $(this).removeClass('active');
+                
+                // On mobile, show user dropdown when sidebar is closed
+                if ($(window).width() <= 768) {
+                    setTimeout(function() {
+                        $('.navbar .nav-item.dropdown').fadeIn(300);
+                    }, 100);
+                }
             });
             
             // Detect small screens and collapse sidebar by default
@@ -463,6 +580,7 @@
                 if ($(window).width() <= 768) {
                     $('#sidebar').removeClass('active');
                     $('body').removeClass('sidebar-open').addClass('sidebar-collapsed');
+                    $('.sidebar-overlay').removeClass('active');
                 }
             }
             
