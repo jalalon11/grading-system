@@ -53,6 +53,14 @@ class Grade extends Model
     }
 
     /**
+     * Get the teacher who created this grade
+     */
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    /**
      * Get the grade percentage
      */
     public function getPercentageAttribute(): float

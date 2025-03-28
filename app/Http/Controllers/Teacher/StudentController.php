@@ -167,4 +167,51 @@ class StudentController extends Controller
         return redirect()->route('teacher.students.index')
             ->with('success', 'Student deleted successfully.');
     }
+
+    /**
+     * Display gender distribution data for a specific section or all sections
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function genderDistribution(Request $request)
+    {
+        $sectionId = $request->input('section_id', 'all');
+        
+        if ($sectionId === 'all') {
+            // Get all students for the teacher
+            $students = Student::with('section')->whereHas('section', function($query) {
+                $query->where('adviser_id', Auth::id());
+            })->get();
+        } else {
+            // Get students for a specific section
+            $students = Student::with('section')
+                ->where('section_id', $sectionId)
+                ->whereHas('section', function($query) {
+                    $query->where('adviser_id', Auth::id());
+                })
+                ->get();
+        }
+        
+        // Calculate gender statistics
+        $maleCount = $students->filter(function($student) {
+            return strtolower($student->gender) === 'male';
+        })->count();
+        
+        $femaleCount = $students->filter(function($student) {
+            return strtolower($student->gender) === 'female';
+        })->count();
+        
+        $totalStudents = $students->count();
+        $malePercentage = $totalStudents > 0 ? round(($maleCount / $totalStudents) * 100) : 0;
+        $femalePercentage = $totalStudents > 0 ? round(($femaleCount / $totalStudents) * 100) : 0;
+        
+        return response()->json([
+            'male_count' => $maleCount,
+            'female_count' => $femaleCount,
+            'male_percentage' => $malePercentage,
+            'female_percentage' => $femalePercentage,
+            'total' => $totalStudents
+        ]);
+    }
 }

@@ -326,6 +326,11 @@
                 <div class="sidebar-heading">
                     Teacher Admin Panel
                 </div>
+                <li class="{{ Request::is('teacher-admin/dashboard') ? 'active' : '' }}">
+                    <a href="{{ route('teacher-admin.dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+                    </a>
+                </li>
                 <li class="{{ Request::is('teacher-admin/sections*') ? 'active' : '' }}">
                     <a href="{{ route('teacher-admin.sections.index') }}">
                         <i class="fas fa-door-open"></i> Manage Sections

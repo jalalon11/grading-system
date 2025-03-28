@@ -68,6 +68,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/profile/update', [TeacherDashboardController::class, 'updateProfile'])->name('profile.update');
         Route::put('/profile/password', [TeacherDashboardController::class, 'updatePassword'])->name('password.update');
         
+        // Gender distribution endpoint for AJAX
+        Route::get('/students/gender-distribution', [StudentController::class, 'genderDistribution'])->name('students.gender-distribution');
+        
         // Regular teacher functionality - all teachers including teacher admins
         Route::resource('students', StudentController::class);
         Route::get('grades/assessment-setup', [GradeController::class, 'assessmentSetup'])->name('grades.assessment-setup');

@@ -107,27 +107,32 @@ class AttendanceController extends Controller
         DB::beginTransaction();
         
         try {
-            // Prepare attendance data
-            $attendanceData = [];
+            // Create individual attendance records for each student
             foreach ($validated['attendance'] as $studentId => $status) {
                 // Verify student belongs to the section
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
                                   ->firstOrFail();
                 
-                $attendanceData[] = [
+                // Get the student's subject ID (assuming they only have one subject in this section)
+                $subject = $section->subjects->first();
+                $subjectId = $subject ? $subject->id : null;
+                
+                if (!$subjectId) {
+                    throw new \Exception('No subject found for this section');
+                }
+                
+                // Create individual attendance record
+                Attendance::create([
                     'student_id' => $studentId,
-                    'status' => $status
-                ];
+                    'section_id' => $validated['section_id'],
+                    'teacher_id' => Auth::id(),
+                    'subject_id' => $subjectId,
+                    'date' => $validated['date'],
+                    'status' => $status,
+                    'remarks' => null
+                ]);
             }
-            
-            // Create a single attendance record with JSON data
-            Attendance::create([
-                'section_id' => $validated['section_id'],
-                'date' => $validated['date'],
-                'teacher_id' => Auth::id(),
-                'attendance_data' => $attendanceData
-            ]);
             
             DB::commit();
             return redirect()->route('teacher.attendances.index')
@@ -158,10 +163,8 @@ class AttendanceController extends Controller
         $students = Student::where('section_id', $id)->get();
         
         // Get attendance data for all students in this section on this date
-        $attendanceRecords = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-                                      ->where('students.section_id', $id)
-                                      ->where('attendances.date', $date)
-                                      ->select('attendances.*')
+        $attendanceRecords = Attendance::where('section_id', $id)
+                                      ->where('date', $date)
                                       ->get();
         
         // Map attendance data by student ID
@@ -205,10 +208,8 @@ class AttendanceController extends Controller
         $students = Student::where('section_id', $id)->get();
         
         // Get attendance data for all students in this section on this date
-        $attendanceRecords = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
-                                      ->where('students.section_id', $id)
-                                      ->where('attendances.date', $date)
-                                      ->select('attendances.*')
+        $attendanceRecords = Attendance::where('section_id', $id)
+                                      ->where('date', $date)
                                       ->get();
         
         // Map attendance data by student ID
@@ -245,30 +246,37 @@ class AttendanceController extends Controller
         DB::beginTransaction();
         
         try {
-            // Find existing attendance record or create new one
-            $attendance = Attendance::firstOrNew([
-                'section_id' => $validated['section_id'],
-                'date' => $validated['date'],
-            ]);
+            // Delete existing attendance records for this section and date
+            Attendance::where('section_id', $validated['section_id'])
+                      ->where('date', $validated['date'])
+                      ->delete();
             
-            $attendance->teacher_id = Auth::id();
+            // Get a subject for the section
+            $subject = $section->subjects->first();
+            $subjectId = $subject ? $subject->id : null;
             
-            // Prepare attendance data
-            $attendanceData = [];
+            if (!$subjectId) {
+                throw new \Exception('No subject found for this section');
+            }
+            
+            // Create new attendance records for each student
             foreach ($validated['attendance'] as $studentId => $status) {
                 // Verify student belongs to the section
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
                                   ->firstOrFail();
                 
-                $attendanceData[] = [
+                // Create the attendance record
+                Attendance::create([
                     'student_id' => $studentId,
-                    'status' => $status
-                ];
+                    'section_id' => $validated['section_id'],
+                    'teacher_id' => Auth::id(),
+                    'subject_id' => $subjectId,
+                    'date' => $validated['date'],
+                    'status' => $status,
+                    'remarks' => null
+                ]);
             }
-            
-            $attendance->attendance_data = $attendanceData;
-            $attendance->save();
             
             DB::commit();
             return redirect()->route('teacher.attendances.index')

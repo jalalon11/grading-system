@@ -347,10 +347,10 @@
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0"><i class="fas fa-users text-primary me-2"></i> Recent Sections</h5>
-                    <a href="{{ route('teacher-admin.sections.create') }}" class="btn btn-sm btn-primary">
+                    <h5 class="mb-0"><i class="fas fa-users text-primary me-2"></i> Assigned Sections</h5>
+                    <!-- <a href="{{ route('teacher-admin.sections.create') }}" class="btn btn-sm btn-primary">
                         <i class="fas fa-plus-circle me-1"></i> Add Section
-                    </a>
+                    </a> -->
                 </div>
                 <div class="card-body p-0">
                     @if($recentSections->count() > 0)
@@ -403,10 +403,10 @@
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0"><i class="fas fa-book text-success me-2"></i> Recent Subjects</h5>
-                    <a href="{{ route('teacher-admin.subjects.create') }}" class="btn btn-sm btn-success">
+                    <h5 class="mb-0"><i class="fas fa-book text-success me-2"></i> Assigned Subjects</h5>
+                    <!-- <a href="{{ route('teacher-admin.subjects.create') }}" class="btn btn-sm btn-success">
                         <i class="fas fa-plus-circle me-1"></i> Add Subject
-                    </a>
+                    </a> -->
                 </div>
                 <div class="card-body p-0">
                     @if($recentSubjects->count() > 0)
