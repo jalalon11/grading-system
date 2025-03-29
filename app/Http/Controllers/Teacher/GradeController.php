@@ -42,6 +42,27 @@ class GradeController extends Controller
                 'subject_ids' => $subjectIds
             ]);
             
+            // Get the teacher's transmutation table preference
+            $preferredTableId = DB::table('teacher_preferences')
+                ->where('teacher_id', $teacherId)
+                ->where('preference_key', 'transmutation_table')
+                ->value('preference_value');
+                
+            // If no preference exists yet, set DepEd Transmutation Table (1) as default
+            if (!$preferredTableId) {
+                $preferredTableId = 1; // DepEd Transmutation Table is now Table 1
+                // Save this preference
+                $this->saveTransmutationPreference($teacherId, $preferredTableId);
+            }
+            
+            // Check if we need to clear the lock state
+            if (!$request->has('lock_table') && !session('locked_transmutation_table_id')) {
+                session()->forget('locked_transmutation_table');
+            }
+            
+            // Store the preferred table ID in the view data
+            $preferredTableId = (int) $preferredTableId;
+            
             // Get subjects based on section_subject pivot table
             if (!empty($subjectIds)) {
                 $subjects = Subject::whereIn('id', $subjectIds)->get();
@@ -257,7 +278,7 @@ class GradeController extends Controller
             
             $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
             
-            return view('teacher.grades.index', compact('subjects', 'selectedSubject', 'students', 'terms', 'selectedTerm', 'sections', 'selectedSectionId'));
+            return view('teacher.grades.index', compact('subjects', 'selectedSubject', 'students', 'terms', 'selectedTerm', 'sections', 'selectedSectionId', 'preferredTableId'));
             
         } catch (\Exception $e) {
             Log::error('Error in grades index: ' . $e->getMessage(), [
@@ -1208,5 +1229,99 @@ class GradeController extends Controller
     {
         // Redirect to the grades index page
         return redirect()->route('teacher.grades.index');
+    }
+
+    /**
+     * Lock or unlock a transmutation table for consistent grading
+     * Only section advisers can lock a transmutation table
+     */
+    public function lockTransmutationTable(Request $request)
+    {
+        $teacher = Auth::user();
+        $locked = $request->input('locked', false);
+        
+        // Check if the table should be locked or unlocked
+        if ($locked) {
+            $tableId = $request->input('table_id', 1); // Default to DepEd table (now Table 1)
+            
+            // Store the locked state in the session only when explicitly requested
+            session(['locked_transmutation_table' => true]);
+            session(['locked_transmutation_table_id' => $tableId]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transmutation table has been locked',
+                'table_id' => $tableId
+            ]);
+        } else {
+            // Remove the locked state from the session
+            session()->forget('locked_transmutation_table');
+            session()->forget('locked_transmutation_table_id');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transmutation table has been unlocked'
+            ]);
+        }
+    }
+    
+    /**
+     * Save the teacher's transmutation table preference
+     */
+    public function saveTransmutationPreference($teacherId, $tableId)
+    {
+        try {
+            // Check if a preference already exists
+            $exists = DB::table('teacher_preferences')
+                ->where('teacher_id', $teacherId)
+                ->where('preference_key', 'transmutation_table')
+                ->exists();
+                
+            if ($exists) {
+                // Update existing preference
+                DB::table('teacher_preferences')
+                    ->where('teacher_id', $teacherId)
+                    ->where('preference_key', 'transmutation_table')
+                    ->update([
+                        'preference_value' => $tableId,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                // Create new preference
+                DB::table('teacher_preferences')->insert([
+                    'teacher_id' => $teacherId,
+                    'preference_key' => 'transmutation_table',
+                    'preference_value' => $tableId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error saving transmutation preference: ' . $e->getMessage(), [
+                'teacher_id' => $teacherId,
+                'table_id' => $tableId
+            ]);
+            
+            return false;
+        }
+    }
+    
+    /**
+     * Update the teacher's transmutation table preference
+     */
+    public function updateTransmutationPreference(Request $request)
+    {
+        $tableId = $request->input('transmutation_table', 1); // Default to DepEd table (now Table 1)
+        $teacherId = Auth::id();
+        
+        $success = $this->saveTransmutationPreference($teacherId, $tableId);
+        
+        if ($success) {
+            return redirect()->back()->with('success', 'Transmutation table preference saved successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to save transmutation table preference.');
+        }
     }
 }

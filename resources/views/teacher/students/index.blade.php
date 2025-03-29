@@ -484,6 +484,9 @@
                                                 <div class="student-info-badge bg-light text-dark">
                                                     <i class="fas fa-id-card text-primary"></i> {{ $student->student_id }}
                                                 </div>
+                                                <div class="student-info-badge bg-light text-dark">
+                                                    <i class="fas fa-id-badge text-info"></i> LRN: {{ $student->lrn ?? 'N/A' }}
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="mb-2">

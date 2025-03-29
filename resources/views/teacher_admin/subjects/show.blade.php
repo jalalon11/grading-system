@@ -44,7 +44,20 @@
                                         <tbody>
                                             <tr>
                                                 <th style="width: 30%">Subject Name</th>
-                                                <td>{{ $subject->name }}</td>
+                                                <td>
+                                                    {{ $subject->name }}
+                                                    @php
+                                                        $hasComponents = isset($subject->components) && $subject->components->count() > 0;
+                                                        $isMAPEH = $hasComponents && $subject->components->pluck('name')->filter(function($name) {
+                                                            return in_array(strtolower($name), ['music', 'arts', 'physical education', 'health']) ||
+                                                                in_array(strtolower(substr($name, 0, 5)), ['music', 'arts', 'physi', 'healt']);
+                                                        })->count() == 4;
+                                                    @endphp
+                                                    
+                                                    @if($isMAPEH)
+                                                        <span class="badge bg-info ms-2">MAPEH</span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <th>Code</th>
@@ -88,6 +101,40 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            @if($isMAPEH && $subject->components->count() > 0)
+                            <div class="card mb-4">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">MAPEH Components</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        MAPEH is a consolidated subject with 4 components. The final grade is calculated as a weighted average of these components.
+                                    </div>
+                                    
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Component</th>
+                                                <th>Weight</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($subject->components as $component)
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ $component->name }}</strong>
+                                                    <small class="text-muted d-block">{{ $component->code }}</small>
+                                                </td>
+                                                <td>{{ number_format($component->component_weight, 2) }}%</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                         
                         <div class="col-md-6">

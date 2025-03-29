@@ -116,6 +116,12 @@
     #gradeTable.compact-view th {
         padding: 0.5rem;
     }
+    
+    /* New styles for transmutation tables */
+    .transmutation-info {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
 </style>
 @endpush
 
@@ -201,8 +207,11 @@
                 </div>
             @else
                 <form method="GET" action="{{ route('teacher.grades.index') }}" id="filterForm" class="row g-3">
-                    <div class="col-md-4">
-                        <label for="subject_id" class="form-label fw-bold">Subject</label>
+                    <!-- Subject Filter -->
+                    <div class="col-md-3">
+                        <label for="subject_id" class="form-label fw-bold">
+                            <i class="fas fa-book me-1 text-primary"></i> Subject
+                        </label>
                         <select class="form-select shadow-sm" id="subject_id" name="subject_id">
                             @foreach($subjects as $subject)
                                 <option value="{{ $subject->id }}" {{ (isset($selectedSubject) && $selectedSubject->id == $subject->id) ? 'selected' : '' }}>
@@ -210,10 +219,14 @@
                                 </option>
                             @endforeach
                         </select>
+                        <small class="text-muted d-block mt-1">Select the subject to view grades for</small>
                     </div>
                     
+                    <!-- Section Filter -->
                     <div class="col-md-3">
-                        <label for="section_id" class="form-label fw-bold">Section</label>
+                        <label for="section_id" class="form-label fw-bold">
+                            <i class="fas fa-users me-1 text-success"></i> Section
+                        </label>
                         <select class="form-select shadow-sm" id="section_id" name="section_id">
                             @foreach($sections as $section)
                                 <option value="{{ $section->id }}" {{ $selectedSectionId == $section->id ? 'selected' : '' }}>
@@ -221,10 +234,14 @@
                                 </option>
                             @endforeach
                         </select>
+                        <small class="text-muted d-block mt-1">Select the section to display</small>
                     </div>
                     
-                    <div class="col-md-3">
-                        <label for="term" class="form-label fw-bold">Academic Term</label>
+                    <!-- Academic Term Filter -->
+                    <div class="col-md-2">
+                        <label for="term" class="form-label fw-bold">
+                            <i class="fas fa-calendar-alt me-1 text-warning"></i> Term
+                        </label>
                         <select class="form-select shadow-sm" id="term" name="term">
                             @foreach($terms as $key => $term)
                                 <option value="{{ $key }}" {{ $selectedTerm == $key ? 'selected' : '' }}>
@@ -232,18 +249,69 @@
                                 </option>
                             @endforeach
                         </select>
+                        <small class="text-muted d-block mt-1">Select grading period</small>
                     </div>
                     
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
+                    <!-- Transmutation Table Filter -->
+                    <div class="col-md-4">
+                        <label for="transmutation_table" class="form-label fw-bold d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-table me-1 text-info"></i> Transmutation Table
+                            </div>
+                        </label>
+                        <div class="d-flex align-items-center">
+                            <select class="form-select shadow-sm flex-grow-1" id="transmutation_table" 
+                                    {{ session('locked_transmutation_table') && session('locked_transmutation_table_id') ? 'disabled' : '' }}
+                                    onchange="updateHiddenTransmutationInput(this.value)">
+                                <option value="1" {{ request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1)) == 1 ? 'selected' : '' }}>
+                                    Table 1: DepEd Transmutation Table
+                                </option>
+                                <option value="2" {{ request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1)) == 2 ? 'selected' : '' }}>
+                                    Table 2: Grades 1-10 & Non-Core TVL
+                                </option>
+                                <option value="3" {{ request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1)) == 3 ? 'selected' : '' }}>
+                                    Table 3: SHS Core & Work Immersion
+                                </option>
+                                <option value="4" {{ request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1)) == 4 ? 'selected' : '' }}>
+                                    Table 4: All other SHS Subjects
+                                </option>
+                            </select>
+                            <div class="ms-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="lock_table" name="lock_table" value="true" 
+                                        {{ session('locked_transmutation_table') ? 'checked' : '' }}
+                                        data-bs-toggle="tooltip" data-bs-placement="top" 
+                                        title="Lock this transmutation table for consistent grading">
+                                    <label class="form-check-label" for="lock_table">
+                                        <i class="fas fa-lock text-secondary"></i><span class="visually-hidden">Lock</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Always include a hidden input with the transmutation table value -->
+                        <input type="hidden" id="selected_transmutation_table" name="transmutation_table" value="{{ request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1)) }}">
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <small class="text-muted">Initial grade will be transmuted based on selected table</small>
+                            @if(session('locked_transmutation_table'))
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-lock me-1"></i> Locked
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <!-- View Button -->
+                    <div class="col-md-12 text-end mt-4">
+                        <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search me-2"></i> View Grades
                         </button>
                     </div>
                     
+                    <!-- Comprehensive Grade View Toggle -->
                     <div class="col-12 mt-3">
-                        <div class="card border-0 {{ request('view_all') == 'true' ? 'bg-primary bg-opacity-10' : 'bg-light' }}">
-                            <div class="card-body">
-                                <div class="form-check form-switch">
+                        <div class="card border-0 shadow-sm {{ request('view_all') == 'true' ? 'bg-primary bg-opacity-10' : 'bg-light' }}">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="form-check form-switch me-3">
                                     <input class="form-check-input" type="checkbox" id="view_all" name="view_all" value="true" 
                                            {{ request('view_all') == 'true' ? 'checked' : '' }}
                                            data-bs-toggle="tooltip" data-bs-placement="right" 
@@ -252,7 +320,7 @@
                                         <i class="fas fa-table-columns me-1"></i> Comprehensive Grade View
                                     </label>
                                 </div>
-                                <p class="text-muted small mb-0 mt-1 ms-4">
+                                <p class="text-muted small mb-0">
                                     <i class="fas fa-info-circle me-1"></i> 
                                     {{ request('view_all') == 'true' 
                                         ? 'Currently showing all subjects and calculating overall averages. Each column represents a different subject.' 
@@ -478,7 +546,7 @@
                     </h5>
                 @endif
                 
-                <div>
+                <!-- <div>
                     @if(!isset($students[0]['view_all']) || !$students[0]['view_all'])
                     <a href="{{ route('teacher.grades.batch-create', [
                         'subject_id' => $selectedSubject->id,
@@ -491,7 +559,7 @@
                     <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="printGradesBtn">
                         <i class="fas fa-print me-1"></i> Print
                     </button>
-                </div>
+                </div> -->
             </div>
             <div class="card-body p-0">
                 @if(isset($students[0]['view_all']) && $students[0]['view_all'])
@@ -532,7 +600,8 @@
                                             <div class="subject-code small text-muted">{{ \App\Models\Subject::find($subjectId)->code ?? '' }}</div>
                                         </th>
                                     @endforeach
-                                    <th class="text-center bg-primary bg-opacity-10 fw-bold" style="min-width: 120px;">Final Average</th>
+                                    <th class="text-center bg-light fw-bold" style="min-width: 100px;">Initial Average</th>
+                                    <th class="text-center bg-primary bg-opacity-10 fw-bold" style="min-width: 120px;">Quarterly Average</th>
                                     <th class="text-center" style="width: 100px; min-width: 100px;">Actions</th>
                                 </tr>
                             </thead>
@@ -595,28 +664,104 @@
                                                     
                                                     $avgGrade = round($finalGrade, 1);
                                                     
-                                                    // Grade color class
+                                                    // Get the transmuted grade
+                                                    $transmutedGrade = getTransmutedGrade($avgGrade, request('transmutation_table', 1));
+                                                    
+                                                    // Determine grade color class
                                                     $gradeClass = 'secondary';
-                                                    if ($avgGrade >= 90) {
+                                                    if ($transmutedGrade >= 90) {
                                                         $gradeClass = 'success';
-                                                    } elseif ($avgGrade >= 80) {
+                                                    } elseif ($transmutedGrade >= 80) {
                                                         $gradeClass = 'primary';
-                                                    } elseif ($avgGrade >= 70) {
+                                                    } elseif ($transmutedGrade >= 75) {
                                                         $gradeClass = 'info';
-                                                    } elseif ($avgGrade >= 60) {
-                                                        $gradeClass = 'warning';
-                                                    } elseif ($avgGrade > 0) {
+                                                    } elseif ($transmutedGrade > 0) {
                                                         $gradeClass = 'danger';
                                                     }
                                                 @endphp
                                                 
                                                 @if($writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment)
-                                                    <span class="badge bg-{{ $gradeClass }} grade-badge">{{ $avgGrade }}</span>
+                                                    <div class="mb-1">
+                                                        <span class="badge bg-{{ $gradeClass }} grade-badge">{{ $transmutedGrade }}</span>
+                                                    </div>
+                                                    <div class="small text-muted">Initial: {{ $avgGrade }}%</div>
                                                 @else
                                                     <span class="text-muted small">N/A</span>
                                                 @endif
                                             </td>
                                         @endforeach
+                                        <td class="text-center bg-light">
+                                            @php
+                                                // Calculate the average grade across all subjects
+                                                $totalSubjectGrade = 0;
+                                                $subjectCount = count($studentData['subject_grades']);
+                                                $validSubjectCount = 0;
+                                                
+                                                foreach($studentData['subject_grades'] as $subjectId => $subjectGrade) {
+                                                    $writtenWorks = collect($subjectGrade['written_works']);
+                                                    $performanceTasks = collect($subjectGrade['performance_tasks']);
+                                                    $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
+                                                    
+                                                    $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
+                                                    
+                                                    if($hasGrades) {
+                                                        $writtenWorksAvg = $writtenWorks->count() > 0 ? 
+                                                            $writtenWorks->average(function($grade) {
+                                                                return ($grade->score / $grade->max_score) * 100;
+                                                            }) : 0;
+                                                        
+                                                        $performanceTasksAvg = $performanceTasks->count() > 0 ? 
+                                                            $performanceTasks->average(function($grade) {
+                                                                return ($grade->score / $grade->max_score) * 100;
+                                                            }) : 0;
+                                                        
+                                                        $quarterlyScore = $quarterlyAssessment ? 
+                                                            ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
+                                                        
+                                                        // Get subject's grade configuration
+                                                        $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
+                                                        
+                                                        $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
+                                                        $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
+                                                        $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
+                                                        
+                                                        // Calculate weighted final grade for this subject
+                                                        $subjectFinalGrade = 0;
+                                                        if ($writtenWorksAvg > 0) {
+                                                            $subjectFinalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
+                                                        }
+                                                        if ($performanceTasksAvg > 0) {
+                                                            $subjectFinalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
+                                                        }
+                                                        if ($quarterlyScore > 0) {
+                                                            $subjectFinalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
+                                                        }
+                                                        
+                                                        $totalSubjectGrade += $subjectFinalGrade;
+                                                        $validSubjectCount++;
+                                                    }
+                                                }
+                                                
+                                                $finalAverage = $validSubjectCount > 0 ? $totalSubjectGrade / $validSubjectCount : 0;
+                                                $finalAverage = round($finalAverage, 1);
+                                                
+                                                // Grade color class
+                                                $avgGradeClass = 'secondary';
+                                                if ($finalAverage >= 90) {
+                                                    $avgGradeClass = 'success';
+                                                } elseif ($finalAverage >= 80) {
+                                                    $avgGradeClass = 'primary';
+                                                } elseif ($finalAverage >= 70) {
+                                                    $avgGradeClass = 'info';
+                                                } elseif ($finalAverage >= 60) {
+                                                    $avgGradeClass = 'warning';
+                                                } elseif ($finalAverage > 0) {
+                                                    $avgGradeClass = 'danger';
+                                                }
+                                            @endphp
+                                            
+                                            <span class="badge bg-{{ $avgGradeClass }} bg-opacity-25 text-{{ $avgGradeClass }} fs-5 px-3">{{ $finalAverage }}%</span>
+                                        </td>
                                         <td class="text-center bg-primary bg-opacity-10">
                                             @php
                                                 // Calculate the average grade across all subjects
@@ -687,11 +832,11 @@
                                                 }
                                             @endphp
                                             
-                                            <span class="badge bg-{{ $avgGradeClass }} fs-5 px-3">{{ $finalAverage }}</span>
+                                            <span class="badge bg-{{ $avgGradeClass }} fs-5 px-3">{{ getTransmutedGrade($finalAverage, request('transmutation_table', 1)) }}</span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                                <button type="button" class="btn btn-sm btn-outline-success" 
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#wholeGradeModal{{ $studentData['student']->id }}">
                                                     <i class="fas fa-chart-line me-1"></i> Details
@@ -732,7 +877,8 @@
                                             <div>Quarterly</div>
                                             <span class="badge bg-warning rounded-pill">{{ $quarterlyAssessmentPercentage }}%</span>
                                         </th>
-                                        <th width="10%" class="text-center">Final Grade</th>
+                                        <th width="10%" class="text-center">Initial Grade</th>
+                                        <th width="10%" class="text-center">Quarterly Grade</th>
                                         <th width="15%" class="text-center pe-4">Actions</th>
                                     </tr>
                                 </thead>
@@ -807,7 +953,7 @@
                                             </td>
                                             <td class="text-center">
                                                 @if(count($writtenWorks) > 0)
-                                                    <div class="fw-bold">{{ number_format($writtenWorksAvg, 1) }}%</div>
+                                                    <div class="fw-bold">{{ number_format($writtenWorksAvg * $writtenWorkPercentage / 100, 1) }}%</div>
                                                     <div class="small text-muted">{{ count($writtenWorks) }} assessments</div>
                                                 @else
                                                     <span class="badge bg-light text-muted">No data</span>
@@ -815,7 +961,7 @@
                                             </td>
                                             <td class="text-center">
                                                 @if(count($performanceTasks) > 0)
-                                                    <div class="fw-bold">{{ number_format($performanceTasksAvg, 1) }}%</div>
+                                                    <div class="fw-bold">{{ number_format($performanceTasksAvg * $performanceTaskPercentage / 100, 1) }}%</div>
                                                     <div class="small text-muted">{{ count($performanceTasks) }} tasks</div>
                                                 @else
                                                     <span class="badge bg-light text-muted">No data</span>
@@ -823,7 +969,7 @@
                                             </td>
                                             <td class="text-center">
                                                 @if($quarterlyAssessment)
-                                                    <div class="fw-bold">{{ number_format($quarterlyScore, 1) }}%</div>
+                                                    <div class="fw-bold">{{ number_format($quarterlyScore * $quarterlyAssessmentPercentage / 100, 1) }}%</div>
                                                     <div class="small text-muted">
                                                         {{ $quarterlyAssessment->score }}/{{ $quarterlyAssessment->max_score }}
                                                     </div>
@@ -832,12 +978,49 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <div class="fw-bold fs-5 {{ $gradeColor }}">
-                                                    {{ number_format($finalGrade, 1) }}%
+                                                <div class="fw-bold">{{ number_format($finalGrade, 1) }}%</div>
+                                                @php
+                                                    // Determine grade class for display
+                                                    $gradeClass = 'secondary';
+                                                    if ($finalGrade >= 90) {
+                                                        $gradeClass = 'success';
+                                                    } elseif ($finalGrade >= 80) {
+                                                        $gradeClass = 'primary';
+                                                    } elseif ($finalGrade >= 70) {
+                                                        $gradeClass = 'info';
+                                                    } elseif ($finalGrade >= 60) {
+                                                        $gradeClass = 'warning';
+                                                    } elseif ($finalGrade > 0) {
+                                                        $gradeClass = 'danger';
+                                                    }
+                                                @endphp
+                                                <span class="badge bg-{{ $gradeClass }} bg-opacity-25 text-{{ $gradeClass }} small">Initial</span>
+                                            </td>
+                                            <td class="text-center">
+                                                @php
+                                                    // Get the selected transmutation table from request or session
+                                                    $selectedTableId = request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1));
+                                                    
+                                                    // Get the transmuted grade using the selected table
+                                                    $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTableId);
+                                                    
+                                                    // Determine grade class based on transmuted grade
+                                                    $transmutedClass = 'secondary';
+                                                    if ($transmutedGrade >= 90) {
+                                                        $transmutedClass = 'success';
+                                                    } elseif ($transmutedGrade >= 80) {
+                                                        $transmutedClass = 'primary';
+                                                    } elseif ($transmutedGrade >= 75) {
+                                                        $transmutedClass = 'info';
+                                                    } elseif ($transmutedGrade > 0) {
+                                                        $transmutedClass = 'danger';
+                                                    }
+                                                @endphp
+                                                <div class="fw-bold fs-4">{{ $transmutedGrade }}</div>
+                                                <span class="badge bg-{{ $transmutedClass }} small">Quarterly</span>
+                                                <div class="mt-1 small text-muted d-none d-md-block">
+                                                    <small>{{ number_format($finalGrade, 1) }}% → {{ $transmutedGrade }}</small>
                                                 </div>
-                                                <span class="badge {{ str_replace('text', 'bg', $gradeColor) }} bg-opacity-10 {{ $gradeColor }}">
-                                                    {{ $gradeStatus }}
-                                                </span>
                                             </td>
                                             <td class="text-center pe-4">
                                                 <div class="btn-group">
@@ -875,11 +1058,11 @@
         </div>
         
         <!-- Grade Statistics Card -->
-        <div class="card shadow-sm rounded-3 border-0 mb-4">
+        <!-- <div class="card shadow-sm rounded-3 border-0 mb-4">
             <div class="card-header py-3 bg-white">
-                <h5 class="mb-0 fw-bold text-primary">
+                            <h5 class="mb-0 fw-bold text-primary">
                     <i class="fas fa-chart-line me-2"></i> Class Performance Summary
-                </h5>
+                            </h5>
             </div>
             <div class="card-body">
                 @if(empty($students) || count($students) == 0)
@@ -1010,9 +1193,14 @@
                         <div class="col-md-3">
                             <div class="card border-0 bg-primary bg-opacity-10 h-100 stat-card">
                                 <div class="card-body text-center">
-                                    <div class="display-5 text-primary mb-3">
-                                        {{ number_format($classAverage, 1) }}%
+                                    @php
+                                        // Get the selected transmutation table from request or session
+                                        $selectedTableId = request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1));
+                                    @endphp
+                                    <div class="display-5 text-primary mb-2">
+                                        {{ getTransmutedGrade($classAverage, $selectedTableId) }}
                                     </div>
+                                    <div class="small text-primary mb-2">({{ number_format($classAverage, 1) }}%)</div>
                                     <h6 class="fw-bold text-primary">Class Average</h6>
                                 </div>
                             </div>
@@ -1033,9 +1221,10 @@
                         <div class="col-md-3">
                             <div class="card border-0 bg-info bg-opacity-10 h-100 stat-card">
                                 <div class="card-body text-center">
-                                    <div class="display-5 text-info mb-3">
-                                        {{ number_format($highestGrade, 1) }}%
+                                    <div class="display-5 text-info mb-2">
+                                        {{ getTransmutedGrade($highestGrade, $selectedTableId) }}
                                     </div>
+                                    <div class="small text-info mb-2">({{ number_format($highestGrade, 1) }}%)</div>
                                     <h6 class="fw-bold text-info">Highest Grade</h6>
                                 </div>
                             </div>
@@ -1044,9 +1233,10 @@
                         <div class="col-md-3">
                             <div class="card border-0 bg-warning bg-opacity-10 h-100 stat-card">
                                 <div class="card-body text-center">
-                                    <div class="display-5 text-warning mb-3">
-                                        {{ number_format($lowestGrade, 1) }}%
+                                    <div class="display-5 text-warning mb-2">
+                                        {{ getTransmutedGrade($lowestGrade, $selectedTableId) }}
                                     </div>
+                                    <div class="small text-warning mb-2">({{ number_format($lowestGrade, 1) }}%)</div>
                                     <h6 class="fw-bold text-warning">Lowest Grade</h6>
                                 </div>
                             </div>
@@ -1056,7 +1246,7 @@
             </div>
         </div>
     @endif
-</div>
+</div> -->
 
 @php
 function calculateAverage($grades) {
@@ -1071,6 +1261,235 @@ function calculateAverage($grades) {
     
     return $total / count($grades);
 }
+
+// Define the transmutation function based on the selected table
+function getTransmutedGrade($initialGrade, $tableType) {
+    if ($initialGrade < 0) return 60;
+    
+    // Table 1: DepEd Transmutation Table (formerly Table 4)
+    if ($tableType == 1) {
+        if ($initialGrade == 100) return 100;
+        elseif ($initialGrade >= 98.40) return 99;
+        elseif ($initialGrade >= 96.80) return 98;
+        elseif ($initialGrade >= 95.20) return 97;
+        elseif ($initialGrade >= 93.60) return 96;
+        elseif ($initialGrade >= 92.00) return 95;
+        elseif ($initialGrade >= 90.40) return 94;
+        elseif ($initialGrade >= 88.80) return 93;
+        elseif ($initialGrade >= 87.20) return 92;
+        elseif ($initialGrade >= 85.60) return 91;
+        elseif ($initialGrade >= 84.00) return 90;
+        elseif ($initialGrade >= 82.40) return 89;
+        elseif ($initialGrade >= 80.80) return 88;
+        elseif ($initialGrade >= 79.20) return 87;
+        elseif ($initialGrade >= 77.60) return 86;
+        elseif ($initialGrade >= 76.00) return 85;
+        elseif ($initialGrade >= 74.40) return 84;
+        elseif ($initialGrade >= 72.80) return 83;
+        elseif ($initialGrade >= 71.20) return 82;
+        elseif ($initialGrade >= 69.60) return 81;
+        elseif ($initialGrade >= 68.00) return 80;
+        elseif ($initialGrade >= 66.40) return 79;
+        elseif ($initialGrade >= 64.80) return 78;
+        elseif ($initialGrade >= 63.20) return 77;
+        elseif ($initialGrade >= 61.60) return 76;
+        elseif ($initialGrade >= 60.00) return 75;
+        elseif ($initialGrade >= 56.00) return 74;
+        elseif ($initialGrade >= 52.00) return 73;
+        elseif ($initialGrade >= 48.00) return 72;
+        elseif ($initialGrade >= 44.00) return 71;
+        elseif ($initialGrade >= 40.00) return 70;
+        elseif ($initialGrade >= 36.00) return 69;
+        elseif ($initialGrade >= 32.00) return 68;
+        elseif ($initialGrade >= 28.00) return 67;
+        elseif ($initialGrade >= 24.00) return 66;
+        elseif ($initialGrade >= 20.00) return 65;
+        elseif ($initialGrade >= 16.00) return 64;
+        elseif ($initialGrade >= 12.00) return 63;
+        elseif ($initialGrade >= 8.00) return 62;
+        elseif ($initialGrade >= 4.00) return 61;
+        else return 60;
+    }
+    // Table 2: Grades 1-10 and Non-Core Subjects of TVL, Sports, and Arts & Design (formerly Table 1)
+    elseif ($tableType == 2) {
+        if ($initialGrade >= 80) return 100;
+        elseif ($initialGrade >= 78.40) return 99;
+        elseif ($initialGrade >= 76.80) return 98;
+        elseif ($initialGrade >= 75.20) return 97;
+        elseif ($initialGrade >= 73.60) return 96;
+        elseif ($initialGrade >= 72.00) return 95;
+        elseif ($initialGrade >= 70.40) return 94;
+        elseif ($initialGrade >= 68.80) return 93;
+        elseif ($initialGrade >= 67.20) return 92;
+        elseif ($initialGrade >= 65.60) return 91;
+        elseif ($initialGrade >= 64.00) return 90;
+        elseif ($initialGrade >= 62.40) return 89;
+        elseif ($initialGrade >= 60.80) return 88;
+        elseif ($initialGrade >= 59.20) return 87;
+        elseif ($initialGrade >= 57.60) return 86;
+        elseif ($initialGrade >= 56.00) return 85;
+        elseif ($initialGrade >= 54.40) return 84;
+        elseif ($initialGrade >= 52.80) return 83;
+        elseif ($initialGrade >= 51.20) return 82;
+        elseif ($initialGrade >= 49.60) return 81;
+        elseif ($initialGrade >= 48.00) return 80;
+        elseif ($initialGrade >= 46.40) return 79;
+        elseif ($initialGrade >= 44.80) return 78;
+        elseif ($initialGrade >= 43.20) return 77;
+        elseif ($initialGrade >= 41.60) return 76;
+        elseif ($initialGrade >= 40.00) return 75;
+        elseif ($initialGrade >= 38.40) return 74;
+        elseif ($initialGrade >= 36.80) return 73;
+        elseif ($initialGrade >= 35.20) return 72;
+        elseif ($initialGrade >= 33.60) return 71;
+        elseif ($initialGrade >= 32.00) return 70;
+        elseif ($initialGrade >= 30.40) return 69;
+        elseif ($initialGrade >= 28.80) return 68;
+        elseif ($initialGrade >= 27.20) return 67;
+        elseif ($initialGrade >= 25.60) return 66;
+        elseif ($initialGrade >= 24.00) return 65;
+        elseif ($initialGrade >= 22.40) return 64;
+        elseif ($initialGrade >= 20.80) return 63;
+        elseif ($initialGrade >= 19.20) return 62;
+        elseif ($initialGrade >= 17.60) return 61;
+        else return 60;
+    }
+    // Table 3: For SHS Core Subjects and Work Immersion/Research/Business Enterprise/Performance (formerly Table 2)
+    elseif ($tableType == 3) {
+        if ($initialGrade >= 100) return 100;
+        elseif ($initialGrade >= 73.80) return 99;
+        elseif ($initialGrade >= 72.60) return 98;
+        elseif ($initialGrade >= 71.40) return 97;
+        elseif ($initialGrade >= 70.20) return 96;
+        elseif ($initialGrade >= 69.00) return 95;
+        elseif ($initialGrade >= 67.80) return 94;
+        elseif ($initialGrade >= 66.60) return 93;
+        elseif ($initialGrade >= 65.40) return 92;
+        elseif ($initialGrade >= 64.20) return 91;
+        elseif ($initialGrade >= 63.00) return 90;
+        elseif ($initialGrade >= 61.80) return 89;
+        elseif ($initialGrade >= 60.60) return 88;
+        elseif ($initialGrade >= 59.40) return 87;
+        elseif ($initialGrade >= 58.20) return 86;
+        elseif ($initialGrade >= 57.00) return 85;
+        elseif ($initialGrade >= 55.80) return 84;
+        elseif ($initialGrade >= 54.60) return 83;
+        elseif ($initialGrade >= 53.40) return 82;
+        elseif ($initialGrade >= 52.20) return 81;
+        elseif ($initialGrade >= 51.00) return 80;
+        elseif ($initialGrade >= 49.80) return 79;
+        elseif ($initialGrade >= 48.60) return 78;
+        elseif ($initialGrade >= 47.40) return 77;
+        elseif ($initialGrade >= 46.20) return 76;
+        elseif ($initialGrade >= 45.00) return 75;
+        elseif ($initialGrade >= 43.80) return 74;
+        elseif ($initialGrade >= 42.60) return 73;
+        elseif ($initialGrade >= 41.40) return 72;
+        elseif ($initialGrade >= 40.20) return 71;
+        elseif ($initialGrade >= 39.00) return 70;
+        elseif ($initialGrade >= 37.80) return 69;
+        elseif ($initialGrade >= 36.60) return 68;
+        elseif ($initialGrade >= 35.40) return 67;
+        elseif ($initialGrade >= 34.20) return 66;
+        elseif ($initialGrade >= 33.00) return 65;
+        elseif ($initialGrade >= 31.80) return 64;
+        elseif ($initialGrade >= 30.60) return 63;
+        elseif ($initialGrade >= 29.40) return 62;
+        elseif ($initialGrade >= 28.20) return 61;
+        else return 60;
+    }
+    // Table 4: For all other SHS Subjects in the Academic Track (formerly Table 3)
+    elseif ($tableType == 4) {
+        if ($initialGrade >= 100) return 100;
+        elseif ($initialGrade >= 68.90) return 99;
+        elseif ($initialGrade >= 67.80) return 98;
+        elseif ($initialGrade >= 66.70) return 97;
+        elseif ($initialGrade >= 65.60) return 96;
+        elseif ($initialGrade >= 64.50) return 95;
+        elseif ($initialGrade >= 63.40) return 94;
+        elseif ($initialGrade >= 62.30) return 93;
+        elseif ($initialGrade >= 61.20) return 92;
+        elseif ($initialGrade >= 60.10) return 91;
+        elseif ($initialGrade >= 59.00) return 90;
+        elseif ($initialGrade >= 57.80) return 89;
+        elseif ($initialGrade >= 56.70) return 88;
+        elseif ($initialGrade >= 55.60) return 87;
+        elseif ($initialGrade >= 54.50) return 86;
+        elseif ($initialGrade >= 53.40) return 85;
+        elseif ($initialGrade >= 52.30) return 84;
+        elseif ($initialGrade >= 51.20) return 83;
+        elseif ($initialGrade >= 50.10) return 82;
+        elseif ($initialGrade >= 49.00) return 81;
+        elseif ($initialGrade >= 47.90) return 80;
+        elseif ($initialGrade >= 46.80) return 79;
+        elseif ($initialGrade >= 45.70) return 78;
+        elseif ($initialGrade >= 44.60) return 77;
+        elseif ($initialGrade >= 43.50) return 76;
+        elseif ($initialGrade >= 42.40) return 75;
+        elseif ($initialGrade >= 41.30) return 74;
+        elseif ($initialGrade >= 40.20) return 73;
+        elseif ($initialGrade >= 39.10) return 72;
+        elseif ($initialGrade >= 34.00) return 71;
+        elseif ($initialGrade >= 28.90) return 70;
+        elseif ($initialGrade >= 23.80) return 69;
+        elseif ($initialGrade >= 19.70) return 68;
+        elseif ($initialGrade >= 17.60) return 67;
+        elseif ($initialGrade >= 15.50) return 66;
+        elseif ($initialGrade >= 13.40) return 65;
+        elseif ($initialGrade >= 11.30) return 64;
+        elseif ($initialGrade >= 9.20) return 63;
+        elseif ($initialGrade >= 7.10) return 62;
+        elseif ($initialGrade >= 5.00) return 61;
+        else return 60;
+    }
+    else {
+        // Default to table 1 (DepEd) if an invalid table type is specified
+        if ($initialGrade == 100) return 100;
+        elseif ($initialGrade >= 98.40) return 99;
+        elseif ($initialGrade >= 96.80) return 98;
+        elseif ($initialGrade >= 95.20) return 97;
+        elseif ($initialGrade >= 93.60) return 96;
+        elseif ($initialGrade >= 92.00) return 95;
+        elseif ($initialGrade >= 90.40) return 94;
+        elseif ($initialGrade >= 88.80) return 93;
+        elseif ($initialGrade >= 87.20) return 92;
+        elseif ($initialGrade >= 85.60) return 91;
+        elseif ($initialGrade >= 84.00) return 90;
+        elseif ($initialGrade >= 82.40) return 89;
+        elseif ($initialGrade >= 80.80) return 88;
+        elseif ($initialGrade >= 79.20) return 87;
+        elseif ($initialGrade >= 77.60) return 86;
+        elseif ($initialGrade >= 76.00) return 85;
+        elseif ($initialGrade >= 74.40) return 84;
+        elseif ($initialGrade >= 72.80) return 83;
+        elseif ($initialGrade >= 71.20) return 82;
+        elseif ($initialGrade >= 69.60) return 81;
+        elseif ($initialGrade >= 68.00) return 80;
+        elseif ($initialGrade >= 66.40) return 79;
+        elseif ($initialGrade >= 64.80) return 78;
+        elseif ($initialGrade >= 63.20) return 77;
+        elseif ($initialGrade >= 61.60) return 76;
+        elseif ($initialGrade >= 60.00) return 75;
+        elseif ($initialGrade >= 56.00) return 74;
+        elseif ($initialGrade >= 52.00) return 73;
+        elseif ($initialGrade >= 48.00) return 72;
+        elseif ($initialGrade >= 44.00) return 71;
+        elseif ($initialGrade >= 40.00) return 70;
+        elseif ($initialGrade >= 36.00) return 69;
+        elseif ($initialGrade >= 32.00) return 68;
+        elseif ($initialGrade >= 28.00) return 67;
+        elseif ($initialGrade >= 24.00) return 66;
+        elseif ($initialGrade >= 20.00) return 65;
+        elseif ($initialGrade >= 16.00) return 64;
+        elseif ($initialGrade >= 12.00) return 63;
+        elseif ($initialGrade >= 8.00) return 62;
+        elseif ($initialGrade >= 4.00) return 61;
+        else return 60;
+    }
+}
+
+// Get the selected transmutation table (default to table 1)
+$selectedTransmutationTable = request('transmutation_table', 1);
 @endphp
 
 @push('scripts')
@@ -1224,6 +1643,119 @@ function printStudentReport(studentId) {
     url = url.replace('STUDENT_ID', studentId);
     window.open(url, 'studentReport', 'width=800,height=600');
 }
+
+// Add any JavaScript needed for the transmutation table functionality
+$(document).ready(function() {
+    // Existing script code
+    
+    // Update any tooltips or help text for the transmutation tables
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+
+// Add JavaScript for transmutation table locking functionality
+$(document).ready(function() {
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize the hidden input with the current dropdown value
+    updateHiddenTransmutationInput($('#transmutation_table').val());
+    
+    // Handle lock table toggle
+    $('#lock_table').change(function() {
+        const isLocked = $(this).is(':checked');
+        const tableId = $('#transmutation_table').val();
+        
+        if (isLocked) {
+            $('#transmutation_table').prop('disabled', true);
+            $('#selected_transmutation_table').val(tableId); // Ensure hidden input has the value
+            
+            // Save the locked state via AJAX
+            $.ajax({
+                url: '{{ route("teacher.grades.lock-transmutation") }}',
+                type: 'POST',
+                data: {
+                    locked: true,
+                    table_id: tableId,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Transmutation table has been locked');
+                        
+                        // Also save as preference
+                        saveTransmutationPreference(tableId);
+                    }
+                }
+            });
+        } else {
+            $('#transmutation_table').prop('disabled', false);
+            
+            // Remove the locked state via AJAX
+            $.ajax({
+                url: '{{ route("teacher.grades.lock-transmutation") }}',
+                type: 'POST',
+                data: {
+                    locked: false,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.info('Transmutation table has been unlocked');
+                    }
+                }
+            });
+        }
+    });
+    
+    // Clear lock state from session if checkbox is not checked on page load
+    if (!$('#lock_table').is(':checked')) {
+        $.ajax({
+            url: '{{ route("teacher.grades.lock-transmutation") }}',
+            type: 'POST',
+            data: {
+                locked: false,
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Enable the select field
+                    $('#transmutation_table').prop('disabled', false);
+                }
+            }
+        });
+    }
+});
+
+// Function to update the hidden input with the current transmutation table value
+function updateHiddenTransmutationInput(value) {
+    $('#selected_transmutation_table').val(value);
+}
+
+// Function to save transmutation preference
+function saveTransmutationPreference(tableId) {
+    $.ajax({
+        url: '{{ route("teacher.grades.update-transmutation-preference") }}',
+        type: 'POST',
+        data: {
+            transmutation_table: tableId,
+            _token: '{{ csrf_token() }}'
+        },
+        success: function(response) {
+            // Preference saved silently
+        }
+    });
+}
+
+// When transmutation table changes, update preference if locked
+$('#transmutation_table').change(function() {
+    const tableId = $(this).val();
+    if ($('#lock_table').is(':checked')) {
+        saveTransmutationPreference(tableId);
+    }
+});
 </script>
 @endpush
 
@@ -1316,7 +1848,10 @@ function printStudentReport(studentId) {
                                                         <td>{{ $grade->assessment_name }}</td>
                                                         <td class="text-center">
                                                             <span class="badge bg-primary">{{ $grade->score }}/{{ $grade->max_score }}</span>
-                                                            <div class="small text-muted">{{ number_format(($grade->score / $grade->max_score) * 100, 1) }}%</div>
+                                                            <div class="small text-muted">
+                                                                {{ number_format(($grade->score / $grade->max_score) * 100, 1) }}% 
+                                                                <span class="text-primary">({{ number_format((($grade->score / $grade->max_score) * 100) * ($writtenWorkPercentage / 100), 1) }}% weighted)</span>
+                                                            </div>
                                                         </td>
                                                         <td>{{ $grade->created_at->format('M d, Y') }}</td>
                                                         <td>{{ $grade->remarks ?? 'No remarks' }}</td>
@@ -1339,9 +1874,9 @@ function printStudentReport(studentId) {
                                         <p class="small text-muted mb-3">Add assessments to track student's performance</p>
                                         <a href="{{ route('teacher.grades.create', [
                                             'student_id' => $student->id, 
-                                            'subject_id' => $selectedSubject->id, 
-                                            'term' => $selectedTerm,
-                                            'grade_type' => 'written_work'
+                                    'subject_id' => $selectedSubject->id,
+                                    'term' => $selectedTerm,
+                                    'grade_type' => 'written_work'
                                         ]) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-plus-circle me-1"></i> Add Assessment
                                         </a>
@@ -1369,7 +1904,10 @@ function printStudentReport(studentId) {
                                                         <td>{{ $grade->assessment_name }}</td>
                                                         <td class="text-center">
                                                             <span class="badge bg-success">{{ $grade->score }}/{{ $grade->max_score }}</span>
-                                                            <div class="small text-muted">{{ number_format(($grade->score / $grade->max_score) * 100, 1) }}%</div>
+                                                            <div class="small text-muted">
+                                                                {{ number_format(($grade->score / $grade->max_score) * 100, 1) }}% 
+                                                                <span class="text-success">({{ number_format((($grade->score / $grade->max_score) * 100) * ($performanceTaskPercentage / 100), 1) }}% weighted)</span>
+                                                            </div>
                                                         </td>
                                                         <td>{{ $grade->created_at->format('M d, Y') }}</td>
                                                         <td>{{ $grade->remarks ?? 'No remarks' }}</td>
@@ -1392,9 +1930,9 @@ function printStudentReport(studentId) {
                                         <p class="small text-muted mb-3">Add performance tasks to track student's practical skills</p>
                                         <a href="{{ route('teacher.grades.create', [
                                             'student_id' => $student->id, 
-                                            'subject_id' => $selectedSubject->id, 
-                                            'term' => $selectedTerm,
-                                            'grade_type' => 'performance_task'
+                                    'subject_id' => $selectedSubject->id,
+                                    'term' => $selectedTerm,
+                                    'grade_type' => 'performance_task'
                                         ]) }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-plus-circle me-1"></i> Add Task
                                         </a>
@@ -1421,7 +1959,10 @@ function printStudentReport(studentId) {
                                                     <td>{{ $quarterlyAssessment->assessment_name }}</td>
                                                     <td class="text-center">
                                                         <span class="badge bg-warning">{{ $quarterlyAssessment->score }}/{{ $quarterlyAssessment->max_score }}</span>
-                                                        <div class="small text-muted">{{ number_format(($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100, 1) }}%</div>
+                                                        <div class="small text-muted">
+                                                            {{ number_format(($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100, 1) }}%
+                                                            <span class="text-warning">({{ number_format((($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100) * ($quarterlyAssessmentPercentage / 100), 1) }}% weighted)</span>
+                                                        </div>
                                                     </td>
                                                     <td>{{ $quarterlyAssessment->created_at->format('M d, Y') }}</td>
                                                     <td>{{ $quarterlyAssessment->remarks ?? 'No remarks' }}</td>
@@ -1443,17 +1984,17 @@ function printStudentReport(studentId) {
                                         <p class="small text-muted mb-3">Add quarterly assessment to evaluate overall performance</p>
                                         <a href="{{ route('teacher.grades.create', [
                                             'student_id' => $student->id, 
-                                            'subject_id' => $selectedSubject->id, 
-                                            'term' => $selectedTerm,
-                                            'grade_type' => 'quarterly'
-                                        ]) }}" class="btn btn-sm btn-warning">
+                                    'subject_id' => $selectedSubject->id,
+                                    'term' => $selectedTerm,
+                                    'grade_type' => 'quarterly'
+                                ]) }}" class="btn btn-sm btn-warning">
                                             <i class="fas fa-plus-circle me-1"></i> Add Assessment
-                                        </a>
-                                    </div>
-                                @endif
+                                </a>
                             </div>
+                                @endif
                         </div>
-                    </div>
+                                                </div>
+                                                </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                         <a href="{{ route('teacher.grades.create', [
@@ -1464,7 +2005,7 @@ function printStudentReport(studentId) {
                            class="btn btn-primary">
                             <i class="fas fa-plus-circle me-1"></i> Add New Grade
                         </a>
-                    </div>
+                                                </div>
                 </div>
             </div>
         </div>
@@ -1475,7 +2016,7 @@ function printStudentReport(studentId) {
 @if(isset($students) && count($students) > 0 && isset($students[0]['view_all']) && $students[0]['view_all'])
     @foreach($students as $studentData)
         <div class="modal fade" id="wholeGradeModal{{ $studentData['student']->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">
@@ -1483,33 +2024,188 @@ function printStudentReport(studentId) {
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-0">
                         <!-- Final Average Summary -->
-                        <div class="card mb-4 bg-light border-0 shadow-sm">
-                            <div class="card-body">
-                                @php
-                                    // Calculate the average grade across all subjects
-                                    $totalSubjectGrade = 0;
-                                    $subjectCount = count($studentData['subject_grades']);
-                                    $validSubjectCount = 0;
-                                    $calculatedSubjectFinalGrades = [];
-                                    
-                                    foreach($studentData['subject_grades'] as $subjectId => $subjectGrade) {
+                        @php
+                            // Calculate the average grade across all subjects
+                            $totalSubjectGrade = 0;
+                            $subjectCount = count($studentData['subject_grades']);
+                            $validSubjectCount = 0;
+                            $calculatedSubjectFinalGrades = [];
+                            
+                            foreach($studentData['subject_grades'] as $subjectId => $subjectGrade) {
+                                $writtenWorks = collect($subjectGrade['written_works']);
+                                $performanceTasks = collect($subjectGrade['performance_tasks']);
+                                $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
+                                
+                                // Get the actual weighted score from written works
+                                $writtenTotal = 0;
+                                $writtenMaxTotal = 0;
+                                
+                                foreach($writtenWorks as $grade) {
+                                    $writtenTotal += $grade->score;
+                                    $writtenMaxTotal += $grade->max_score;
+                                }
+                                
+                                $writtenPercentage = $writtenMaxTotal > 0 ? 
+                                    ($writtenTotal / $writtenMaxTotal) * 100 : 0;
+                                
+                                // Get the actual weighted score from performance tasks
+                                $performanceTotal = 0;
+                                $performanceMaxTotal = 0;
+                                
+                                foreach($performanceTasks as $grade) {
+                                    $performanceTotal += $grade->score;
+                                    $performanceMaxTotal += $grade->max_score;
+                                }
+                                
+                                $performancePercentage = $performanceMaxTotal > 0 ? 
+                                    ($performanceTotal / $performanceMaxTotal) * 100 : 0;
+                                
+                                // Use the actual quarterly score
+                                $quarterlyPercentage = $quarterlyAssessment ? 
+                                    ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
+                                
+                                // Get subject's grade configuration
+                                $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
+                                
+                                $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
+                                $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
+                                $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
+                                
+                                // Calculate weighted final grade for this subject
+                                $subjectFinalGrade = 0;
+                                $hasAnyComponents = false;
+                                
+                                if ($writtenPercentage > 0) {
+                                    $subjectFinalGrade += ($writtenPercentage * ($writtenWorkPercentage / 100));
+                                    $hasAnyComponents = true;
+                                }
+                                if ($performancePercentage > 0) {
+                                    $subjectFinalGrade += ($performancePercentage * ($performanceTaskPercentage / 100));
+                                    $hasAnyComponents = true;
+                                }
+                                if ($quarterlyPercentage > 0) {
+                                    $subjectFinalGrade += ($quarterlyPercentage * ($quarterlyAssessmentPercentage / 100));
+                                    $hasAnyComponents = true;
+                                }
+                                
+                                if ($hasAnyComponents) {
+                                    $calculatedSubjectFinalGrades[$subjectId] = round($subjectFinalGrade, 1);
+                                    $totalSubjectGrade += $subjectFinalGrade;
+                                    $validSubjectCount++;
+                                }
+                            }
+                            
+                            $finalAverage = $validSubjectCount > 0 ? round($totalSubjectGrade / $validSubjectCount, 1) : 0;
+                            
+                            // Get the transmuted final average
+                            $transmutedFinalAverage = getTransmutedGrade($finalAverage, $selectedTransmutationTable);
+                            
+                            // Determine grade status text
+                            $gradeStatus = 'Not Graded';
+                            $avgGradeClass = 'secondary';
+                            
+                            if ($finalAverage > 0) {
+                                if ($transmutedFinalAverage >= 90) {
+                                $avgGradeClass = 'success';
+                                $gradeStatus = 'Excellent';
+                                } elseif ($transmutedFinalAverage >= 85) {
+                                $avgGradeClass = 'primary';
+                                $gradeStatus = 'Very Good';
+                                } elseif ($transmutedFinalAverage >= 80) {
+                                $avgGradeClass = 'info';
+                                $gradeStatus = 'Good';
+                                } elseif ($transmutedFinalAverage >= 75) {
+                                $avgGradeClass = 'warning';
+                                $gradeStatus = 'Passed';
+                            } elseif ($finalAverage > 0) {
+                                $avgGradeClass = 'danger';
+                                $gradeStatus = 'Failed';
+                                }
+                            }
+                        @endphp
+                        
+                        <div class="row align-items-center m-0 p-4 border-bottom">
+                            <div class="col-md-5">
+                                <h5 class="fw-bold mb-2">Overall Academic Performance</h5>
+                                <p class="text-muted mb-0">{{ $terms[$selectedTerm] }} | Final average across {{ $validSubjectCount }} subjects</p>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <div class="bg-{{ $avgGradeClass }} bg-opacity-10 p-3 rounded-3">
+                                    <div class="display-3 fw-bold text-{{ $avgGradeClass }}">{{ $transmutedFinalAverage }}</div>
+                                    <div class="small text-muted mb-2">(Initial: {{ $finalAverage }}%)</div>
+                                    <span class="badge bg-{{ $avgGradeClass }} px-3 py-2">{{ $gradeStatus }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card shadow-sm border-0 bg-light">
+                                    <div class="card-body p-3">
+                                        <h6 class="fw-bold mb-2">Calculated using:</h6>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-book me-2 text-primary"></i>
+                                            <div>
+                                                <span class="text-muted">Subjects:</span> 
+                                                <span class="fw-bold">{{ $validSubjectCount }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                                            <div>
+                                                <span class="text-muted">Academic Term:</span> 
+                                                <span class="fw-bold">{{ $terms[$selectedTerm] }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-table me-2 text-primary"></i>
+                                            <div>
+                                                <span class="text-muted">Transmutation:</span> 
+                                                <span class="fw-bold">Table {{ $selectedTransmutationTable }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subject Grades Section -->
+                        <div class="p-4">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2">Subject Performance</h6>
+                            
+                            <div class="row">
+                                @foreach($studentData['subject_grades'] as $subjectId => $subjectGrade)
+                                    @php
+                                        // Calculate all values for this subject
                                         $writtenWorks = collect($subjectGrade['written_works']);
                                         $performanceTasks = collect($subjectGrade['performance_tasks']);
                                         $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
                                         
-                                        $writtenWorksAvg = $writtenWorks->count() > 0 ? 
-                                            $writtenWorks->average(function($grade) {
-                                                return ($grade->score / $grade->max_score) * 100;
-                                            }) : 0;
+                                        // Get the actual weighted score from written works
+                                        $writtenTotal = 0;
+                                        $writtenMaxTotal = 0;
                                         
-                                        $performanceTasksAvg = $performanceTasks->count() > 0 ? 
-                                            $performanceTasks->average(function($grade) {
-                                                return ($grade->score / $grade->max_score) * 100;
-                                            }) : 0;
+                                        foreach($writtenWorks as $grade) {
+                                            $writtenTotal += $grade->score;
+                                            $writtenMaxTotal += $grade->max_score;
+                                        }
                                         
-                                        $quarterlyScore = $quarterlyAssessment ? 
+                                        $writtenPercentage = $writtenMaxTotal > 0 ? 
+                                            ($writtenTotal / $writtenMaxTotal) * 100 : 0;
+                                        
+                                        // Get the actual weighted score from performance tasks
+                                        $performanceTotal = 0;
+                                        $performanceMaxTotal = 0;
+                                        
+                                        foreach($performanceTasks as $grade) {
+                                            $performanceTotal += $grade->score;
+                                            $performanceMaxTotal += $grade->max_score;
+                                        }
+                                        
+                                        $performancePercentage = $performanceMaxTotal > 0 ? 
+                                            ($performanceTotal / $performanceMaxTotal) * 100 : 0;
+                                        
+                                        // Use the actual quarterly score
+                                        $quarterlyPercentage = $quarterlyAssessment ? 
                                             ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
                                         
                                         // Get subject's grade configuration
@@ -1519,407 +2215,174 @@ function printStudentReport(studentId) {
                                         $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
                                         $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
                                         
-                                        // Calculate weighted final grade for this subject
-                                        $subjectFinalGrade = 0;
-                                        $hasAnyComponents = false;
-                                        
-                                        if ($writtenWorksAvg > 0) {
-                                            $subjectFinalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
-                                            $hasAnyComponents = true;
+                                        // Calculate weighted final grade
+                                        $finalGrade = 0;
+                                        if ($writtenPercentage > 0) {
+                                            $finalGrade += ($writtenPercentage * ($writtenWorkPercentage / 100));
                                         }
-                                        if ($performanceTasksAvg > 0) {
-                                            $subjectFinalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
-                                            $hasAnyComponents = true;
+                                        if ($performancePercentage > 0) {
+                                            $finalGrade += ($performancePercentage * ($performanceTaskPercentage / 100));
                                         }
-                                        if ($quarterlyScore > 0) {
-                                            $subjectFinalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
-                                            $hasAnyComponents = true;
+                                        if ($quarterlyPercentage > 0) {
+                                            $finalGrade += ($quarterlyPercentage * ($quarterlyAssessmentPercentage / 100));
                                         }
                                         
-                                        if ($hasAnyComponents) {
-                                            $totalSubjectGrade += $subjectFinalGrade;
-                                            $validSubjectCount++;
-                                            $calculatedSubjectFinalGrades[$subjectId] = round($subjectFinalGrade, 1);
+                                        $avgGrade = round($finalGrade, 1);
+                                        $transmutedGrade = getTransmutedGrade($avgGrade, $selectedTransmutationTable);
+                                        
+                                        // Grade color class
+                                        $gradeClass = 'secondary';
+                                        if ($transmutedGrade >= 90) {
+                                            $gradeClass = 'success';
+                                        } elseif ($transmutedGrade >= 80) {
+                                            $gradeClass = 'primary';
+                                        } elseif ($transmutedGrade >= 75) {
+                                            $gradeClass = 'info';
+                                        } elseif ($transmutedGrade > 0) {
+                                            $gradeClass = 'danger';
                                         }
-                                    }
-                                    
-                                    $finalAverage = $validSubjectCount > 0 ? $totalSubjectGrade / $validSubjectCount : 0;
-                                    $finalAverage = round($finalAverage, 1);
-                                    
-                                    // Grade color class and status
-                                    $avgGradeClass = 'secondary';
-                                    $gradeStatus = 'Not Graded';
-                                    
-                                    if ($finalAverage >= 90) {
-                                        $avgGradeClass = 'success';
-                                        $gradeStatus = 'Excellent';
-                                    } elseif ($finalAverage >= 85) {
-                                        $avgGradeClass = 'primary';
-                                        $gradeStatus = 'Very Good';
-                                    } elseif ($finalAverage >= 80) {
-                                        $avgGradeClass = 'info';
-                                        $gradeStatus = 'Good';
-                                    } elseif ($finalAverage >= 75) {
-                                        $avgGradeClass = 'warning';
-                                        $gradeStatus = 'Passed';
-                                    } elseif ($finalAverage > 0) {
-                                        $avgGradeClass = 'danger';
-                                        $gradeStatus = 'Failed';
-                                    }
-                                @endphp
-                                
-                                <div class="row align-items-center">
-                                    <div class="col-md-5">
-                                        <h5 class="mb-1">Overall Academic Performance</h5>
-                                        <p class="text-muted mb-0">{{ $terms[$selectedTerm] }} | Final average across {{ $validSubjectCount }} subjects</p>
-                                    </div>
-                                    <div class="col-md-4 text-center">
-                                        <div class="bg-{{ $avgGradeClass }} bg-opacity-10 py-3 rounded-3 mb-2">
-                                            <div class="display-4 fw-bold text-{{ $avgGradeClass }}">{{ $finalAverage }}%</div>
-                                            <span class="badge bg-{{ $avgGradeClass }} px-3 py-2 mt-1">{{ $gradeStatus }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="small mb-1"><i class="fas fa-book me-2 text-muted"></i> <span class="text-muted">Total Subjects:</span> <span class="fw-bold">{{ $subjectCount }}</span></div>
-                                        <div class="small mb-1"><i class="fas fa-check-circle me-2 text-muted"></i> <span class="text-muted">Graded Subjects:</span> <span class="fw-bold">{{ $validSubjectCount }}</span></div>
-                                        <div class="small"><i class="fas fa-calendar-alt me-2 text-muted"></i> <span class="text-muted">Academic Term:</span> <span class="fw-bold">{{ $terms[$selectedTerm] }}</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Grade Distribution Chart -->
-                        <div class="card mb-4 border-0 shadow-sm">
-                            <div class="card-header bg-white">
-                                <h6 class="mb-0 fw-bold">Grade Distribution by Subject</h6>
-                            </div>
-                            <div class="card-body pb-0">
-                                <div class="row">
-                                    @foreach($studentData['subject_grades'] as $subjectId => $subjectGrade)
-                                        @php
-                                            // Calculate all values for this subject
-                                            $writtenWorks = collect($subjectGrade['written_works']);
-                                            $performanceTasks = collect($subjectGrade['performance_tasks']);
-                                            $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
-                                            
-                                            $writtenWorksAvg = $writtenWorks->count() > 0 ? 
-                                                $writtenWorks->average(function($grade) {
-                                                    return ($grade->score / $grade->max_score) * 100;
-                                                }) : 0;
-                                            
-                                            $performanceTasksAvg = $performanceTasks->count() > 0 ? 
-                                                $performanceTasks->average(function($grade) {
-                                                    return ($grade->score / $grade->max_score) * 100;
-                                                }) : 0;
-                                            
-                                            $quarterlyScore = $quarterlyAssessment ? 
-                                                ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                            
-                                            // Get subject's grade configuration
-                                            $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
-                                            
-                                            $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
-                                            $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
-                                            $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
-                                            
-                                            // Calculate weighted final grade
-                                            $finalGrade = 0;
-                                            if ($writtenWorksAvg > 0) {
-                                                $finalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
-                                            }
-                                            if ($performanceTasksAvg > 0) {
-                                                $finalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
-                                            }
-                                            if ($quarterlyScore > 0) {
-                                                $finalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
-                                            }
-                                            
-                                            $avgGrade = round($finalGrade, 1);
-                                            
-                                            // Grade color class
-                                            $gradeClass = 'secondary';
-                                            if ($avgGrade >= 90) {
-                                                $gradeClass = 'success';
-                                            } elseif ($avgGrade >= 80) {
-                                                $gradeClass = 'primary';
-                                            } elseif ($avgGrade >= 70) {
-                                                $gradeClass = 'info';
-                                            } elseif ($avgGrade >= 60) {
-                                                $gradeClass = 'warning';
-                                            } elseif ($avgGrade > 0) {
-                                                $gradeClass = 'danger';
-                                            }
-
-                                            $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
-                                        @endphp
-                                        
-                                        <div class="col-md-6 mb-4">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <h6 class="mb-0 flex-grow-1">{{ $subjectGrade['subject_name'] }}</h6>
+                                        $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
+                                    @endphp
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card shadow-sm h-100">
+                                            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0 fw-bold">{{ $subjectGrade['subject_name'] }}</h6>
                                                 @if($hasGrades)
-                                                    <span class="badge bg-{{ $gradeClass }} px-2">{{ $avgGrade }}%</span>
+                                                    <span class="badge bg-{{ $gradeClass }} px-3 py-2">{{ $transmutedGrade }}</span>
                                                 @else
-                                                    <span class="badge bg-secondary px-2">Not Graded</span>
+                                                    <span class="badge bg-secondary px-3 py-2">Not Graded</span>
                                                 @endif
                                             </div>
-                                            
-                                            <div class="mb-3 position-relative">
-                                                <div class="d-flex justify-content-between small mb-1">
-                                                    <span>Written ({{ $writtenWorkPercentage }}%)</span>
-                                                    <span>Performance ({{ $performanceTaskPercentage }}%)</span>
-                                                    <span>Quarterly ({{ $quarterlyAssessmentPercentage }}%)</span>
-                                                </div>
-                                                <div class="progress rounded-0" style="height: 24px;">
-                                                    @if($hasGrades)
-                                                        <div class="progress-bar bg-primary" role="progressbar" 
-                                                            style="width: {{ $writtenWorksAvg > 0 ? ($writtenWorksAvg * $writtenWorkPercentage) / 100 : 0 }}%;" 
-                                                            aria-valuenow="{{ $writtenWorksAvg }}" aria-valuemin="0" aria-valuemax="100">
-                                                            {{ number_format($writtenWorksAvg, 0) }}%
-                                                        </div>
-                                                        <div class="progress-bar bg-success" role="progressbar" 
-                                                            style="width: {{ $performanceTasksAvg > 0 ? ($performanceTasksAvg * $performanceTaskPercentage) / 100 : 0 }}%;" 
-                                                            aria-valuenow="{{ $performanceTasksAvg }}" aria-valuemin="0" aria-valuemax="100">
-                                                            {{ number_format($performanceTasksAvg, 0) }}%
-                                                        </div>
-                                                        <div class="progress-bar bg-warning" role="progressbar" 
-                                                            style="width: {{ $quarterlyScore > 0 ? ($quarterlyScore * $quarterlyAssessmentPercentage) / 100 : 0 }}%;" 
-                                                            aria-valuenow="{{ $quarterlyScore }}" aria-valuemin="0" aria-valuemax="100">
-                                                            {{ number_format($quarterlyScore, 0) }}%
-                                                        </div>
-                                                    @else
-                                                        <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%">No grades recorded</div>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Subject Details -->
-                        <div class="accordion" id="subjectAccordion{{ $studentData['student']->id }}">
-                            @foreach($studentData['subject_grades'] as $subjectId => $subjectGrade)
-                                @php
-                                    // Calculate all values for this subject
-                                    $writtenWorks = collect($subjectGrade['written_works']);
-                                    $performanceTasks = collect($subjectGrade['performance_tasks']);
-                                    $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
-                                    
-                                    $writtenWorksAvg = $writtenWorks->count() > 0 ? 
-                                        $writtenWorks->average(function($grade) {
-                                            return ($grade->score / $grade->max_score) * 100;
-                                        }) : 0;
-                                    
-                                    $performanceTasksAvg = $performanceTasks->count() > 0 ? 
-                                        $performanceTasks->average(function($grade) {
-                                            return ($grade->score / $grade->max_score) * 100;
-                                        }) : 0;
-                                    
-                                    $quarterlyScore = $quarterlyAssessment ? 
-                                        ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                    
-                                    // Get subject's grade configuration
-                                    $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
-                                    
-                                    $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
-                                    $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
-                                    $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
-                                    
-                                    // Calculate weighted final grade
-                                    $finalGrade = 0;
-                                    if ($writtenWorksAvg > 0) {
-                                        $finalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
-                                    }
-                                    if ($performanceTasksAvg > 0) {
-                                        $finalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
-                                    }
-                                    if ($quarterlyScore > 0) {
-                                        $finalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
-                                    }
-                                    
-                                    $avgGrade = round($finalGrade, 1);
-                                    
-                                    // Grade color class
-                                    $gradeClass = 'secondary';
-                                    if ($avgGrade >= 90) {
-                                        $gradeClass = 'success';
-                                    } elseif ($avgGrade >= 80) {
-                                        $gradeClass = 'primary';
-                                    } elseif ($avgGrade >= 70) {
-                                        $gradeClass = 'info';
-                                    } elseif ($avgGrade >= 60) {
-                                        $gradeClass = 'warning';
-                                    } elseif ($avgGrade > 0) {
-                                        $gradeClass = 'danger';
-                                    }
-
-                                    $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
-                                @endphp
-                                
-                                <div class="accordion-item border mb-3 rounded shadow-sm">
-                                    <h2 class="accordion-header" id="heading{{ $subjectId }}">
-                                        <button class="accordion-button collapsed" type="button" 
-                                                data-bs-toggle="collapse" 
-                                                data-bs-target="#collapse{{ $subjectId }}{{ $studentData['student']->id }}" 
-                                                aria-expanded="false" 
-                                                aria-controls="collapse{{ $subjectId }}{{ $studentData['student']->id }}">
-                                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                                <span class="fw-bold">{{ $subjectGrade['subject_name'] }}</span>
+                                            <div class="card-body">
                                                 @if($hasGrades)
-                                                    <span class="badge bg-{{ $gradeClass }} ms-2">{{ $avgGrade }}%</span>
+                                                    <div class="d-flex justify-content-around mb-3">
+                                                        <div class="text-center">
+                                                            <div class="small fw-bold text-primary mb-1">Written</div>
+                                                            <div class="badge bg-light text-dark border px-2 py-1">
+                                                                @php
+                                                                    // Get the actual weighted score from written works
+                                                                    $writtenTotal = 0;
+                                                                    $writtenMaxTotal = 0;
+                                                                    
+                                                                    foreach($writtenWorks as $grade) {
+                                                                        $writtenTotal += $grade->score;
+                                                                        $writtenMaxTotal += $grade->max_score;
+                                                                    }
+                                                                    
+                                                                    $writtenPercentage = $writtenMaxTotal > 0 ? 
+                                                                        ($writtenTotal / $writtenMaxTotal) * 100 : 0;
+                                                                    
+                                                                    // Format to match the individual subject view
+                                                                    echo number_format($writtenPercentage, 1);
+                                                                @endphp%
+                                                            </div>
+                                                            <div class="small text-muted">{{ $writtenWorkPercentage }}% weight</div>
+                                                        </div>
+                                                        <div class="text-center">
+                                                            <div class="small fw-bold text-success mb-1">Performance</div>
+                                                            <div class="badge bg-light text-dark border px-2 py-1">
+                                                                @php
+                                                                    // Get the actual weighted score from performance tasks
+                                                                    $performanceTotal = 0;
+                                                                    $performanceMaxTotal = 0;
+                                                                    
+                                                                    foreach($performanceTasks as $grade) {
+                                                                        $performanceTotal += $grade->score;
+                                                                        $performanceMaxTotal += $grade->max_score;
+                                                                    }
+                                                                    
+                                                                    $performancePercentage = $performanceMaxTotal > 0 ? 
+                                                                        ($performanceTotal / $performanceMaxTotal) * 100 : 0;
+                                                                    
+                                                                    // Format to match the individual subject view
+                                                                    echo number_format($performancePercentage, 1);
+                                                                @endphp%
+                                                            </div>
+                                                            <div class="small text-muted">{{ $performanceTaskPercentage }}% weight</div>
+                                                        </div>
+                                                        <div class="text-center">
+                                                            <div class="small fw-bold text-warning mb-1">Quarterly</div>
+                                                            <div class="badge bg-light text-dark border px-2 py-1">
+                                                                @php
+                                                                    // Use the actual quarterly score
+                                                                    $quarterlyPercentage = $quarterlyAssessment ? 
+                                                                        ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
+                                                                    
+                                                                    // Format to match the individual subject view
+                                                                    echo number_format($quarterlyPercentage, 1);
+                                                                @endphp%
+                                                            </div>
+                                                            <div class="small text-muted">{{ $quarterlyAssessmentPercentage }}% weight</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted">Initial Grade:</span>
+                                                        <span class="fw-bold">{{ $avgGrade }}%</span>
+                                                    </div>
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-muted">Transmuted (Table {{ $selectedTransmutationTable }}):</span>
+                                                        <span class="fw-bold text-{{ $gradeClass }}">{{ $transmutedGrade }}</span>
+                                                    </div>
                                                 @else
-                                                    <span class="badge bg-secondary ms-2">Not Graded</span>
+                                                    <div class="text-center text-muted py-3">
+                                                        <i class="fas fa-exclamation-circle mb-2" style="font-size: 2rem;"></i>
+                                                        <p class="mb-0">No grades have been entered for this subject.</p>
+                                                    </div>
                                                 @endif
                                             </div>
-                                        </button>
-                                    </h2>
-                                    <div id="collapse{{ $subjectId }}{{ $studentData['student']->id }}" class="accordion-collapse collapse" 
-                                         aria-labelledby="heading{{ $subjectId }}" 
-                                         data-bs-parent="#subjectAccordion{{ $studentData['student']->id }}">
-                                        <div class="accordion-body">
-                                            <div class="row mb-3">
-                                                <div class="col-md-4">
-                                                    <div class="card h-100 shadow-sm border-primary border-opacity-25">
-                                                        <div class="card-header bg-primary bg-opacity-10 py-2">
-                                                            <h6 class="mb-0 text-primary">Written Works</h6>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <div class="text-center mb-3">
-                                                                <span class="h3">{{ number_format($writtenWorksAvg, 1) }}%</span>
-                                                                <div class="small text-muted">{{ $writtenWorkPercentage }}% of final grade</div>
-                                                            </div>
-                                                            <div class="table-responsive">
-                                                                <table class="table table-sm">
-                                                                    <thead class="table-light">
-                                                                        <tr>
-                                                                            <th>Assessment</th>
-                                                                            <th class="text-end">Score</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @if($writtenWorks->count() > 0)
-                                                                            @foreach($writtenWorks as $grade)
-                                                                                <tr>
-                                                                                    <td>{{ $grade->assessment_name }}</td>
-                                                                                    <td class="text-end">
-                                                                                        {{ $grade->score }}/{{ $grade->max_score }}
-                                                                                        <div class="small text-muted">{{ number_format(($grade->score / $grade->max_score) * 100, 1) }}%</div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            @endforeach
-                                                                        @else
-                                                                            <tr>
-                                                                                <td colspan="2" class="text-center text-muted">No written works recorded</td>
-                                                                            </tr>
-                                                                        @endif
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="col-md-4">
-                                                    <div class="card h-100 shadow-sm border-success border-opacity-25">
-                                                        <div class="card-header bg-success bg-opacity-10 py-2">
-                                                            <h6 class="mb-0 text-success">Performance Tasks</h6>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <div class="text-center mb-3">
-                                                                <span class="h3">{{ number_format($performanceTasksAvg, 1) }}%</span>
-                                                                <div class="small text-muted">{{ $performanceTaskPercentage }}% of final grade</div>
-                                                            </div>
-                                                            <div class="table-responsive">
-                                                                <table class="table table-sm">
-                                                                    <thead class="table-light">
-                                                                        <tr>
-                                                                            <th>Assessment</th>
-                                                                            <th class="text-end">Score</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @if($performanceTasks->count() > 0)
-                                                                            @foreach($performanceTasks as $grade)
-                                                                                <tr>
-                                                                                    <td>{{ $grade->assessment_name }}</td>
-                                                                                    <td class="text-end">
-                                                                                        {{ $grade->score }}/{{ $grade->max_score }}
-                                                                                        <div class="small text-muted">{{ number_format(($grade->score / $grade->max_score) * 100, 1) }}%</div>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            @endforeach
-                                                                        @else
-                                                                            <tr>
-                                                                                <td colspan="2" class="text-center text-muted">No performance tasks recorded</td>
-                                                                            </tr>
-                                                                        @endif
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="col-md-4">
-                                                    <div class="card h-100 shadow-sm border-warning border-opacity-25">
-                                                        <div class="card-header bg-warning bg-opacity-10 py-2">
-                                                            <h6 class="mb-0 text-warning">Quarterly Assessment</h6>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <div class="text-center mb-3">
-                                                                <span class="h3">{{ number_format($quarterlyScore, 1) }}%</span>
-                                                                <div class="small text-muted">{{ $quarterlyAssessmentPercentage }}% of final grade</div>
-                                                            </div>
-                                                            <div class="table-responsive">
-                                                                <table class="table table-sm">
-                                                                    <thead class="table-light">
-                                                                        <tr>
-                                                                            <th>Assessment</th>
-                                                                            <th class="text-end">Score</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @if($quarterlyAssessment)
-                                                                            <tr>
-                                                                                <td>{{ $quarterlyAssessment->assessment_name }}</td>
-                                                                                <td class="text-end">
-                                                                                    {{ $quarterlyAssessment->score }}/{{ $quarterlyAssessment->max_score }}
-                                                                                    <div class="small text-muted">{{ number_format(($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100, 1) }}%</div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        @else
-                                                                            <tr>
-                                                                                <td colspan="2" class="text-center text-muted">No quarterly assessment recorded</td>
-                                                                            </tr>
-                                                                        @endif
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @if($hasGrades)
-                                                <div class="alert alert-info mt-3 mb-0">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="me-3"><i class="fas fa-calculator text-primary"></i></div>
-                                                        <div>
-                                                            <strong>Final Grade Calculation</strong>
-                                                            <p class="mb-0">
-                                                                (Written {{ number_format($writtenWorksAvg, 1) }}% × {{ $writtenWorkPercentage }}%) + 
-                                                                (Performance {{ number_format($performanceTasksAvg, 1) }}% × {{ $performanceTaskPercentage }}%) + 
-                                                                (Quarterly {{ number_format($quarterlyScore, 1) }}% × {{ $quarterlyAssessmentPercentage }}%) = 
-                                                                <strong>{{ $avgGrade }}%</strong>
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        
+                        <!-- Grade Calculation Section -->
+                        <div class="p-4 bg-light border-top">
+                            <h6 class="fw-bold mb-3">Grade Calculation Details</h6>
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-primary mb-2"><i class="fas fa-calculator me-2"></i>Initial Grade:</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless">
+                                                <thead class="text-muted">
+                                                    <tr>
+                                                        <th>Subject</th>
+                                                        <th>Initial Grade</th>
+                                                        <th>Weight</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($calculatedSubjectFinalGrades as $subjectId => $grade)
+                                                        <tr>
+                                                            <td>{{ $studentData['subject_grades'][$subjectId]['subject_name'] }}</td>
+                                                            <td>{{ $grade }}%</td>
+                                                            <td>{{ number_format(100/$validSubjectCount, 1) }}%</td>
+                                                        </tr>
+                                                    @endforeach
+                                                    <tr class="fw-bold border-top">
+                                                        <td colspan="2" class="text-end">Final Initial Grade:</td>
+                                                        <td>{{ $finalAverage }}%</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <h6 class="text-primary mb-2"><i class="fas fa-exchange-alt me-2"></i>Transmutation (Table {{ $selectedTransmutationTable }}):</h6>
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <div class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2 fs-5">{{ $finalAverage }}%</div>
+                                            <i class="fas fa-long-arrow-alt-right mx-3 text-muted"></i>
+                                            <div class="badge bg-{{ $avgGradeClass }} px-3 py-2 fs-5">{{ $transmutedFinalAverage }}</div>
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

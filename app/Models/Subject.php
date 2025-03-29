@@ -24,6 +24,9 @@ class Subject extends Model
         'description',
         'school_id',
         'is_active',
+        'parent_subject_id',
+        'is_component',
+        'component_weight',
     ];
 
     /**
@@ -33,6 +36,8 @@ class Subject extends Model
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'is_component' => 'boolean',
+        'component_weight' => 'decimal:2',
     ];
 
     /**
@@ -78,6 +83,163 @@ class Subject extends Model
     {
         return $this->hasMany(Grade::class);
     }
+    
+    /**
+     * Get parent subject for this component.
+     */
+    public function parentSubject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'parent_subject_id');
+    }
+
+    /**
+     * Get component subjects for this parent subject.
+     */
+    public function components(): HasMany
+    {
+        return $this->hasMany(Subject::class, 'parent_subject_id');
+    }
+    
+    /**
+     * Check if this is a MAPEH subject
+     */
+    public function getIsMAPEHAttribute(): bool
+    {
+        // Check if this subject has component subjects that match MAPEH components
+        if ($this->is_component) {
+            return false;
+        }
+        
+        $components = $this->components;
+        
+        if ($components->count() !== 4) {
+            return false;
+        }
+        
+        $componentNames = $components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+        $requiredComponents = ['music', 'arts', 'physical education', 'health'];
+        
+        foreach ($requiredComponents as $component) {
+            if (!in_array($component, $componentNames) && 
+                !in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Get the computed final grade for this subject for a student
+     */
+    public function computeFinalGradeForStudent($studentId, $term)
+    {
+        if ($this->is_component) {
+            // Regular component-level grade calculation
+            return $this->calculateSubjectGrade($studentId, $term);
+        }
+
+        if ($this->getIsMAPEHAttribute()) {
+            // Weighted average of component grades
+            $components = $this->components;
+            $totalWeightedGrade = 0;
+            $totalWeight = 0;
+            
+            foreach ($components as $component) {
+                $componentGrade = $component->calculateSubjectGrade($studentId, $term);
+                if ($componentGrade !== null) {
+                    $totalWeightedGrade += ($componentGrade * $component->component_weight);
+                    $totalWeight += $component->component_weight;
+                }
+            }
+            
+            return $totalWeight > 0 ? ($totalWeightedGrade / $totalWeight) : null;
+        }
+        
+        // Regular subject grade calculation
+        return $this->calculateSubjectGrade($studentId, $term);
+    }
+    
+    /**
+     * Calculate regular grade for a subject
+     */
+    private function calculateSubjectGrade($studentId, $term)
+    {
+        // Get all grades for this student, subject, and term
+        $grades = $this->grades()
+            ->where('student_id', $studentId)
+            ->where('term', $term)
+            ->get();
+            
+        // Return null if no grades found
+        if ($grades->isEmpty()) {
+            return null;
+        }
+        
+        // Get grade configuration for this subject
+        $config = $this->gradeConfiguration;
+        
+        if (!$config) {
+            // Use default configuration if not set
+            $ww = 0.30; // Written work - 30%
+            $pt = 0.50; // Performance task - 50%
+            $qa = 0.20; // Quarterly assessment - 20%
+        } else {
+            $ww = $config->written_work_percentage / 100;
+            $pt = $config->performance_task_percentage / 100;
+            $qa = $config->quarterly_assessment_percentage / 100;
+        }
+        
+        // Group grades by type
+        $writtenWorks = $grades->where('grade_type', 'written_work');
+        $performanceTasks = $grades->where('grade_type', 'performance_task');
+        $quarterlyAssessments = $grades->where('grade_type', 'quarterly_assessment');
+        
+        // Calculate average for each component
+        $wwAvg = $this->calculateComponentAverage($writtenWorks);
+        $ptAvg = $this->calculateComponentAverage($performanceTasks);
+        $qaAvg = $this->calculateComponentAverage($quarterlyAssessments);
+        
+        // Calculate weighted final grade
+        $finalGrade = 0;
+        $weightSum = 0;
+        
+        if ($wwAvg !== null) {
+            $finalGrade += $wwAvg * $ww;
+            $weightSum += $ww;
+        }
+        
+        if ($ptAvg !== null) {
+            $finalGrade += $ptAvg * $pt;
+            $weightSum += $pt;
+        }
+        
+        if ($qaAvg !== null) {
+            $finalGrade += $qaAvg * $qa;
+            $weightSum += $qa;
+        }
+        
+        // Return final grade (normalized if not all components are present)
+        return $weightSum > 0 ? ($finalGrade / $weightSum) : null;
+    }
+    
+    /**
+     * Calculate the average for a specific grade component
+     */
+    private function calculateComponentAverage($grades)
+    {
+        if ($grades->isEmpty()) {
+            return null;
+        }
+        
+        $totalPercentage = 0;
+        
+        foreach ($grades as $grade) {
+            $totalPercentage += ($grade->score / $grade->max_score) * 100;
+        }
+        
+        return $totalPercentage / $grades->count();
+    }
 
     /**
      * Scope a query to only include active subjects.
@@ -101,5 +263,23 @@ class Subject extends Model
     public function scopeFromSchool($query, $schoolId)
     {
         return $query->where('school_id', $schoolId);
+    }
+    
+    /**
+     * Scope a query to only include parent subjects (not components).
+     */
+    public function scopeParentOnly($query)
+    {
+        return $query->where('is_component', false);
+    }
+    
+    /**
+     * Scope a query to only include MAPEH subjects.
+     */
+    public function scopeMAPEH($query)
+    {
+        return $query->whereHas('components', function($q) {
+            $q->whereIn('name', ['Music', 'Arts', 'Physical Education', 'Health']);
+        })->where('is_component', false);
     }
 }

@@ -82,6 +82,11 @@ class SubjectController extends Controller
                 'code' => 'nullable|string|max:50',
                 'description' => 'nullable|string',
                 'grade_level' => 'nullable|string',
+                'is_mapeh' => 'nullable|boolean',
+                'music_weight' => 'nullable|numeric|min:0|max:100',
+                'arts_weight' => 'nullable|numeric|min:0|max:100',
+                'pe_weight' => 'nullable|numeric|min:0|max:100',
+                'health_weight' => 'nullable|numeric|min:0|max:100',
             ]);
             
             Log::info('Creating new subject', ['data' => $validated]);
@@ -105,9 +110,15 @@ class SubjectController extends Controller
                 'grade_level' => $gradeLevel,
                 'school_id' => Auth::user()->school_id,
                 'is_active' => true,
+                'is_component' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            
+            // If this is a MAPEH subject, create its components
+            if ($request->filled('is_mapeh') && $request->is_mapeh) {
+                $this->createMAPEHComponents($subjectId, $request);
+            }
             
             // Log success
             Log::info('Subject created successfully', ['subject_id' => $subjectId]);
@@ -129,6 +140,74 @@ class SubjectController extends Controller
             
             return back()->withInput()
                 ->with('error', 'Failed to create subject: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create MAPEH component subjects
+     */
+    private function createMAPEHComponents($parentSubjectId, Request $request)
+    {
+        // Default weights
+        $weights = [
+            'music' => $request->filled('music_weight') ? $request->music_weight : 25,
+            'arts' => $request->filled('arts_weight') ? $request->arts_weight : 25,
+            'pe' => $request->filled('pe_weight') ? $request->pe_weight : 25,
+            'health' => $request->filled('health_weight') ? $request->health_weight : 25,
+        ];
+        
+        // Normalize weights to ensure they sum to 100%
+        $totalWeight = array_sum($weights);
+        if ($totalWeight != 100) {
+            foreach ($weights as $key => $weight) {
+                $weights[$key] = ($weight / $totalWeight) * 100;
+            }
+        }
+        
+        // Create the component subjects
+        $components = [
+            [
+                'name' => 'Music',
+                'code' => 'MUSIC',
+                'description' => 'Music component of MAPEH',
+                'weight' => $weights['music']
+            ],
+            [
+                'name' => 'Arts',
+                'code' => 'ARTS',
+                'description' => 'Arts component of MAPEH',
+                'weight' => $weights['arts']
+            ],
+            [
+                'name' => 'Physical Education',
+                'code' => 'PE',
+                'description' => 'Physical Education component of MAPEH',
+                'weight' => $weights['pe']
+            ],
+            [
+                'name' => 'Health',
+                'code' => 'HEALTH',
+                'description' => 'Health component of MAPEH',
+                'weight' => $weights['health']
+            ]
+        ];
+        
+        $parentSubject = Subject::find($parentSubjectId);
+        
+        foreach ($components as $component) {
+            DB::table('subjects')->insert([
+                'name' => $component['name'],
+                'code' => $component['code'],
+                'description' => $component['description'],
+                'grade_level' => $parentSubject->grade_level,
+                'school_id' => Auth::user()->school_id,
+                'is_active' => true,
+                'is_component' => true,
+                'parent_subject_id' => $parentSubjectId,
+                'component_weight' => $component['weight'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 

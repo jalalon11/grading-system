@@ -5,12 +5,12 @@
     <!-- Welcome Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-sm bg-gradient-primary text-white">
+            <div class="card border-0 shadow-sm bg-primary bg-gradient text-white">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
                             <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-3">
-                                <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                            <i class="fas fa-chalkboard-teacher fa-2x"></i>
                             </div>
                             <div>
                                 <h2 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}</h2>
@@ -18,8 +18,8 @@
                             </div>
                         </div>
                         <div>
-                            <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light btn-lg">
-                                <i class="fas fa-clipboard-list me-2"></i> Take Today's Attendance
+                        <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-plus-circle me-2"></i> Create New Section
                             </a>
                         </div>
                     </div>
@@ -246,14 +246,14 @@
                     <h5 class="mb-0"><i class="fas fa-chart-bar text-info me-2"></i> Student Performance Metrics</h5>
                     <select class="form-select form-select-sm" style="width: auto;" id="performanceMetricSection">
                         @foreach($recentSections as $section)
-                            <option value="{{ $section->id }}">{{ $section->name }}</option>
+                            <option value="{{ $section->id }}">{{ $section->name }} (Adviser)</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="card-body p-0">
                     @if($recentSections->count() > 0)
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
+                            <table class="table table-hover align-middle mb-0 student-performance-table">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-4">Top Students</th>
@@ -295,7 +295,22 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @php $rating = $student->performance_rating ?? 0; $stars = min(5, max(1, round($rating / 20))); @endphp
+                                                    @php 
+                                                        $score = $student->grades_avg_score ?? 0;
+                                                        $stars = 0;
+                                                        
+                                                        if ($score >= 94) {
+                                                            $stars = 5;
+                                                        } elseif ($score >= 87) {
+                                                            $stars = 4;
+                                                        } elseif ($score >= 82) {
+                                                            $stars = 3;
+                                                        } elseif ($score >= 78) {
+                                                            $stars = 2;
+                                                        } elseif ($score >= 75) {
+                                                            $stars = 1;
+                                                        }
+                                                    @endphp
                                                     @for($j = 1; $j <= 5; $j++)
                                                         <i class="fas fa-star {{ $j <= $stars ? 'text-warning' : 'text-muted' }} me-1"></i>
                                                     @endfor
@@ -513,6 +528,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Define API routes
+        const attendanceDataUrl = "{{ route('teacher.dashboard.attendance-data') }}";
+        const performanceDataUrl = "{{ route('teacher.dashboard.performance-data') }}";
+        
         // Initialize Attendance Chart
         const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
         const attendanceChart = new Chart(attendanceCtx, {
@@ -643,7 +662,7 @@
                 const sectionId = sectionSelect ? sectionSelect.value : null;
                 
                 // Fetch attendance data by period via AJAX
-                fetch(`/teacher/dashboard/attendance-data?period=${period}${sectionId ? '&section_id='+sectionId : ''}`)
+                fetch(`${attendanceDataUrl}?period=${period}${sectionId ? '&section_id='+sectionId : ''}`)
                     .then(response => response.json())
                     .then(data => {
                         // Update chart with real data
@@ -670,9 +689,29 @@
                 const activePeriodBtn = document.querySelector('.attendance-period-btn.active');
                 const period = activePeriodBtn ? activePeriodBtn.dataset.period : 'week';
                 
+                // Show loading state
+                const performanceTable = document.querySelector('.student-performance-table tbody');
+                if (performanceTable) {
+                    performanceTable.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center py-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 mb-0">Loading student data...</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
                 // Fetch attendance data for the selected section
-                fetch(`/teacher/dashboard/attendance-data?period=${period}&section_id=${sectionId}`)
-                    .then(response => response.json())
+                fetch(`${attendanceDataUrl}?period=${period}&section_id=${sectionId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         // Update chart with section-specific data
                         attendanceChart.data.labels = data.labels;
@@ -686,14 +725,129 @@
                     });
                 
                 // Also update the student performance metrics table
-                fetch(`/teacher/dashboard/performance-data?section_id=${sectionId}`)
-                    .then(response => response.json())
+                fetch(`${performanceDataUrl}?section_id=${sectionId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        // Debug log to check response structure
+                        console.log('Performance data response:', data);
+                        
                         // Update the student performance table with new data
-                        // This will be handled by the backend already returning the right view
+                        if (performanceTable && data.students && data.students.length > 0) {
+                            let tableHTML = '';
+                            data.students.forEach(student => {
+                                // Calculate stars based on new grading scale
+                                let stars = 0;
+                                const score = student.grades_avg_score || 0;
+                                
+                                if (score >= 94) {
+                                    stars = 5;
+                                } else if (score >= 87) {
+                                    stars = 4;
+                                } else if (score >= 82) {
+                                    stars = 3;
+                                } else if (score >= 78) {
+                                    stars = 2;
+                                } else if (score >= 75) {
+                                    stars = 1;
+                                }
+                                
+                                // Generate star icons
+                                let starsHTML = '';
+                                for (let i = 1; i <= 5; i++) {
+                                    starsHTML += `<i class="fas fa-star ${i <= stars ? 'text-warning' : 'text-muted'} me-1"></i>`;
+                                }
+                                
+                                // Determine grade badge color
+                                let badgeClass = 'bg-danger';
+                                if (score >= 90) badgeClass = 'bg-success';
+                                else if (score >= 80) badgeClass = 'bg-primary';
+                                else if (score >= 70) badgeClass = 'bg-info';
+                                else if (score >= 60) badgeClass = 'bg-warning';
+                                
+                                // Add row to table
+                                tableHTML += `
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-container me-2">
+                                                    <span class="avatar bg-primary text-white rounded-circle" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                                        ${student.first_name ? student.first_name.substring(0, 1) : 'S'}${student.last_name ? student.last_name.substring(0, 1) : ''}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">${student.first_name || 'Student'} ${student.last_name || ''}</div>
+                                                    <small class="text-muted">ID: ${student.student_id || 'N/A'}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge ${badgeClass} rounded-pill px-3 py-2">
+                                                ${student.grades_avg_score ? student.grades_avg_score.toFixed(1) : '0.0'}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="performance-progress progress-taller">
+                                                    <div class="progress-bar bg-success" role="progressbar" aria-valuenow="${student.attendance_rate || 0}" aria-valuemin="0" aria-valuemax="100" style="width: ${student.attendance_rate || 0}%"></div>
+                                                </div>
+                                                <span class="text-muted small">${student.attendance_rate || 0}%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                ${starsHTML}
+                                            </div>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <a href="/teacher/students/${student.id}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                            performanceTable.innerHTML = tableHTML;
+                        } else if (performanceTable) {
+                            performanceTable.innerHTML = `
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="py-5">
+                                            <div class="avatar bg-light rounded-circle mx-auto mb-3" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-user-graduate text-muted fa-2x"></i>
+                                            </div>
+                                            <h6 class="text-muted">No student performance data available</h6>
+                                            <p class="text-muted small mb-3">Add grades for students to see performance metrics</p>
+                                            <a href="{{ route('teacher.grades.create') }}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-plus-circle me-1"></i> Add Grades
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching performance data:', error);
+                        if (performanceTable) {
+                            performanceTable.innerHTML = `
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="py-5">
+                                            <div class="avatar bg-light rounded-circle mx-auto mb-3" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-exclamation-triangle text-danger fa-2x"></i>
+                                            </div>
+                                            <h6 class="text-danger">Error loading data</h6>
+                                            <p class="text-muted small mb-3">There was a problem fetching student performance data: ${error.message}</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }
                     });
             });
         }
