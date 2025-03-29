@@ -25,33 +25,43 @@ class DashboardController extends Controller
             $advisedSections = Section::where('adviser_id', $user->id)->get();
             $sectionIds = $advisedSections->pluck('id')->toArray();
             
+            // Get sections where user teaches subjects
+            $taughtSectionIds = DB::table('section_subject')
+                ->where('teacher_id', $user->id)
+                ->pluck('section_id')
+                ->unique()
+                ->toArray();
+                
+            // Combine all sections for stats calculation
+            $allSectionIds = array_unique(array_merge($sectionIds, $taughtSectionIds));
+                
+            // Get only the sections where user is adviser for the dashboard dropdown
+            $recentSections = Section::where('adviser_id', $user->id)
+                ->with('students') // Eager load students
+                ->latest()
+                ->get();
+            
             // Get all subjects taught by the user (through the pivot table)
             $taughtSubjects = Subject::whereHas('teachers', function($query) use ($user) {
                 $query->where('users.id', $user->id);
             })->get();
             
             // Get students in the advised sections
-            $studentsInSections = Student::whereIn('section_id', $sectionIds)->get();
+            $studentsInSections = Student::whereIn('section_id', $allSectionIds)->get();
             $studentIds = $studentsInSections->pluck('id')->toArray();
             
             $stats = [
-                'sectionsCount' => count($sectionIds),
+                'sectionsCount' => count($allSectionIds),
                 'subjectsCount' => $taughtSubjects->count(),
                 'studentsCount' => $studentsInSections->count(),
-                'todayAttendance' => Attendance::where(function($query) use ($user, $sectionIds) {
+                'todayAttendance' => Attendance::where(function($query) use ($user, $allSectionIds) {
                                             $query->where('teacher_id', $user->id)
-                                                  ->orWhereIn('section_id', $sectionIds);
+                                                  ->orWhereIn('section_id', $allSectionIds);
                                         })
                                         ->whereDate('date', now()->toDateString())
                                         ->count()
             ];
             
-            $recentSections = Section::where('adviser_id', $user->id)
-                                ->with('students') // Eager load students
-                                ->latest()
-                                ->take(5)
-                                ->get();
-                                
             // Get recent subjects using the teachers relationship with eager loading
             $recentSubjects = Subject::whereHas('teachers', function($query) use ($user) {
                 $query->where('users.id', $user->id);
@@ -74,9 +84,9 @@ class DashboardController extends Controller
                 ]);
                 
                 // Get attendance records for this date (check both by teacher_id and section_id)
-                $attendanceRecords = Attendance::where(function($query) use ($user, $sectionIds) {
+                $attendanceRecords = Attendance::where(function($query) use ($user, $allSectionIds) {
                         $query->where('teacher_id', $user->id)
-                              ->orWhereIn('section_id', $sectionIds);
+                              ->orWhereIn('section_id', $allSectionIds);
                     })
                     ->whereDate('date', $date)
                     ->get();
@@ -154,7 +164,7 @@ class DashboardController extends Controller
             // Fetch all grades for students in advised sections with better query
             $grades = DB::table('grades')
                 ->join('students', 'grades.student_id', '=', 'students.id')
-                ->whereIn('students.section_id', $sectionIds)
+                ->whereIn('students.section_id', $allSectionIds)
                 ->whereIn('grades.subject_id', $taughtSubjects->pluck('id')->toArray())
                 ->select('grades.score')
                 ->get();
@@ -185,66 +195,8 @@ class DashboardController extends Controller
                     round(($count / $gradesCount) * 100) : 0;
             }
             
-            // Get top performing students
-            $topStudents = Student::whereIn('id', $studentIds)
-                ->with(['grades' => function($query) use ($taughtSubjects) {
-                    $query->whereIn('subject_id', $taughtSubjects->pluck('id')->toArray());
-                }])
-                ->withAvg('grades', 'score')
-                ->having('grades_avg_score', '>', 0)  // Only include students with grades
-                ->orderByDesc('grades_avg_score')
-                ->take(5)
-                ->get();
-            
-            // Get attendance rates for top students
-            foreach ($topStudents as $student) {
-                // Calculating attendance rate from all relevant attendance records
-                $attendanceRecords = Attendance::where(function($query) use ($user, $student) {
-                        $query->where('teacher_id', $user->id)
-                              ->orWhere('section_id', $student->section_id);
-                    })
-                    ->get();
-                
-                $totalDays = $attendanceRecords->count();
-                $presentDays = 0;
-                $lateDays = 0;
-                
-                foreach ($attendanceRecords as $record) {
-                    // Using the new attendance data structure
-                    if ($record->attendance_data) {
-                        $attendanceData = is_array($record->attendance_data) ? 
-                            $record->attendance_data : json_decode($record->attendance_data, true) ?? [];
-                        
-                        foreach ($attendanceData as $data) {
-                            if (isset($data['student_id']) && $data['student_id'] == $student->id) {
-                                if ($data['status'] === 'present') {
-                                    $presentDays++;
-                                } elseif ($data['status'] === 'late') {
-                                    $lateDays++;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    // Using the old attendance structure
-                    else if ($record->status && $record->student_id == $student->id) {
-                        if ($record->status === 'present') {
-                            $presentDays++;
-                        } elseif ($record->status === 'late') {
-                            $lateDays++;
-                        }
-                    }
-                }
-                
-                $student->attendance_rate = $totalDays > 0 ? round((($presentDays + $lateDays) / $totalDays) * 100) : 0;
-                $student->performance_rating = $this->calculatePerformanceRating($student->grades_avg_score, $student->attendance_rate);
-                
-                // Add additional data for display
-                $student->present_days = $presentDays;
-                $student->late_days = $lateDays;
-                $student->total_days = $totalDays;
-                $student->grades_count = $student->grades->count();
-            }
+            // Get top performing students using our new method
+            $topStudents = $this->getPerformanceData(new Request(['section_id' => $recentSections->first()->id ?? null]));
             
             return view('teacher.dashboard', compact(
                 'stats', 
@@ -536,96 +488,185 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get performance data for a section (AJAX endpoint)
+     * Get teacher performance metrics
      */
     public function getPerformanceData(Request $request)
     {
         $user = Auth::user();
         $sectionId = $request->input('section_id');
+        $debug = [];
         
         try {
-            // Verify section belongs to this teacher
-            $section = Section::where('id', $sectionId)
-                ->where('adviser_id', $user->id)
-                ->first();
-                
-            if (!$section) {
-                return response()->json(['error' => 'Section not found'], 404);
+            // Variable to store the selected section
+            $section = null;
+            
+            if ($sectionId) {
+                // Find section by ID where user is the adviser only
+                $section = Section::where('id', $sectionId)
+                    ->where('adviser_id', $user->id)
+                    ->first();
+                    
+                $debug['requested_section_id'] = $sectionId;
+                $debug['section_found'] = !is_null($section);
             }
             
-            // Get all subjects taught by user
-            $taughtSubjects = Subject::whereHas('teachers', function($query) use ($user) {
-                $query->where('users.id', $user->id);
-            })->get();
-            
-            // Get top students in this section with eager loading and better filtering
-            $students = Student::where('section_id', $sectionId)
-                ->with(['grades' => function($query) use ($taughtSubjects) {
-                    $query->whereIn('subject_id', $taughtSubjects->pluck('id')->toArray());
-                }])
-                ->withAvg('grades', 'score')
-                ->having('grades_avg_score', '>', 0)
-                ->orderByDesc('grades_avg_score')
-                ->take(5)
-                ->get();
+            // If no section specified/found, get first available section where user is adviser
+            if (!$section) {
+                // Get a section where user is the adviser
+                $section = Section::where('adviser_id', $user->id)->first();
                 
-            // Add attendance data
-            foreach ($students as $student) {
-                // Get attendance records for this section
-                $attendanceRecords = Attendance::where(function($query) use ($user, $sectionId) {
-                        $query->where('teacher_id', $user->id)
-                              ->orWhere('section_id', $sectionId);
-                    })
-                    ->get();
-                    
-                $totalDays = $attendanceRecords->count();
-                $presentDays = 0;
-                $lateDays = 0;
-                
-                foreach ($attendanceRecords as $record) {
-                    // Using the new attendance data structure
-                    if ($record->attendance_data) {
-                        $attendanceData = is_array($record->attendance_data) ? 
-                            $record->attendance_data : json_decode($record->attendance_data, true) ?? [];
-                        
-                        foreach ($attendanceData as $data) {
-                            if (isset($data['student_id']) && $data['student_id'] == $student->id) {
-                                if ($data['status'] === 'present') {
-                                    $presentDays++;
-                                } elseif ($data['status'] === 'late') {
-                                    $lateDays++;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    // Using the old attendance structure
-                    else if ($record->status && $record->student_id == $student->id) {
-                        if ($record->status === 'present') {
-                            $presentDays++;
-                        } elseif ($record->status === 'late') {
-                            $lateDays++;
-                        }
-                    }
+                // If no section is found where user is adviser, return empty response
+                if (!$section) {
+                    return $request->expectsJson() 
+                        ? response()->json([
+                            'students' => [],
+                            'section' => null,
+                            'error' => 'No sections available where you are adviser',
+                            'debug' => $debug
+                        ]) 
+                        : collect();
                 }
                 
-                $student->attendance_rate = $totalDays > 0 ? round((($presentDays + $lateDays) / $totalDays) * 100) : 0;
-                $student->performance_rating = $this->calculatePerformanceRating($student->grades_avg_score, $student->attendance_rate);
-                
-                // Add additional data for display
-                $student->present_days = $presentDays;
-                $student->late_days = $lateDays;
-                $student->total_days = $totalDays;
-                $student->grades_count = $student->grades->count();
+                $debug['fallback_section_id'] = $section->id;
             }
             
-            return response()->json([
-                'students' => $students,
-                'section' => $section
-            ]);
+            // Get all subjects assigned to this section
+            $sectionSubjects = $section->subjects;
+            
+            $debug['subjects_count'] = $sectionSubjects->count();
+            $debug['subject_ids'] = $sectionSubjects->pluck('id')->toArray();
+            
+            // Get students in this section with their final grades
+            $students = Student::where('section_id', $section->id)
+                ->with(['grades' => function($query) use ($sectionSubjects) {
+                    $query->whereIn('subject_id', $sectionSubjects->pluck('id')->toArray())
+                          ->where(function($q) {
+                              $q->where('grade_type', 'final') // Try to get final grades first
+                                ->orWhereNotExists(function($subquery) {
+                                    $subquery->select(DB::raw(1))
+                                        ->from('grades as g')
+                                        ->whereColumn('g.student_id', 'grades.student_id')
+                                        ->whereColumn('g.subject_id', 'grades.subject_id')
+                                        ->where('g.grade_type', 'final');
+                                });
+                          });
+                }])
+                ->get();
+                
+            $debug['students_count'] = $students->count();
+            
+            // Calculate average final grades for each student
+            foreach ($students as $student) {
+                // Check if student has any final grades first
+                $finalGrades = $student->grades->where('grade_type', 'final');
+                
+                if ($finalGrades->count() > 0) {
+                    // If final grades exist, use only those
+                    $student->grades_avg_score = $finalGrades->avg('score');
+                } else {
+                    // Otherwise use regular grades (calculated per subject)
+                    $avgGrades = [];
+                    
+                    foreach ($sectionSubjects as $subject) {
+                        $subjectGrades = $student->grades->where('subject_id', $subject->id);
+                        
+                        if ($subjectGrades->count() > 0) {
+                            // Calculate average per subject and add to the list
+                            $avgGrades[] = $subjectGrades->avg('score');
+                        }
+                    }
+                    
+                    $student->grades_avg_score = count($avgGrades) > 0 ? array_sum($avgGrades) / count($avgGrades) : 0;
+                }
+                
+                // Add attendance data
+                $this->addAttendanceData($student, $section->id, $user->id);
+            }
+            
+            // Sort students by their average grade
+            $students = $students->sortByDesc('grades_avg_score')->values();
+            
+            // Take only top 5
+            $topStudents = $students->take(5);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'students' => $topStudents,
+                    'section' => $section,
+                    'debug' => $debug
+                ]);
+            }
+            
+            return $topStudents;
         } catch (\Exception $e) {
-            Log::error('Error getting performance data: ' . $e->getMessage());
-            return response()->json(['error' => 'Error fetching data'], 500);
+            Log::error('Error getting performance data: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'section_id' => $sectionId
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Error fetching data: ' . $e->getMessage(),
+                    'debug' => $debug
+                ], 500);
+            }
+            
+            return collect();
         }
+    }
+    
+    /**
+     * Add attendance data to student
+     */
+    private function addAttendanceData($student, $sectionId, $userId)
+    {
+        // Get attendance records for this section
+        $attendanceRecords = Attendance::where(function($query) use ($userId, $sectionId) {
+            $query->where('teacher_id', $userId)
+                  ->orWhere('section_id', $sectionId);
+        })
+        ->get();
+            
+        $totalDays = $attendanceRecords->count();
+        $presentDays = 0;
+        $lateDays = 0;
+        
+        foreach ($attendanceRecords as $record) {
+            // Using the new attendance data structure
+            if ($record->attendance_data) {
+                $attendanceData = is_array($record->attendance_data) ? 
+                    $record->attendance_data : json_decode($record->attendance_data, true) ?? [];
+                
+                foreach ($attendanceData as $data) {
+                    if (isset($data['student_id']) && $data['student_id'] == $student->id) {
+                        if ($data['status'] === 'present') {
+                            $presentDays++;
+                        } elseif ($data['status'] === 'late') {
+                            $lateDays++;
+                        }
+                        break;
+                    }
+                }
+            }
+            // Using the old attendance structure
+            else if ($record->status && $record->student_id == $student->id) {
+                if ($record->status === 'present') {
+                    $presentDays++;
+                } elseif ($record->status === 'late') {
+                    $lateDays++;
+                }
+            }
+        }
+        
+        $student->attendance_rate = $totalDays > 0 ? round((($presentDays + $lateDays) / $totalDays) * 100) : 0;
+        $student->performance_rating = $this->calculatePerformanceRating($student->grades_avg_score, $student->attendance_rate);
+        
+        // Add additional data for display
+        $student->present_days = $presentDays;
+        $student->late_days = $lateDays;
+        $student->total_days = $totalDays;
+        $student->grades_count = $student->grades->count();
     }
 }

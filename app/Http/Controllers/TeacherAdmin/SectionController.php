@@ -335,20 +335,37 @@ class SectionController extends Controller
             // Begin transaction
             DB::beginTransaction();
             
-            // First, clear existing subject assignments
-            DB::table('section_subject')
-                ->where('section_id', $section->id)
-                ->delete();
+            // Instead of clearing all existing subjects, we'll determine which ones to add or update
+            $existingSubjectIds = $section->subjects->pluck('id')->toArray();
+            $newSubjectIds = collect($request->subjects)->pluck('subject_id')->toArray();
             
-            // Then, add new subject assignments
+            // Loop through new subject assignments
             foreach ($request->subjects as $subject) {
-                DB::table('section_subject')->insert([
-                    'section_id' => $section->id,
-                    'subject_id' => $subject['subject_id'],
-                    'teacher_id' => $subject['teacher_id'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // Check if this subject is already assigned to this section
+                $existingPivot = DB::table('section_subject')
+                    ->where('section_id', $section->id)
+                    ->where('subject_id', $subject['subject_id'])
+                    ->first();
+                
+                if ($existingPivot) {
+                    // Update the existing subject-teacher assignment
+                    DB::table('section_subject')
+                        ->where('section_id', $section->id)
+                        ->where('subject_id', $subject['subject_id'])
+                        ->update([
+                            'teacher_id' => $subject['teacher_id'],
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    // Insert a new subject-teacher assignment
+                    DB::table('section_subject')->insert([
+                        'section_id' => $section->id,
+                        'subject_id' => $subject['subject_id'],
+                        'teacher_id' => $subject['teacher_id'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
             
             // Log success
@@ -405,6 +422,57 @@ class SectionController extends Controller
             ]);
             
             return back()->with('error', 'Failed to update section status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update the classroom adviser for a section.
+     */
+    public function updateAdviser(Request $request, Section $section)
+    {
+        try {
+            // Authorize the request
+            $this->authorize('update', $section);
+            
+            // Validate the input
+            $validated = $request->validate([
+                'adviser_id' => 'required|exists:users,id'
+            ]);
+            
+            Log::info('Updating section adviser', [
+                'section_id' => $section->id,
+                'new_adviser_id' => $request->adviser_id
+            ]);
+            
+            // Begin transaction
+            DB::beginTransaction();
+            
+            // Update the section adviser
+            DB::table('sections')
+                ->where('id', $section->id)
+                ->update([
+                    'adviser_id' => $request->adviser_id,
+                    'updated_at' => now(),
+                ]);
+            
+            // Log success
+            Log::info('Section adviser updated successfully', ['section_id' => $section->id]);
+            
+            // Commit transaction
+            DB::commit();
+            
+            return redirect()->route('teacher-admin.sections.show', $section)
+                ->with('success', 'Section adviser has been updated successfully.');
+        } catch (\Exception $e) {
+            // Rollback transaction
+            DB::rollBack();
+            
+            Log::error('Failed to update section adviser: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return back()->with('error', 'Failed to update section adviser: ' . $e->getMessage());
         }
     }
 }

@@ -1,6 +1,41 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* Custom scrollbar styling */
+    .activity-scroll {
+        max-height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin; /* Firefox */
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent; /* Firefox */
+    }
+    
+    .activity-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .activity-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .activity-scroll::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+    
+    .activity-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Sticky header for tables */
+    .sticky-header th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 1;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+    }
+</style>
 <div class="container-fluid">
     <!-- Welcome Header -->
     <div class="row mb-4">
@@ -197,9 +232,9 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    <div class="table-responsive activity-scroll" style="max-height: 300px;">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
+                            <thead class="sticky-header bg-light">
                                 <tr>
                                     <th class="border-0">Teacher</th>
                                     <th class="border-0 text-center">Subjects</th>
@@ -252,25 +287,29 @@
         <!-- Recent Activity -->
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fas fa-history text-warning me-2"></i> Recent School Activity</h5>
+                    <span class="badge bg-primary rounded-pill">{{ count($recentActivity) }}</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
+                    <div class="list-group list-group-flush activity-scroll">
                         @foreach($recentActivity as $activity)
-                        <div class="list-group-item border-0 py-3">
-                            <div class="d-flex">
+                        <div class="list-group-item border-0 py-3 px-3 {{ $loop->even ? 'bg-light bg-opacity-50' : '' }}">
+                            <div class="d-flex align-items-center mb-2">
                                 <div class="avatar rounded-circle {{ $activity['type'] == 'grade' ? 'bg-success bg-opacity-10 text-success' : 'bg-info bg-opacity-10 text-info' }} p-2 me-3">
                                     <i class="fas {{ $activity['type'] == 'grade' ? 'fa-star' : 'fa-clipboard-check' }}"></i>
                                 </div>
-                                <div>
-                                    <p class="mb-1">{{ $activity['description'] }}</p>
-                                    <div class="d-flex justify-content-between">
-                                        <small class="text-muted">By {{ $activity['user'] }}</small>
-                                        <small class="text-muted">{{ $activity['date']->diffForHumans() }}</small>
-                                    </div>
+                                <div class="d-flex justify-content-between align-items-center w-100">
+                                    <h6 class="mb-0 fw-bold">
+                                        <span class="badge {{ $activity['type'] == 'grade' ? 'bg-success' : 'bg-info' }} rounded-pill me-2">
+                                            {{ ucfirst($activity['type']) }}
+                                        </span>
+                                        {{ $activity['user'] }}
+                                    </h6>
+                                    <small class="text-muted">{{ $activity['date']->diffForHumans() }}</small>
                                 </div>
                             </div>
+                            <p class="ms-5 mb-0 text-dark">{{ $activity['description'] }}</p>
                         </div>
                         @endforeach
                     </div>
@@ -294,7 +333,7 @@
                 </div>
                 <div class="card-body p-0">
                     @if($recentSections->count() > 0)
-                        <div class="list-group list-group-flush">
+                        <div class="list-group list-group-flush activity-scroll">
                             @foreach($recentSections as $section)
                                 <a href="{{ route('teacher-admin.sections.show', $section) }}" class="list-group-item list-group-item-action">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -340,7 +379,7 @@
                 </div>
                 <div class="card-body p-0">
                     @if($recentSubjects->count() > 0)
-                        <div class="list-group list-group-flush">
+                        <div class="list-group list-group-flush activity-scroll">
                             @foreach($recentSubjects as $subject)
                                 <a href="{{ route('teacher-admin.subjects.show', $subject) }}" class="list-group-item list-group-item-action">
                                     <div class="d-flex justify-content-between align-items-center">

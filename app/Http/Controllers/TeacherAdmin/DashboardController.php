@@ -203,15 +203,31 @@ class DashboardController extends Controller
         $recentGrades = Grade::whereHas('student.section', function($query) use ($schoolId) {
             $query->where('school_id', $schoolId);
         })
-        ->with(['student', 'subject'])
+        ->with(['student.section.subjects', 'subject', 'teacher'])
         ->orderBy('created_at', 'desc')
         ->take(5)
         ->get()
         ->map(function($grade) {
+            // Try to find the correct teacher from the section_subject pivot
+            $teacherName = Auth::user()->name; // Default fallback
+            
+            // Get the section_subject relationship that contains the correct teacher
+            $sectionSubject = $grade->student->section->subjects
+                ->where('id', $grade->subject_id)
+                ->first();
+                
+            // If we found it, get the teacher name from the pivot
+            if ($sectionSubject && isset($sectionSubject->pivot->teacher_id)) {
+                $teacher = User::find($sectionSubject->pivot->teacher_id);
+                if ($teacher) {
+                    $teacherName = $teacher->name;
+                }
+            }
+            
             return [
                 'type' => 'grade',
                 'description' => "Grade added for {$grade->student->name} in {$grade->subject->name}",
-                'user' => "Teacher", // Use a default value since teacher_id is not available
+                'user' => $teacherName,
                 'date' => $grade->created_at
             ];
         });
@@ -227,7 +243,7 @@ class DashboardController extends Controller
             return [
                 'type' => 'attendance',
                 'description' => "Attendance marked for {$attendance->student->name} as {$attendance->status}",
-                'user' => $attendance->teacher ? $attendance->teacher->name : 'Teacher',
+                'user' => $attendance->teacher ? $attendance->teacher->name : Auth::user()->name,
                 'date' => $attendance->created_at
             ];
         });

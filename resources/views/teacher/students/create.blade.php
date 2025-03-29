@@ -72,6 +72,19 @@
 
                                 <div class="col-md-4">
                                     <div class="form-group">
+                                        <label for="lrn" class="form-label">Learner Reference Number (LRN) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('lrn') is-invalid @enderror" 
+                                            id="lrn" name="lrn" value="{{ old('lrn') }}" required
+                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                        @error('lrn')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted">Numbers only</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
                                         <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
                                         <select class="form-select @error('gender') is-invalid @enderror" id="gender" name="gender" required>
                                             <option value="">Select Gender</option>
@@ -83,7 +96,9 @@
                                         @enderror
                                     </div>
                                 </div>
+                            </div>
 
+                            <div class="row g-3 mt-2">
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="birth_date" class="form-label">Birth Date <span class="text-danger">*</span></label>

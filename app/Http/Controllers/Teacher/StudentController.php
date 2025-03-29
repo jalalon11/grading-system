@@ -60,6 +60,7 @@ class StudentController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'student_id' => 'required|string|max:50|unique:students',
+            'lrn' => 'required|numeric|unique:students',
             'gender' => 'required|in:Male,Female',
             'birth_date' => 'required|date',
             'section_id' => 'required|exists:sections,id',
@@ -82,17 +83,20 @@ class StudentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         // Get sections associated with the current teacher
         $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
         
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)
-            ->with(['section', 'grades', 'attendances'])
+            ->with(['section.subjects', 'section.adviser', 'grades', 'attendances'])
             ->findOrFail($id);
         
-        return view('teacher.students.show', compact('student'));
+        // Get the selected transmutation table from the request or use default (1)
+        $selectedTransmutationTable = $request->query('transmutation_table', 1);
+        
+        return view('teacher.students.show', compact('student', 'selectedTransmutationTable'));
     }
 
     /**
@@ -126,6 +130,7 @@ class StudentController extends Controller
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
             'student_id' => 'required|string|max:50|unique:students,student_id,' . $student->id,
+            'lrn' => 'required|numeric|unique:students,lrn,' . $student->id,
             'gender' => 'required|in:Male,Female',
             'birth_date' => 'required|date',
             'section_id' => 'required|exists:sections,id',

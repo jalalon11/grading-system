@@ -90,6 +90,8 @@ Route::middleware(['auth'])->group(function () {
         Route::put('grades/{grade}', [GradeController::class, 'update'])->name('grades.update');
         Route::delete('grades/{grade}', [GradeController::class, 'destroy'])->name('grades.destroy');
         Route::get('grades/{grade}', [GradeController::class, 'show'])->name('grades.show');
+        Route::post('grades/lock-transmutation-table', [GradeController::class, 'lockTransmutationTable'])->name('grades.lock-transmutation');
+        Route::post('grades/update-transmutation-preference', [GradeController::class, 'updateTransmutationPreference'])->name('grades.update-transmutation-preference');
         
         Route::resource('attendances', AttendanceController::class);
         
@@ -168,6 +170,8 @@ Route::middleware(['auth'])->group(function () {
                 ->name('sections.assign-subjects');
             Route::patch('sections/{section}/toggle-status', [SectionController::class, 'toggleStatus'])
                 ->name('sections.toggle-status');
+            Route::patch('sections/{section}/update-adviser', [SectionController::class, 'updateAdviser'])
+                ->name('sections.update-adviser');
 
             // Subjects Management
             Route::resource('subjects', TeacherAdminSubjectController::class);

@@ -23,6 +23,7 @@ class Student extends Model
         'birth_date',
         'gender',
         'student_id',
+        'lrn',
         'address',
         'guardian_name',
         'guardian_contact',

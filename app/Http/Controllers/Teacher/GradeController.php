@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Grade;
+use App\Models\GradeConfiguration;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\GradeConfiguration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +41,27 @@ class GradeController extends Controller
                 'teacher_id' => $teacherId,
                 'subject_ids' => $subjectIds
             ]);
+            
+            // Get the teacher's transmutation table preference
+            $preferredTableId = DB::table('teacher_preferences')
+                ->where('teacher_id', $teacherId)
+                ->where('preference_key', 'transmutation_table')
+                ->value('preference_value');
+                
+            // If no preference exists yet, set DepEd Transmutation Table (1) as default
+            if (!$preferredTableId) {
+                $preferredTableId = 1; // DepEd Transmutation Table is now Table 1
+                // Save this preference
+                $this->saveTransmutationPreference($teacherId, $preferredTableId);
+            }
+            
+            // Check if we need to clear the lock state
+            if (!$request->has('lock_table') && !session('locked_transmutation_table_id')) {
+                session()->forget('locked_transmutation_table');
+            }
+            
+            // Store the preferred table ID in the view data
+            $preferredTableId = (int) $preferredTableId;
             
             // Get subjects based on section_subject pivot table
             if (!empty($subjectIds)) {
@@ -187,35 +208,148 @@ class GradeController extends Controller
             // Get students and their grades for the selected subject and section
             $students = [];
             if ($selectedSubject && $selectedSectionId) {
-                $sectionStudents = Student::where('section_id', $selectedSectionId)
-                    ->with(['grades' => function ($query) use ($selectedSubject, $selectedTerm) {
-                        $query->where('subject_id', $selectedSubject->id)
-                              ->where('term', $selectedTerm);
-                    }])
-                    ->get();
+                $viewAll = $request->has('view_all') && $request->view_all == 'true';
                 
-                Log::info('Students found in section', [
-                    'section_id' => $selectedSectionId,
-                    'count' => $sectionStudents->count()
-                ]);
-                
-                foreach ($sectionStudents as $student) {
-                    $writtenWorks = $student->grades->where('grade_type', 'written_work')->all();
-                    $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
-                    $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
+                if ($viewAll) {
+                    // Get all subjects assigned to this section
+                    $sectionSubjectIds = DB::table('section_subject')
+                        ->where('section_id', $selectedSectionId)
+                        ->pluck('subject_id')
+                        ->unique()
+                        ->toArray();
                     
-                    $students[] = [
-                        'student' => $student,
-                        'written_works' => $writtenWorks,
-                        'performance_tasks' => $performanceTasks,
-                        'quarterly_assessment' => $quarterlyAssessment,
-                    ];
+                    $sectionStudents = Student::where('section_id', $selectedSectionId)
+                        ->with(['grades' => function ($query) use ($sectionSubjectIds, $selectedTerm) {
+                            $query->whereIn('subject_id', $sectionSubjectIds)
+                                  ->where('term', $selectedTerm)
+                                  ->with('subject'); // Eager load the subject relation
+                        }])
+                        ->get();
+                    
+                    foreach ($sectionStudents as $student) {
+                        // Group grades by subject
+                        $subjectGrades = [];
+                        
+                        foreach ($sectionSubjectIds as $subjectId) {
+                            $subjectName = Subject::find($subjectId)->name ?? "Unknown Subject";
+                            $subjectGrades[$subjectId] = [
+                                'subject_name' => $subjectName,
+                                'written_works' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'written_work')->all(),
+                                'performance_tasks' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'performance_task')->all(),
+                                'quarterly_assessment' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'quarterly')->first(),
+                            ];
+                        }
+                        
+                        $students[] = [
+                            'student' => $student,
+                            'view_all' => true,
+                            'subject_grades' => $subjectGrades,
+                        ];
+                    }
+                } else {
+                    // Original code for viewing a single subject
+                    $sectionStudents = Student::where('section_id', $selectedSectionId)
+                        ->with(['grades' => function ($query) use ($selectedSubject, $selectedTerm) {
+                            $query->where('subject_id', $selectedSubject->id)
+                                  ->where('term', $selectedTerm);
+                        }])
+                        ->get();
+                    
+                    Log::info('Students found in section', [
+                        'section_id' => $selectedSectionId,
+                        'count' => $sectionStudents->count()
+                    ]);
+                    
+                    foreach ($sectionStudents as $student) {
+                        $writtenWorks = $student->grades->where('grade_type', 'written_work')->all();
+                        $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
+                        $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
+                        
+                        // Check if this is a MAPEH subject with components
+                        $isMAPEH = false;
+                        $mapehComponents = [];
+                        
+                        if (isset($selectedSubject->components) && $selectedSubject->components->count() > 0) {
+                            $componentNames = $selectedSubject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+                            $requiredComponents = ['music', 'arts', 'physical education', 'health'];
+                            
+                            $matchedComponents = 0;
+                            foreach ($requiredComponents as $component) {
+                                if (in_array($component, $componentNames) || 
+                                    in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
+                                    $matchedComponents++;
+                                }
+                            }
+                            
+                            $isMAPEH = $matchedComponents == 4;
+                            
+                            // If MAPEH, load component grades
+                            if ($isMAPEH) {
+                                $componentSubjectIds = $selectedSubject->components->pluck('id')->toArray();
+                                
+                                // Fetch component grades for this student
+                                $componentGrades = Grade::where('student_id', $student->id)
+                                    ->whereIn('subject_id', $componentSubjectIds)
+                                    ->where('term', $selectedTerm)
+                                    ->get();
+                                
+                                // Group by component subject and grade type
+                                foreach ($selectedSubject->components as $component) {
+                                    $componentWrittenWorks = $componentGrades
+                                        ->where('subject_id', $component->id)
+                                        ->where('grade_type', 'written_work')
+                                        ->all();
+                                        
+                                    $componentPerformanceTasks = $componentGrades
+                                        ->where('subject_id', $component->id)
+                                        ->where('grade_type', 'performance_task')
+                                        ->all();
+                                        
+                                    $componentQuarterlyAssessment = $componentGrades
+                                        ->where('subject_id', $component->id)
+                                        ->where('grade_type', 'quarterly')
+                                        ->first();
+                                    
+                                    $mapehComponents[$component->id] = [
+                                        'component' => $component,
+                                        'written_works' => $componentWrittenWorks,
+                                        'performance_tasks' => $componentPerformanceTasks,
+                                        'quarterly_assessment' => $componentQuarterlyAssessment,
+                                    ];
+                                }
+                                
+                                // Add component written works to the main written works if not already there
+                                foreach ($mapehComponents as $componentData) {
+                                    foreach ($componentData['written_works'] as $work) {
+                                        $writtenWorks[] = $work;
+                                    }
+                                    foreach ($componentData['performance_tasks'] as $task) {
+                                        $performanceTasks[] = $task;
+                                    }
+                                    // For quarterly assessment, only use if main one is not set
+                                    if (!$quarterlyAssessment && $componentData['quarterly_assessment']) {
+                                        $quarterlyAssessment = $componentData['quarterly_assessment'];
+                                    }
+                                }
+                            }
+                        }
+                        
+                        $students[] = [
+                            'student' => $student,
+                            'written_works' => $writtenWorks,
+                            'performance_tasks' => $performanceTasks,
+                            'quarterly_assessment' => $quarterlyAssessment,
+                            'view_all' => false,
+                            'is_mapeh' => $isMAPEH,
+                            'mapeh_components' => $mapehComponents,
+                        ];
+                    }
                 }
             }
             
             $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
             
-            return view('teacher.grades.index', compact('subjects', 'selectedSubject', 'students', 'terms', 'selectedTerm', 'sections', 'selectedSectionId'));
+            return view('teacher.grades.index', compact('subjects', 'selectedSubject', 'students', 'terms', 'selectedTerm', 'sections', 'selectedSectionId', 'preferredTableId'));
             
         } catch (\Exception $e) {
             Log::error('Error in grades index: ' . $e->getMessage(), [
@@ -447,23 +581,59 @@ class GradeController extends Controller
      */
     public function batchCreate(Request $request)
     {
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'term' => 'required|in:Q1,Q2,Q3,Q4',
-            'grade_type' => 'required|in:written_work,performance_task,quarterly',
-            'section_id' => 'required|exists:sections,id',
-        ]);
-        
         try {
             $teacher = Auth::id();
-            Log::info('Teacher accessing batch grade creation', [
+            Log::info('Starting batch grade creation', [
                 'teacher_id' => $teacher,
+                'request' => $request->all()
+            ]);
+            
+            // Load the subject
+            $subject = Subject::with('components')->findOrFail($request->subject_id);
+            
+            // Check if this is a MAPEH subject
+            $isMAPEH = $subject->components()->count() >= 4;
+            
+            // Log MAPEH-related data for debugging
+            if ($isMAPEH) {
+                Log::info('MAPEH subject detected', [
+                    'subject_id' => $subject->id,
+                    'subject_name' => $subject->name,
+                    'component_count' => $subject->components->count(),
+                    'components' => $subject->components->pluck('name', 'id')->toArray(),
+                    'session_data' => [
+                        'is_mapeh' => session('is_mapeh', false),
+                        'selected_components' => session('selected_components', []),
+                        'component_max_score' => session('component_max_score', [])
+                    ]
+                ]);
+            }
+            
+            // Verify that this is a MAPEH assessment from the setup
+            if ($isMAPEH && (!session('is_mapeh') || empty(session('selected_components')) || empty(session('component_max_score')))) {
+                Log::warning('Missing MAPEH session data', [
+                    'is_mapeh' => session('is_mapeh', false),
+                    'selected_components' => session('selected_components', []),
+                    'component_max_score' => session('component_max_score', [])
+                ]);
+                
+                // Redirect back to setup if MAPEH data is missing
+                return redirect()->route('teacher.grades.assessment-setup', [
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->term,
+                    'grade_type' => $request->grade_type,
+                    'section_id' => $request->section_id
+                ])->with('error', 'MAPEH component data is missing. Please set up your assessment again.');
+            }
+            
+            Log::info('Assessment info', [
                 'subject_id' => $request->subject_id,
-                'section_id' => $request->section_id,
                 'term' => $request->term,
                 'grade_type' => $request->grade_type,
+                'section_id' => $request->section_id,
                 'assessment_name' => session('assessment_name'),
-                'max_score' => session('max_score')
+                'is_mapeh' => $isMAPEH,
+                'max_score' => $isMAPEH ? 'Using component scores' : session('max_score')
             ]);
             
             // Check if the teacher teaches this subject in this section
@@ -498,10 +668,9 @@ class GradeController extends Controller
             }
             
             // Make sure we have assessment parameters
-            if (!session('assessment_name') || !session('max_score')) {
-                Log::warning('Missing assessment parameters in session', [
-                    'assessment_name' => session('assessment_name'),
-                    'max_score' => session('max_score')
+            if (!session('assessment_name')) {
+                Log::warning('Missing assessment name in session', [
+                    'assessment_name' => session('assessment_name')
                 ]);
                 
                 return redirect()->route('teacher.grades.assessment-setup', [
@@ -509,11 +678,55 @@ class GradeController extends Controller
                     'term' => $request->term,
                     'grade_type' => $request->grade_type,
                     'section_id' => $request->section_id
-                ])->with('error', 'Assessment parameters are missing. Please set up the assessment again.');
+                ])->with('error', 'Assessment name is missing. Please set up the assessment again.');
             }
             
-            // Load the subject
-            $subject = Subject::findOrFail($request->subject_id);
+            // For MAPEH subjects, check if we have the selected components
+            if ($isMAPEH) {
+                if (!session('selected_components') || !session('component_max_score')) {
+                    Log::warning('Missing MAPEH component parameters in session', [
+                        'selected_components' => session('selected_components'),
+                        'component_max_score' => session('component_max_score')
+                    ]);
+                    
+                    return redirect()->route('teacher.grades.assessment-setup', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term,
+                        'grade_type' => $request->grade_type,
+                        'section_id' => $request->section_id
+                    ])->with('error', 'MAPEH component parameters are missing. Please set up the assessment again.');
+                }
+                
+                // Verify all selected components exist in the database
+                $componentCount = Subject::whereIn('id', session('selected_components'))->count();
+                if ($componentCount != count(session('selected_components'))) {
+                    Log::warning('Some selected MAPEH components not found', [
+                        'expected' => count(session('selected_components')),
+                        'found' => $componentCount
+                    ]);
+                    
+                    return redirect()->route('teacher.grades.assessment-setup', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term,
+                        'grade_type' => $request->grade_type,
+                        'section_id' => $request->section_id
+                    ])->with('error', 'Some MAPEH components are invalid. Please set up the assessment again.');
+                }
+            } else {
+                // For regular subjects, check if we have the max score
+                if (!session('max_score')) {
+                    Log::warning('Missing max score in session', [
+                        'max_score' => session('max_score')
+                    ]);
+                    
+                    return redirect()->route('teacher.grades.assessment-setup', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term,
+                        'grade_type' => $request->grade_type,
+                        'section_id' => $request->section_id
+                    ])->with('error', 'Maximum score is missing. Please set up the assessment again.');
+                }
+            }
             
             // Load the section
             $section = Section::findOrFail($request->section_id);
@@ -547,7 +760,8 @@ class GradeController extends Controller
                 'students',
                 'request',
                 'gradeTypes',
-                'terms'
+                'terms',
+                'isMAPEH'
             ));
         } catch (\Exception $e) {
             Log::error('Error in batch grade creation: ' . $e->getMessage(), [
@@ -569,18 +783,39 @@ class GradeController extends Controller
      */
     public function batchStore(Request $request)
     {
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'section_id' => 'required|exists:sections,id',
-            'term' => 'required|in:Q1,Q2,Q3,Q4',
-            'grade_type' => 'required|in:written_work,performance_task,quarterly',
-            'max_score' => 'required|numeric|min:1',
-            'assessment_name' => 'required|string|max:255',
-            'scores' => 'required|array',
-            'scores.*' => 'required|numeric|min:0',
-            'student_ids' => 'required|array',
-            'student_ids.*' => 'required|exists:students,id',
-        ]);
+        // Check if this is a MAPEH assessment with components
+        $isMAPEH = $request->has('is_mapeh') && $request->is_mapeh == 1;
+        
+        if ($isMAPEH) {
+            // Validate MAPEH component batch
+            $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'section_id' => 'required|exists:sections,id',
+                'term' => 'required|in:Q1,Q2,Q3,Q4',
+                'grade_type' => 'required|in:written_work,performance_task,quarterly',
+                'assessment_name' => 'required|string|max:255',
+                'component_ids' => 'required|array',
+                'component_ids.*' => 'required|exists:subjects,id',
+                'component_max_scores' => 'required|array',
+                'component_scores' => 'required|array',
+                'student_ids' => 'required|array',
+                'student_ids.*' => 'required|exists:students,id',
+            ]);
+        } else {
+            // Validate regular subject batch
+            $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'section_id' => 'required|exists:sections,id',
+                'term' => 'required|in:Q1,Q2,Q3,Q4',
+                'grade_type' => 'required|in:written_work,performance_task,quarterly',
+                'max_score' => 'required|numeric|min:1',
+                'assessment_name' => 'required|string|max:255',
+                'scores' => 'required|array',
+                'scores.*' => 'required|numeric|min:0',
+                'student_ids' => 'required|array',
+                'student_ids.*' => 'required|exists:students,id',
+            ]);
+        }
         
         try {
             $teacher = Auth::id();
@@ -588,7 +823,8 @@ class GradeController extends Controller
                 'teacher_id' => $teacher,
                 'subject_id' => $request->subject_id,
                 'section_id' => $request->section_id,
-                'assessment_name' => $request->assessment_name
+                'assessment_name' => $request->assessment_name,
+                'is_mapeh' => $isMAPEH
             ]);
             
             // Check if the teacher teaches this subject in this section
@@ -615,51 +851,122 @@ class GradeController extends Controller
                 }
             }
             
-            // Store each student's grade
-            $gradesAdded = 0;
-            foreach ($request->student_ids as $index => $studentId) {
-                // Check if the student belongs to the section
-                $student = Student::where('id', $studentId)
-                    ->where('section_id', $request->section_id)
-                    ->firstOrFail();
+            if ($isMAPEH) {
+                // Process MAPEH component grades
+                $gradesAdded = 0;
                 
-                // Only create grade if score is provided
-                if (isset($request->scores[$index])) {
-                    Grade::create([
-                        'student_id' => $student->id,
-                        'subject_id' => $request->subject_id,
-                        'term' => $request->term,
-                        'grade_type' => $request->grade_type,
-                        'score' => $request->scores[$index],
-                        'max_score' => $request->max_score,
-                        'assessment_name' => $request->assessment_name,
-                        'remarks' => isset($request->remarks[$index]) ? $request->remarks[$index] : null
-                    ]);
-                    $gradesAdded++;
+                // Get the components from the form
+                $componentIds = $request->component_ids;
+                $componentMaxScores = $request->component_max_scores;
+                $componentScores = $request->component_scores;
+                
+                Log::info('MAPEH grading data received', [
+                    'component_ids' => $componentIds,
+                    'component_max_scores' => $componentMaxScores,
+                    'component_scores_structure' => array_keys($componentScores),
+                    'student_ids' => $request->student_ids
+                ]);
+                
+                // For each component
+                foreach ($componentIds as $componentId) {
+                    if (!isset($componentMaxScores[$componentId]) || !isset($componentScores[$componentId])) {
+                        Log::warning("Missing component data for component $componentId", [
+                            'has_max_score' => isset($componentMaxScores[$componentId]),
+                            'has_component_scores' => isset($componentScores[$componentId])
+                        ]);
+                        continue;
+                    }
+                    
+                    $maxScore = $componentMaxScores[$componentId];
+                    Log::info("Processing component $componentId with max score $maxScore");
+                    
+                    // For each student
+                    foreach ($request->student_ids as $studentId) {
+                        // Check if a score was provided for this student and component
+                        if (isset($componentScores[$componentId][$studentId])) {
+                            $score = $componentScores[$componentId][$studentId];
+                            
+                            // Validate the score against max score
+                            if ($score < 0 || $score > $maxScore) {
+                                Log::warning("Invalid score for student $studentId in component $componentId: $score (max: $maxScore)");
+                                continue; // Skip invalid scores
+                            }
+                            
+                            // Create grade for the specific component
+                            Grade::create([
+                                'student_id' => $studentId,
+                                'subject_id' => $componentId, // Component subject ID
+                                'term' => $request->term,
+                                'grade_type' => $request->grade_type,
+                                'score' => $score,
+                                'max_score' => $maxScore,
+                                'assessment_name' => $request->assessment_name,
+                                'remarks' => isset($request->remarks[$studentId]) ? $request->remarks[$studentId] : null
+                            ]);
+                            
+                            $gradesAdded++;
+                            Log::info("Grade added for student $studentId in component $componentId: $score/$maxScore");
+                        } else {
+                            Log::warning("No score found for student $studentId in component $componentId");
+                        }
+                    }
                 }
-            }
-            
-            Log::info('Batch grades recorded successfully', [
-                'count' => $gradesAdded,
-                'subject_id' => $request->subject_id,
-                'section_id' => $request->section_id
-            ]);
-            
-            return redirect()->route('teacher.grades.index', [
+                
+                if ($gradesAdded === 0) {
+                    Log::error('No grades were saved for MAPEH components', [
+                        'component_ids' => $componentIds,
+                        'student_ids' => $request->student_ids
+                    ]);
+                    return redirect()->back()->with('error', 'No grades were saved. Please check your inputs and try again.');
+                }
+                
+                return redirect()->route('teacher.grades.index', [
                     'subject_id' => $request->subject_id,
-                    'section_id' => $request->section_id,
                     'term' => $request->term
-                ])
-                ->with('success', 'Grades recorded successfully.');
+                ])->with('success', $gradesAdded . ' MAPEH component grades have been recorded successfully.');
+            } else {
+                // Process regular subject grades
+                $gradesAdded = 0;
+                foreach ($request->student_ids as $index => $studentId) {
+                    // Check if the student belongs to the section
+                    $student = Student::where('id', $studentId)
+                        ->where('section_id', $request->section_id)
+                        ->firstOrFail();
+                    
+                    // Only create grade if score is provided
+                    if (isset($request->scores[$index])) {
+                        Grade::create([
+                            'student_id' => $student->id,
+                            'subject_id' => $request->subject_id,
+                            'term' => $request->term,
+                            'grade_type' => $request->grade_type,
+                            'score' => $request->scores[$index],
+                            'max_score' => $request->max_score,
+                            'assessment_name' => $request->assessment_name,
+                            'remarks' => isset($request->remarks[$index]) ? $request->remarks[$index] : null
+                        ]);
+                        $gradesAdded++;
+                    }
+                }
+                
+                Log::info('Grades added successfully', [
+                    'count' => $gradesAdded
+                ]);
+                
+                return redirect()->route('teacher.grades.index', [
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->term
+                ])->with('success', $gradesAdded . ' grades have been recorded successfully.');
+            }
         } catch (\Exception $e) {
-            Log::error('Error storing batch grades: ' . $e->getMessage(), [
+            Log::error('Error in batch store: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->except(['_token'])
             ]);
             
-            return redirect()->back()
-                ->with('error', 'Error recording grades: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while saving grades: ' . $e->getMessage());
         }
     }
 
@@ -866,14 +1173,46 @@ class GradeController extends Controller
      */
     public function storeAssessmentSetup(Request $request)
     {
-        $request->validate([
-            'subject_id' => 'required|exists:subjects,id',
-            'term' => 'required|in:Q1,Q2,Q3,Q4',
-            'grade_type' => 'required|in:written_work,performance_task,quarterly',
-            'assessment_name' => 'required|string|max:255',
-            'max_score' => 'required|numeric|min:1',
-            'section_id' => 'required|exists:sections,id',
-        ]);
+        // Check if this is a MAPEH subject with components
+        $isMAPEH = $request->has('is_mapeh') && $request->is_mapeh == 1;
+        
+        if ($isMAPEH) {
+            // Validate MAPEH component setup
+            $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'term' => 'required|in:Q1,Q2,Q3,Q4',
+                'grade_type' => 'required|in:written_work,performance_task,quarterly',
+                'assessment_name' => 'required|string|max:255',
+                'section_id' => 'required|exists:sections,id',
+                'selected_components' => 'required|array|min:1',
+                'selected_components.*' => 'exists:subjects,id',
+                'component_max_score' => 'required|array|min:1',
+                'component_max_score.*' => 'required|numeric|min:1',
+            ], [
+                'selected_components.required' => 'Please select at least one MAPEH component.',
+                'selected_components.min' => 'Please select at least one MAPEH component.',
+                'component_max_score.*.required' => 'Maximum score is required for each selected component.',
+                'component_max_score.*.min' => 'Maximum score must be at least 1 for each component.'
+            ]);
+            
+            // Log the selected components and max scores for debugging
+            Log::info('MAPEH assessment setup', [
+                'teacher_id' => Auth::id(),
+                'subject_id' => $request->subject_id,
+                'selected_components' => $request->selected_components,
+                'component_max_scores' => $request->component_max_score
+            ]);
+        } else {
+            // Validate regular subject setup
+            $request->validate([
+                'subject_id' => 'required|exists:subjects,id',
+                'term' => 'required|in:Q1,Q2,Q3,Q4',
+                'grade_type' => 'required|in:written_work,performance_task,quarterly',
+                'assessment_name' => 'required|string|max:255',
+                'max_score' => 'required|numeric|min:1',
+                'section_id' => 'required|exists:sections,id',
+            ]);
+        }
         
         $teacherId = Auth::id();
         
@@ -896,9 +1235,41 @@ class GradeController extends Controller
         
         // Store assessment parameters in session
         session([
-            'assessment_name' => $request->assessment_name,
-            'max_score' => $request->max_score
+            'assessment_name' => $request->assessment_name
         ]);
+        
+        if ($isMAPEH) {
+            // For MAPEH, store the selected components and their max scores
+            session([
+                'is_mapeh' => true,
+                'selected_components' => $request->selected_components,
+                'component_max_score' => $request->component_max_score
+            ]);
+            
+            // Verify that all components exist in the database
+            $components = Subject::whereIn('id', $request->selected_components)->get();
+            if ($components->count() != count($request->selected_components)) {
+                Log::warning('Some MAPEH components not found in database', [
+                    'requested' => $request->selected_components,
+                    'found' => $components->pluck('id')->toArray()
+                ]);
+                return redirect()->back()->with('error', 'Some selected MAPEH components are invalid. Please try again.');
+            }
+            
+            // Log before redirect for debugging
+            Log::info('MAPEH session data before redirect', [
+                'is_mapeh' => session('is_mapeh'),
+                'selected_components' => session('selected_components'),
+                'component_max_score' => session('component_max_score'),
+                'assessment_name' => session('assessment_name')
+            ]);
+        } else {
+            // For regular subjects, store the max score
+            session([
+                'is_mapeh' => false,
+                'max_score' => $request->max_score
+            ]);
+        }
         
         // Redirect to batch grade entry form with the parameters
         return redirect()->route('teacher.grades.batch-create', [
@@ -1120,6 +1491,75 @@ class GradeController extends Controller
                     $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
                     $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
                     
+                    // Check if this is a MAPEH subject with components
+                    $isMAPEH = false;
+                    $mapehComponents = [];
+                    
+                    if (isset($selectedSubject->components) && $selectedSubject->components->count() > 0) {
+                        $componentNames = $selectedSubject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+                        $requiredComponents = ['music', 'arts', 'physical education', 'health'];
+                        
+                        $matchedComponents = 0;
+                        foreach ($requiredComponents as $component) {
+                            if (in_array($component, $componentNames) || 
+                                in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
+                                $matchedComponents++;
+                            }
+                        }
+                        
+                        $isMAPEH = $matchedComponents == 4;
+                        
+                        // If MAPEH, load component grades
+                        if ($isMAPEH) {
+                            $componentSubjectIds = $selectedSubject->components->pluck('id')->toArray();
+                            
+                            // Fetch component grades for this student
+                            $componentGrades = Grade::where('student_id', $student->id)
+                                ->whereIn('subject_id', $componentSubjectIds)
+                                ->where('term', $selectedTerm)
+                                ->get();
+                            
+                            // Group by component subject and grade type
+                            foreach ($selectedSubject->components as $component) {
+                                $componentWrittenWorks = $componentGrades
+                                    ->where('subject_id', $component->id)
+                                    ->where('grade_type', 'written_work')
+                                    ->all();
+                                    
+                                $componentPerformanceTasks = $componentGrades
+                                    ->where('subject_id', $component->id)
+                                    ->where('grade_type', 'performance_task')
+                                    ->all();
+                                    
+                                $componentQuarterlyAssessment = $componentGrades
+                                    ->where('subject_id', $component->id)
+                                    ->where('grade_type', 'quarterly')
+                                    ->first();
+                                
+                                $mapehComponents[$component->id] = [
+                                    'component' => $component,
+                                    'written_works' => $componentWrittenWorks,
+                                    'performance_tasks' => $componentPerformanceTasks,
+                                    'quarterly_assessment' => $componentQuarterlyAssessment,
+                                ];
+                            }
+                            
+                            // Add component written works to the main written works if not already there
+                            foreach ($mapehComponents as $componentData) {
+                                foreach ($componentData['written_works'] as $work) {
+                                    $writtenWorks[] = $work;
+                                }
+                                foreach ($componentData['performance_tasks'] as $task) {
+                                    $performanceTasks[] = $task;
+                                }
+                                // For quarterly assessment, only use if main one is not set
+                                if (!$quarterlyAssessment && $componentData['quarterly_assessment']) {
+                                    $quarterlyAssessment = $componentData['quarterly_assessment'];
+                                }
+                            }
+                        }
+                    }
+                    
                     $students[] = [
                         'student' => $student,
                         'written_works' => $writtenWorks,
@@ -1166,5 +1606,99 @@ class GradeController extends Controller
     {
         // Redirect to the grades index page
         return redirect()->route('teacher.grades.index');
+    }
+
+    /**
+     * Lock or unlock a transmutation table for consistent grading
+     * Only section advisers can lock a transmutation table
+     */
+    public function lockTransmutationTable(Request $request)
+    {
+        $teacher = Auth::user();
+        $locked = $request->input('locked', false);
+        
+        // Check if the table should be locked or unlocked
+        if ($locked) {
+            $tableId = $request->input('table_id', 1); // Default to DepEd table (now Table 1)
+            
+            // Store the locked state in the session only when explicitly requested
+            session(['locked_transmutation_table' => true]);
+            session(['locked_transmutation_table_id' => $tableId]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transmutation table has been locked',
+                'table_id' => $tableId
+            ]);
+        } else {
+            // Remove the locked state from the session
+            session()->forget('locked_transmutation_table');
+            session()->forget('locked_transmutation_table_id');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transmutation table has been unlocked'
+            ]);
+        }
+    }
+    
+    /**
+     * Save the teacher's transmutation table preference
+     */
+    public function saveTransmutationPreference($teacherId, $tableId)
+    {
+        try {
+            // Check if a preference already exists
+            $exists = DB::table('teacher_preferences')
+                ->where('teacher_id', $teacherId)
+                ->where('preference_key', 'transmutation_table')
+                ->exists();
+                
+            if ($exists) {
+                // Update existing preference
+                DB::table('teacher_preferences')
+                    ->where('teacher_id', $teacherId)
+                    ->where('preference_key', 'transmutation_table')
+                    ->update([
+                        'preference_value' => $tableId,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                // Create new preference
+                DB::table('teacher_preferences')->insert([
+                    'teacher_id' => $teacherId,
+                    'preference_key' => 'transmutation_table',
+                    'preference_value' => $tableId,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error saving transmutation preference: ' . $e->getMessage(), [
+                'teacher_id' => $teacherId,
+                'table_id' => $tableId
+            ]);
+            
+            return false;
+        }
+    }
+    
+    /**
+     * Update the teacher's transmutation table preference
+     */
+    public function updateTransmutationPreference(Request $request)
+    {
+        $tableId = $request->input('transmutation_table', 1); // Default to DepEd table (now Table 1)
+        $teacherId = Auth::id();
+        
+        $success = $this->saveTransmutationPreference($teacherId, $tableId);
+        
+        if ($success) {
+            return redirect()->back()->with('success', 'Transmutation table preference saved successfully.');
+        } else {
+            return redirect()->back()->with('error', 'Failed to save transmutation table preference.');
+        }
     }
 }
