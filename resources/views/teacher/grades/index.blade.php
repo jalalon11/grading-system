@@ -51,6 +51,19 @@
         top: -25px;
     }
     
+    /* MAPEH Components Display */
+    .mapeh-components {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+    }
+    .mapeh-components .badge {
+        font-size: 10px;
+        padding: 3px 5px;
+        white-space: nowrap;
+    }
+    
     /* New styles for comprehensive grade view */
     .table-responsive {
         overflow-x: auto;
@@ -121,6 +134,39 @@
     .transmutation-info {
         font-size: 0.8rem;
         color: #6c757d;
+    }
+    
+    /* MAPEH Component Selector */
+    .mapeh-selector {
+        max-width: 300px;
+        margin-bottom: 15px;
+    }
+    
+    /* Component grade highlight */
+    .component-grade-highlight {
+        font-weight: bold;
+        padding: 3px 5px;
+        border-radius: 4px;
+    }
+    
+    .music-highlight {
+        background-color: rgba(13, 110, 253, 0.15);
+        color: #0d6efd;
+    }
+    
+    .arts-highlight {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+    
+    .pe-highlight {
+        background-color: rgba(25, 135, 84, 0.15);
+        color: #198754;
+    }
+    
+    .health-highlight {
+        background-color: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
     }
 </style>
 @endpush
@@ -229,7 +275,24 @@
                         </label>
                         <select class="form-select shadow-sm" id="section_id" name="section_id">
                             @foreach($sections as $section)
-                                <option value="{{ $section->id }}" {{ $selectedSectionId == $section->id ? 'selected' : '' }}>
+                                @php
+                                    // Get the subjects assigned to this section for this teacher
+                                    $sectionSubjectIds = DB::table('section_subject')
+                                        ->where('section_id', $section->id)
+                                        ->where('teacher_id', Auth::id())
+                                        ->pluck('subject_id')
+                                        ->toArray();
+                                        
+                                    // Add adviser's sections as well
+                                    $isAdviser = $section->adviser_id == Auth::id();
+                                    
+                                    // Create a data attribute with all subject IDs for this section
+                                    $subjectDataAttr = implode(',', $sectionSubjectIds);
+                                @endphp
+                                <option value="{{ $section->id }}" 
+                                    {{ $selectedSectionId == $section->id ? 'selected' : '' }}
+                                    data-subjects="{{ $subjectDataAttr }}"
+                                    data-is-adviser="{{ $isAdviser ? 'true' : 'false' }}">
                                     {{ $section->name }} (Grade {{ $section->grade_level }})
                                 </option>
                             @endforeach
@@ -534,32 +597,36 @@
         </div>
         
         <!-- Student Grades Table -->
-        <div class="card shadow-sm rounded-3 border-0 mb-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                @if(isset($students[0]['view_all']) && $students[0]['view_all'])
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold text-primary">
-                        <i class="fas fa-table-columns me-2"></i> Comprehensive Grade Report - {{ $terms[$selectedTerm] }}
+                    <i class="fas fa-user-graduate me-2"></i> Student Grades
                     </h5>
-                @else
-                    <h5 class="mb-0 fw-bold text-primary">
-                        <i class="fas fa-users me-2"></i> {{ $sections->find($selectedSectionId)?->name }} - {{ $selectedSubject->name }} Grades
-                    </h5>
+                <div class="d-flex">
+                    @if($selectedSubject && stripos($selectedSubject->name, 'MAPEH') !== false)
+                    <div class="mapeh-selector me-3">
+                        <select id="mapehComponentSelector" class="form-select form-select-sm">
+                            <option value="average" selected>MAPEH Average Grade</option>
+                            <option value="music">Music Component</option>
+                            <option value="arts">Arts Component</option>
+                            <option value="pe">PE Component</option>
+                            <option value="health">Health Component</option>
+                        </select>
+                    </div>
                 @endif
-                
-                <!-- <div>
-                    @if(!isset($students[0]['view_all']) || !$students[0]['view_all'])
-                    <a href="{{ route('teacher.grades.batch-create', [
-                        'subject_id' => $selectedSubject->id,
-                        'section_id' => $selectedSectionId,
-                        'term' => $selectedTerm
-                    ]) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-list-alt me-1"></i> Batch Grade Entry
-                    </a>
-                    @endif
-                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="printGradesBtn">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <button class="btn btn-sm btn-outline-primary" id="toggleTableView">
+                                <i class="fas fa-table-columns me-1"></i> Toggle View
+                            </button>
+                        </div>
+                        <div>
+                            <button id="printGradesBtn" class="btn btn-sm btn-outline-secondary">
                         <i class="fas fa-print me-1"></i> Print
                     </button>
-                </div> -->
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-body p-0">
                 @if(isset($students[0]['view_all']) && $students[0]['view_all'])
@@ -625,7 +692,148 @@
                                         @foreach($studentData['subject_grades'] as $subjectId => $subjectGrade)
                                             <td class="text-center subject-grade">
                                                 @php
-                                                    // Calculate grade for this subject
+                                                    // Get the subject
+                                                    $subject = \App\Models\Subject::find($subjectId);
+                                                    
+                                                    // Check if this is a MAPEH subject
+                                                    $isMAPEH = false;
+                                                    if ($subject && isset($subject->components) && $subject->components->count() > 0) {
+                                                        $componentNames = $subject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+                                                        $requiredComponents = ['music', 'arts', 'physical education', 'health'];
+                                                        
+                                                        $matchedComponents = 0;
+                                                        foreach ($requiredComponents as $component) {
+                                                            if (in_array($component, $componentNames) || 
+                                                                in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
+                                                                $matchedComponents++;
+                                                            }
+                                                        }
+                                                        
+                                                        $isMAPEH = $matchedComponents == 4;
+                                                    }
+                                                    
+                                                    // Get subject's grade configuration
+                                                    $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
+                                                    
+                                                    $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
+                                                    $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
+                                                    $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
+                                                    
+                                                    if ($isMAPEH && $subject->components) {
+                                                        // For MAPEH subjects, calculate component grades individually
+                                                        $componentGrades = [];
+                                                        $componentTransmuted = [];
+                                                        
+                                                        foreach ($subject->components as $component) {
+                                                            // Get component grades from database for this term
+                                                            $componentWrittenWorks = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                                ->where('subject_id', $component->id)
+                                                                ->where('term', request('term', 'q1'))
+                                                                ->where('grade_type', 'written_work')
+                                                                ->get();
+                                                                
+                                                            $componentPerformanceTasks = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                                ->where('subject_id', $component->id)
+                                                                ->where('term', request('term', 'q1'))
+                                                                ->where('grade_type', 'performance_task')
+                                                                ->get();
+                                                                
+                                                            $componentQuarterlyAssessment = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                                ->where('subject_id', $component->id)
+                                                                ->where('term', request('term', 'q1'))
+                                                                ->where('grade_type', 'quarterly')
+                                                                ->first();
+                                                            
+                                                            // Calculate component grade using weighted formula identical to regular subjects
+                                                            $componentWrittenWorksAvg = $componentWrittenWorks->count() > 0 ? 
+                                                                $componentWrittenWorks->average(function($grade) {
+                                                                    return ($grade->score / $grade->max_score) * 100;
+                                                                }) : 0;
+                                                                
+                                                            $componentPerformanceTasksAvg = $componentPerformanceTasks->count() > 0 ? 
+                                                                $componentPerformanceTasks->average(function($grade) {
+                                                                    return ($grade->score / $grade->max_score) * 100;
+                                                                }) : 0;
+                                                                
+                                                            $componentQuarterlyScore = $componentQuarterlyAssessment ? 
+                                                                ($componentQuarterlyAssessment->score / $componentQuarterlyAssessment->max_score) * 100 : 0;
+                                                            
+                                                            // Get component's grade configuration (or use parent if not set)
+                                                            $componentConfig = \App\Models\GradeConfiguration::where('subject_id', $component->id)->first();
+                                                            
+                                                            $compWrittenWorkPercentage = $componentConfig ? 
+                                                                $componentConfig->written_work_percentage : $writtenWorkPercentage;
+                                                                
+                                                            $compPerformanceTaskPercentage = $componentConfig ? 
+                                                                $componentConfig->performance_task_percentage : $performanceTaskPercentage;
+                                                                
+                                                            $compQuarterlyAssessmentPercentage = $componentConfig ? 
+                                                                $componentConfig->quarterly_assessment_percentage : $quarterlyAssessmentPercentage;
+                                                                
+                                                            // Calculate component final grade
+                                                            $componentFinalGrade = 0;
+                                                            $hasComponentGrades = false;
+                                                            
+                                                            if ($componentWrittenWorks->count() > 0) {
+                                                                $componentFinalGrade += ($componentWrittenWorksAvg * ($compWrittenWorkPercentage / 100));
+                                                                $hasComponentGrades = true;
+                                                            }
+                                                            
+                                                            if ($componentPerformanceTasks->count() > 0) {
+                                                                $componentFinalGrade += ($componentPerformanceTasksAvg * ($compPerformanceTaskPercentage / 100));
+                                                                $hasComponentGrades = true;
+                                                            }
+                                                            
+                                                            if ($componentQuarterlyAssessment) {
+                                                                $componentFinalGrade += ($componentQuarterlyScore * ($compQuarterlyAssessmentPercentage / 100));
+                                                                $hasComponentGrades = true;
+                                                            }
+                                                            
+                                                            if ($hasComponentGrades) {
+                                                                $componentGrades[$component->name] = round($componentFinalGrade, 1);
+                                                                // Also get transmuted grade for each component
+                                                                $componentTransmuted[$component->name] = getTransmutedGrade(
+                                                                    $componentFinalGrade, 
+                                                                    request('transmutation_table', 1)
+                                                                );
+                                                            } else {
+                                                                $componentGrades[$component->name] = null;
+                                                                $componentTransmuted[$component->name] = null;
+                                                            }
+                                                        }
+                                                        
+                                                        // Calculate MAPEH average based on available component grades
+                                                        $validComponentGrades = array_filter($componentGrades, function($grade) {
+                                                            return $grade !== null;
+                                                        });
+                                                        
+                                                        if (count($validComponentGrades) > 0) {
+                                                            // Calculate the MAPEH average - this is the average of all component initial grades
+                                                            $mapehAverage = array_sum($validComponentGrades) / count($validComponentGrades);
+                                                            $avgGrade = round($mapehAverage, 1);
+                                                            
+                                                            // Get the transmuted grade from this average
+                                                            $transmutedGrade = getTransmutedGrade($avgGrade, request('transmutation_table', 1));
+                                                            
+                                                            // Update grade class
+                                                            $gradeClass = 'secondary';
+                                                            if ($transmutedGrade >= 90) {
+                                                                $gradeClass = 'success';
+                                                            } elseif ($transmutedGrade >= 80) {
+                                                                $gradeClass = 'primary';
+                                                            } elseif ($transmutedGrade >= 75) {
+                                                                $gradeClass = 'info';
+                                                            } elseif ($transmutedGrade > 0) {
+                                                                $gradeClass = 'danger';
+                                                            }
+                                                        } else {
+                                                            // No component grades available
+                                                            $avgGrade = 0;
+                                                            $transmutedGrade = 0;
+                                                            $gradeClass = 'secondary';
+                                                        }
+                                                    } else {
+                                                        // Regular (non-MAPEH) subject calculation
                                                     $writtenWorks = collect($subjectGrade['written_works']);
                                                     $performanceTasks = collect($subjectGrade['performance_tasks']);
                                                     $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
@@ -642,13 +850,6 @@
                                                     
                                                     $quarterlyScore = $quarterlyAssessment ? 
                                                         ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                                    
-                                                    // Get subject's grade configuration
-                                                    $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
-                                                    
-                                                    $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
-                                                    $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
-                                                    $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
                                                     
                                                     // Calculate weighted final grade
                                                     $finalGrade = 0;
@@ -677,10 +878,87 @@
                                                         $gradeClass = 'info';
                                                     } elseif ($transmutedGrade > 0) {
                                                         $gradeClass = 'danger';
+                                                        }
                                                     }
                                                 @endphp
                                                 
-                                                @if($writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment)
+                                                @if($isMAPEH && isset($componentGrades) && count(array_filter($componentGrades)) > 0)
+                                                    <!-- Debug information for component data -->
+                                                    <div class="small text-muted mb-2 debug-info">
+                                                        Component Data: {{ implode(', ', array_keys($componentGrades)) }}
+                                                    </div>
+                                                    
+                                                    <div class="mb-1">
+                                                        <span class="badge bg-{{ $gradeClass }} grade-badge mapeh-average-display" id="mapeh-overall-{{ $studentData['student']->id }}">{{ $transmutedGrade }}</span>
+                                                    </div>
+                                                    <div class="small text-muted mb-1 mapeh-average-display" id="mapeh-initial-{{ $studentData['student']->id }}">Initial: {{ $avgGrade }}%</div>
+                                                    
+                                                    <div class="mapeh-components small mapeh-average-display" id="mapeh-components-{{ $studentData['student']->id }}">
+                                                        @foreach($componentGrades as $componentName => $grade)
+                                                            @php
+                                                                $shortName = strtoupper(substr($componentName, 0, 1));
+                                                                $componentClass = 'secondary';
+                                                                $componentKey = '';
+                                                                
+                                                                if (stripos($componentName, 'music') !== false) {
+                                                                    $componentClass = 'primary';
+                                                                    $componentKey = 'music';
+                                                                } elseif (stripos($componentName, 'art') !== false) {
+                                                                    $componentClass = 'danger';
+                                                                    $componentKey = 'arts';
+                                                                } elseif (stripos($componentName, 'physical') !== false || stripos($componentName, 'pe') !== false) {
+                                                                    $componentClass = 'success';
+                                                                    $componentKey = 'pe';
+                                                                } elseif (stripos($componentName, 'health') !== false) {
+                                                                    $componentClass = 'warning';
+                                                                    $componentKey = 'health';
+                                                                }
+                                                                
+                                                                // Get the transmuted component grade
+                                                                $compTransmuted = isset($componentTransmuted[$componentName]) ? 
+                                                                    $componentTransmuted[$componentName] : 'N/A';
+                                                            @endphp
+                                                            <div class="badge bg-{{ $componentClass }} bg-opacity-10 text-{{ $componentClass }} mb-1 mapeh-component-badge"
+                                                                data-component="{{ $componentKey }}"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                title="{{ $componentName }}: {{ $grade }}% ({{ $compTransmuted }})">
+                                                                {{ $shortName }}: {{ $compTransmuted }}
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                    
+                                                    <!-- Component-specific displays -->
+                                                    @foreach($componentGrades as $componentName => $grade)
+                                                        @php
+                                                            $componentClass = 'secondary';
+                                                            $componentKey = '';
+                                                            
+                                                            if (stripos($componentName, 'music') !== false) {
+                                                                $componentClass = 'primary';
+                                                                $componentKey = 'music';
+                                                            } elseif (stripos($componentName, 'art') !== false) {
+                                                                $componentClass = 'danger';
+                                                                $componentKey = 'arts';
+                                                            } elseif (stripos($componentName, 'physical') !== false || stripos($componentName, 'pe') !== false) {
+                                                                $componentClass = 'success';
+                                                                $componentKey = 'pe';
+                                                            } elseif (stripos($componentName, 'health') !== false) {
+                                                                $componentClass = 'warning';
+                                                                $componentKey = 'health';
+                                                            }
+                                                            
+                                                            // Get the transmuted component grade
+                                                            $compTransmuted = isset($componentTransmuted[$componentName]) ? 
+                                                                $componentTransmuted[$componentName] : 'N/A';
+                                                        @endphp
+                                                        <div class="d-none mapeh-component-single" data-component="{{ $componentKey }}">
+                                                            <div class="{{ $componentKey }}-highlight component-grade-highlight">{{ $componentName }}: {{ $compTransmuted }}</div>
+                                                            <div class="small text-muted">Initial: {{ $grade }}%</div>
+                                                        </div>
+                                                    @endforeach
+                                                @elseif($isMAPEH)
+                                                    <span class="text-muted small">N/A</span>
+                                                @elseif(isset($writtenWorks) && ($writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment))
                                                     <div class="mb-1">
                                                         <span class="badge bg-{{ $gradeClass }} grade-badge">{{ $transmutedGrade }}</span>
                                                     </div>
@@ -1494,267 +1772,99 @@ $selectedTransmutationTable = request('transmutation_table', 1);
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-    
-    // Initialize accordions with custom functionality
-    document.querySelectorAll('.accordion-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const target = document.querySelector(this.getAttribute('data-bs-target'));
-            if (target) {
-                if (target.classList.contains('show')) {
-                    target.classList.remove('show');
-                    this.classList.add('collapsed');
-                    this.setAttribute('aria-expanded', 'false');
-                } else {
-                    // Close all other accordions in this group
-                    const parent = target.getAttribute('data-bs-parent');
-                    if (parent) {
-                        document.querySelectorAll(parent + ' .accordion-collapse.show').forEach(item => {
-                            if (item !== target) {
-                                item.classList.remove('show');
-                                const button = document.querySelector(`[data-bs-target="#${item.id}"]`);
-                                if (button) {
-                                    button.classList.add('collapsed');
-                                    button.setAttribute('aria-expanded', 'false');
-                                }
-                            }
-                        });
-                    }
-                    
-                    target.classList.add('show');
-                    this.classList.remove('collapsed');
-                    this.setAttribute('aria-expanded', 'true');
-                }
-            }
+    // Print student report function
+    function printStudentReport(studentId) {
+        var printWindow = window.open('{{ url("teacher/grades/print-report") }}/' + studentId + '?subject_id={{ $selectedSubject->id ?? 0 }}&term={{ $selectedTerm }}', '_blank');
+        printWindow.addEventListener('load', function() {
+            printWindow.print();
         });
-    });
-    
-    // Toggle compact view for grade table
-    const compactViewToggle = document.getElementById('compactViewToggle');
-    const gradeTable = document.getElementById('gradeTable');
-    
-    if (compactViewToggle && gradeTable) {
-        compactViewToggle.addEventListener('change', function() {
-            if (this.checked) {
-                gradeTable.classList.add('compact-view');
-                localStorage.setItem('gradeTableCompactView', 'true');
-            } else {
-                gradeTable.classList.remove('compact-view');
-                localStorage.setItem('gradeTableCompactView', 'false');
-            }
-        });
-        
-        // Load saved preference
-        if (localStorage.getItem('gradeTableCompactView') === 'true') {
-            compactViewToggle.checked = true;
-            gradeTable.classList.add('compact-view');
-        }
     }
-    
-    // Auto-submit the form when changing filters
-    $('#subject_id, #section_id, #term, #view_all').on('change', function() {
-        $('#filterForm').submit();
-    });
-    
-    // Subject-section mappings
-    const subjectSections = {
-        @foreach($subjects as $subject)
-            {{ $subject->id }}: [
-                @php
-                    // Get sections for this subject
-                    $subjectSectionIds = DB::table('section_subject')
-                        ->where('subject_id', $subject->id)
-                        ->where('teacher_id', Auth::id())
-                        ->pluck('section_id')
-                        ->toArray();
-                @endphp
-                @foreach($subjectSectionIds as $sectionId)
-                    {{ $sectionId }},
-                @endforeach
-            ],
-        @endforeach
-    };
     
     // Function to filter sections based on selected subject
     function filterSectionsBySubject(subjectId) {
+        console.log('Filtering sections for subject ID:', subjectId);
         const sectionDropdown = document.getElementById('section_id');
         if (!sectionDropdown) return;
         
-        const availableSections = subjectSections[subjectId] || [];
+        // Get all section options
+        const sectionOptions = Array.from(sectionDropdown.options);
         
-        // Hide all options first
-        Array.from(sectionDropdown.options).forEach(option => {
-            const sectionId = parseInt(option.value);
-            if (availableSections.includes(sectionId)) {
+        // Filter options based on data attributes
+        sectionOptions.forEach(option => {
+            const subjectIds = option.getAttribute('data-subjects') || '';
+            
+            // Only show sections that have the subject assigned, regardless of adviser status
+            if (subjectIds.split(',').includes(subjectId)) {
                 option.style.display = '';
             } else {
                 option.style.display = 'none';
             }
         });
         
-        // If current selection is not valid, select first available
-        const currentSelection = parseInt(sectionDropdown.value);
-        if (!availableSections.includes(currentSelection) && availableSections.length > 0) {
-            sectionDropdown.value = availableSections[0];
+        // If current selection is hidden, select first visible option
+        if (sectionDropdown.selectedOptions[0].style.display === 'none') {
+            const firstVisibleOption = sectionOptions.find(option => option.style.display !== 'none');
+            if (firstVisibleOption) {
+                sectionDropdown.value = firstVisibleOption.value;
+            }
+        }
+        
+        // If no options are visible at all, show all options as fallback
+        const visibleOptions = sectionOptions.filter(option => option.style.display !== 'none');
+        if (visibleOptions.length === 0) {
+            sectionOptions.forEach(option => option.style.display = '');
         }
     }
     
-    // Filter sections on load
-    const subjectSelect = document.getElementById('subject_id');
-    if (subjectSelect) {
-        filterSectionsBySubject(subjectSelect.value);
-        
-        // Auto-submit form when subject changes
-        subjectSelect.addEventListener('change', function() {
-            filterSectionsBySubject(this.value);
-            document.getElementById('filterForm').submit();
+    // Grade table toggle view
+$(document).ready(function() {
+        $('#toggleTableView').on('click', function() {
+            $('#gradeTable').toggleClass('compact-view');
         });
-    }
-    
-    // Auto-submit form when section or term changes
-    document.getElementById('section_id')?.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-    
-    document.getElementById('term')?.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-    
-    // Print all grades
-    document.getElementById('printGrades')?.addEventListener('click', function() {
-        window.print();
-    });
-    
-    // Export functionality placeholder
-    document.getElementById('exportGrades')?.addEventListener('click', function() {
-        alert('Export functionality will be available soon!');
-    });
-});
-
-// Function to print individual student report
-function printStudentReport(studentId) {
-    // Create a popup window with the student's report
-    let url = "{{ route('teacher.grades.show', ['grade' => 'STUDENT_ID', 'subject_id' => $selectedSubject->id ?? 0, 'term' => $selectedTerm ?? 'Q1']) }}";
-    url = url.replace('STUDENT_ID', studentId);
-    window.open(url, 'studentReport', 'width=800,height=600');
-}
-
-// Add any JavaScript needed for the transmutation table functionality
-$(document).ready(function() {
-    // Existing script code
-    
-    // Update any tooltips or help text for the transmutation tables
-    $('[data-bs-toggle="tooltip"]').tooltip();
-});
-
-// Add JavaScript for transmutation table locking functionality
-$(document).ready(function() {
+        
     // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Initialize the hidden input with the current dropdown value
-    updateHiddenTransmutationInput($('#transmutation_table').val());
-    
-    // Handle lock table toggle
-    $('#lock_table').change(function() {
-        const isLocked = $(this).is(':checked');
-        const tableId = $('#transmutation_table').val();
+        // Initialize section filtering on page load
+        const subjectSelect = document.getElementById('subject_id');
+        if (subjectSelect) {
+            // Filter sections based on initial subject selection
+            filterSectionsBySubject(subjectSelect.value);
+            
+            // Filter sections when subject selection changes
+            subjectSelect.addEventListener('change', function() {
+                filterSectionsBySubject(this.value);
+            });
+        }
         
-        if (isLocked) {
-            $('#transmutation_table').prop('disabled', true);
-            $('#selected_transmutation_table').val(tableId); // Ensure hidden input has the value
+        // MAPEH Component Selector
+        $('#mapehComponentSelector').on('change', function() {
+            let selectedComponent = $(this).val();
+            console.log('Selected component:', selectedComponent);
             
-            // Save the locked state via AJAX
-            $.ajax({
-                url: '{{ route("teacher.grades.lock-transmutation") }}',
-                type: 'POST',
-                data: {
-                    locked: true,
-                    table_id: tableId,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        toastr.success('Transmutation table has been locked');
-                        
-                        // Also save as preference
-                        saveTransmutationPreference(tableId);
-                    }
-                }
-            });
-        } else {
-            $('#transmutation_table').prop('disabled', false);
+            // Hide all component displays first
+            $('.mapeh-average-display').addClass('d-none');
+            $('.mapeh-component-single').addClass('d-none');
             
-            // Remove the locked state via AJAX
-            $.ajax({
-                url: '{{ route("teacher.grades.lock-transmutation") }}',
-                type: 'POST',
-                data: {
-                    locked: false,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        toastr.info('Transmutation table has been unlocked');
-                    }
-                }
-            });
-        }
-    });
-    
-    // Clear lock state from session if checkbox is not checked on page load
-    if (!$('#lock_table').is(':checked')) {
-        $.ajax({
-            url: '{{ route("teacher.grades.lock-transmutation") }}',
-            type: 'POST',
-            data: {
-                locked: false,
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Enable the select field
-                    $('#transmutation_table').prop('disabled', false);
-                }
+            if (selectedComponent === 'average') {
+                // Show only the average MAPEH grade
+                $('.mapeh-average-display').removeClass('d-none');
+                $('.mapeh-component-badge').addClass('d-none');
+                return;
             }
+            
+            // Show only the selected component
+            $('.mapeh-component-single').addClass('d-none');
+            $(`.mapeh-component-single[data-component="${selectedComponent}"]`).removeClass('d-none');
         });
-    }
-});
-
-// Function to update the hidden input with the current transmutation table value
-function updateHiddenTransmutationInput(value) {
-    $('#selected_transmutation_table').val(value);
-}
-
-// Function to save transmutation preference
-function saveTransmutationPreference(tableId) {
-    $.ajax({
-        url: '{{ route("teacher.grades.update-transmutation-preference") }}',
-        type: 'POST',
-        data: {
-            transmutation_table: tableId,
-            _token: '{{ csrf_token() }}'
-        },
-        success: function(response) {
-            // Preference saved silently
-        }
-    });
-}
-
-// When transmutation table changes, update preference if locked
-$('#transmutation_table').change(function() {
-    const tableId = $(this).val();
-    if ($('#lock_table').is(':checked')) {
-        saveTransmutationPreference(tableId);
-    }
+        
+        // Print grades button
+        $('#printGradesBtn').on('click', function() {
+            window.print();
+        });
 });
 </script>
 @endpush

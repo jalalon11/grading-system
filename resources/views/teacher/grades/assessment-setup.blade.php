@@ -19,6 +19,7 @@
     @php
         // Check if this is a MAPEH subject
         $isMAPEH = false;
+        $mapehComponents = [];
         if (isset($subject->components) && $subject->components->count() > 0) {
             $componentNames = $subject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
             $requiredComponents = ['music', 'arts', 'physical education', 'health'];
@@ -32,6 +33,22 @@
             }
             
             $isMAPEH = $matchedComponents == 4;
+
+            if ($isMAPEH) {
+                // Organize the component objects for easy access
+                foreach ($subject->components as $component) {
+                    $componentName = strtolower($component->name);
+                    if (stripos($componentName, 'music') !== false) {
+                        $mapehComponents['music'] = $component;
+                    } elseif (stripos($componentName, 'art') !== false) {
+                        $mapehComponents['arts'] = $component;
+                    } elseif (stripos($componentName, 'physical') !== false || stripos($componentName, 'pe') !== false) {
+                        $mapehComponents['pe'] = $component;
+                    } elseif (stripos($componentName, 'health') !== false) {
+                        $mapehComponents['health'] = $component;
+                    }
+                }
+            }
         }
     @endphp
 
@@ -64,19 +81,31 @@
                                 <h6 class="alert-heading">MAPEH Subject</h6>
                                 <p class="mb-0">
                                     MAPEH is a consolidated subject with 4 components: Music, Arts, Physical Education, and Health.
-                                    You will set up assessments for each component separately.
+                                    Select which component(s) you want to assess with this assessment.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('teacher.grades.store-assessment-setup') }}">
+                    <form method="POST" action="{{ route('teacher.grades.store-assessment-setup') }}" id="mapehAssessmentForm">
                         @csrf
                         <input type="hidden" name="subject_id" value="{{ $subject->id }}">
                         <input type="hidden" name="term" value="{{ $term }}">
                         <input type="hidden" name="grade_type" value="{{ $gradeType }}">
                         <input type="hidden" name="section_id" value="{{ $section->id ?? request()->get('section_id', 1) }}">
                         <input type="hidden" name="is_mapeh" value="1">
+                        
+                        <!-- Debug Info -->
+                        @if($errors->any())
+                        <div class="alert alert-danger mb-4">
+                            <h6>Form Submission Errors:</h6>
+                            <ul class="mb-0">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
                         
                         <div class="mb-4">
                             <label for="assessment_name" class="form-label">Assessment Name <span class="text-danger">*</span></label>
@@ -89,34 +118,81 @@
                                 </span>
                             @enderror
                             <div class="form-text">
-                                Provide a descriptive name for this assessment that will be used across all MAPEH components.
+                                Provide a descriptive name for this assessment.
                             </div>
                         </div>
                         
-                        <div class="row mb-4">
-                            <div class="col-12">
-                                <label class="form-label">Maximum Score for Each Component <span class="text-danger">*</span></label>
+                        <!-- Component Selection -->
+                        <div class="mb-4">
+                            <label class="form-label d-block">Select MAPEH Component(s) <span class="text-danger">*</span></label>
+                            
+                            <div class="row">
+                                @php
+                                    $componentClasses = [
+                                        'music' => 'border-primary text-primary',
+                                        'arts' => 'border-danger text-danger',
+                                        'pe' => 'border-success text-success',
+                                        'health' => 'border-warning text-warning'
+                                    ];
+                                    
+                                    $componentFullNames = [
+                                        'music' => 'Music',
+                                        'arts' => 'Arts',
+                                        'pe' => 'Physical Education',
+                                        'health' => 'Health'
+                                    ];
+                                    
+                                    $componentIcons = [
+                                        'music' => 'fas fa-music',
+                                        'arts' => 'fas fa-paint-brush',
+                                        'pe' => 'fas fa-running',
+                                        'health' => 'fas fa-heartbeat'
+                                    ];
+                                @endphp
+                                
+                                @foreach(['music', 'arts', 'pe', 'health'] as $componentKey)
+                                    @if(isset($mapehComponents[$componentKey]))
+                                        <div class="col-md-6 col-lg-3 mb-3">
+                                            <div class="card h-100 component-card">
+                                                <div class="card-header border-bottom-0 bg-white pt-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input component-checkbox" type="checkbox" 
+                                                            name="selected_components[]" 
+                                                            value="{{ $mapehComponents[$componentKey]->id }}" 
+                                                            id="component_{{ $mapehComponents[$componentKey]->id }}"
+                                                            checked>
+                                                        <label class="form-check-label fw-bold {{ $componentClasses[$componentKey] }}" 
+                                                               for="component_{{ $mapehComponents[$componentKey]->id }}">
+                                                            <i class="{{ $componentIcons[$componentKey] }} me-2"></i>
+                                                            {{ $componentFullNames[$componentKey] }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body pt-0">
+                                                    <small class="text-muted d-block mb-3">
+                                                        Component of {{ $subject->name }}
+                                                    </small>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="max_score_{{ $mapehComponents[$componentKey]->id }}" class="form-label small">
+                                                            Maximum Score
+                                                        </label>
+                                                        <input type="number" class="form-control form-control-sm component-input" 
+                                                            id="max_score_{{ $mapehComponents[$componentKey]->id }}" 
+                                                            name="component_max_score[{{ $mapehComponents[$componentKey]->id }}]" 
+                                                            value="{{ old('component_max_score.' . $mapehComponents[$componentKey]->id, 100) }}" 
+                                                            min="1" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endforeach
                             </div>
                             
-                            @foreach($subject->components as $component)
-                            <div class="col-md-3 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-header bg-light py-2">
-                                        <h6 class="mb-0">{{ $component->name }}</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <input type="number" class="form-control" 
-                                            id="max_score_{{ $component->id }}" 
-                                            name="component_max_score[{{ $component->id }}]" 
-                                            value="{{ old('component_max_score.' . $component->id, 100) }}" 
-                                            min="1" required>
-                                        <div class="form-text small">
-                                            Maximum score for {{ $component->name }}
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="form-text mt-2">
+                                <i class="fas fa-info-circle me-1"></i> Select at least one component to include in this assessment.
                             </div>
-                            @endforeach
                         </div>
                         
                         <div class="alert alert-warning">
@@ -127,7 +203,7 @@
                                 <div>
                                     <h6 class="alert-heading">Assessment Type: {{ $gradeTypes[$gradeType] ?? $gradeType }}</h6>
                                     <p class="mb-0">
-                                        For MAPEH subjects, you will enter grades for each component separately. The final grade will be calculated as a weighted average based on the component weights.
+                                        Each MAPEH component is graded separately. The final MAPEH grade will be calculated as the average of all component grades after each component has its own written work, performance task, and quarterly assessments computed.
                                     </p>
                                 </div>
                             </div>
@@ -237,4 +313,52 @@
     </div>
     @endif
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mapehForm = document.getElementById('mapehAssessmentForm');
+        if (mapehForm) {
+            // Handle component checkbox changes
+            const componentCheckboxes = document.querySelectorAll('.component-checkbox');
+            componentCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const componentId = this.value;
+                    const inputs = document.querySelectorAll(`input[name^="component_max_score[${componentId}]"]`);
+                    
+                    inputs.forEach(input => {
+                        input.disabled = !this.checked;
+                        if (!this.checked) {
+                            input.classList.add('bg-light');
+                        } else {
+                            input.classList.remove('bg-light');
+                        }
+                    });
+                    
+                    // Update parent card styling
+                    const parentCard = this.closest('.component-card');
+                    if (parentCard) {
+                        if (this.checked) {
+                            parentCard.classList.add('border');
+                            parentCard.classList.remove('opacity-50');
+                        } else {
+                            parentCard.classList.remove('border');
+                            parentCard.classList.add('opacity-50');
+                        }
+                    }
+                });
+            });
+            
+            // Form validation
+            mapehForm.addEventListener('submit', function(event) {
+                if (document.querySelectorAll('.component-checkbox:checked').length === 0) {
+                    event.preventDefault();
+                    alert('Please select at least one MAPEH component for this assessment.');
+                }
+            });
+        }
+    });
+</script>
+@endpush
+
 @endsection 

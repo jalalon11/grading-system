@@ -197,7 +197,13 @@
                                     } elseif (stripos($component->name, 'health') !== false) {
                                         $componentClass = 'text-warning';
                                     }
+                                    
+                                    // Check if this component was selected in assessment setup
+                                    $isSelectedComponent = in_array($component->id, session('selected_components', []));
+                                    $componentMaxScore = session('component_max_score.' . $component->id, 100);
                                 @endphp
+                                
+                                @if($isSelectedComponent)
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link {{ $index === 0 ? 'active' : '' }} {{ $componentClass }}" 
                                             id="{{ $componentSlug }}-tab" 
@@ -209,14 +215,23 @@
                                             aria-selected="{{ $index === 0 ? 'true' : 'false' }}">
                                         {{ $component->name }}
                                         <input type="hidden" name="component_ids[]" value="{{ $component->id }}">
-                                        <input type="hidden" name="component_max_scores[]" value="{{ session('component_max_scores')[$component->id] ?? 100 }}">
+                                        <input type="hidden" name="component_max_scores[{{ $component->id }}]" value="{{ $componentMaxScore }}">
                                     </button>
                                 </li>
+                                @endif
                             @endforeach
                         </ul>
                         
+                        <!-- Debug Information -->
+                        <div class="alert alert-secondary mb-3 small d-none">
+                            <h6>Debug Info:</h6>
+                            <p>Selected Components: {{ implode(', ', session('selected_components', [])) }}</p>
+                            <p>Component Max Scores: {{ json_encode(session('component_max_score', [])) }}</p>
+                        </div>
+                        
                         <!-- Component Tab Contents -->
                         <div class="tab-content" id="mapehTabContent">
+                            @php $firstTab = true; @endphp
                             @foreach($subject->components as $index => $component)
                                 @php
                                     $componentSlug = strtolower(str_replace(' ', '-', $component->name));
@@ -231,8 +246,14 @@
                                     } elseif (stripos($component->name, 'health') !== false) {
                                         $componentClass = 'health-border';
                                     }
+                                    
+                                    // Check if this component was selected in assessment setup
+                                    $isSelectedComponent = in_array($component->id, session('selected_components', []));
+                                    $componentMaxScore = session('component_max_score.' . $component->id, 100);
                                 @endphp
-                                <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" 
+                                
+                                @if($isSelectedComponent)
+                                <div class="tab-pane fade {{ $firstTab ? 'show active' : '' }}" 
                                      id="{{ $componentSlug }}-content" 
                                      role="tabpanel" 
                                      aria-labelledby="{{ $componentSlug }}-tab">
@@ -240,12 +261,12 @@
                                     <div class="card mb-3 component-card {{ $componentClass }}">
                                         <div class="card-body py-2">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <h6 class="mb-0">{{ $component->name }} - Maximum Score: {{ session('component_max_scores')[$component->id] ?? 100 }}</h6>
+                                                <h6 class="mb-0">{{ $component->name }} - Maximum Score: {{ $componentMaxScore }}</h6>
                                                 <div>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary fill-zeros" data-component="{{ $index }}">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary fill-zeros" data-component="{{ $component->id }}">
                                                         <i class="fas fa-eraser me-1"></i> Fill With Zeros
                                                     </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-success fill-perfect" data-component="{{ $index }}" data-max="{{ session('component_max_scores')[$component->id] ?? 100 }}">
+                                                    <button type="button" class="btn btn-sm btn-outline-success fill-perfect" data-component="{{ $component->id }}" data-max="{{ $componentMaxScore }}">
                                                         <i class="fas fa-check-circle me-1"></i> Fill With Perfect Scores
                                                     </button>
                                                 </div>
@@ -259,7 +280,7 @@
                                                 <tr>
                                                     <th width="5%">#</th>
                                                     <th width="45%">Student</th>
-                                                    <th width="25%" class="text-center">{{ $component->name }} Score<br>(max: {{ session('component_max_scores')[$component->id] ?? 100 }})</th>
+                                                    <th width="25%" class="text-center">{{ $component->name }} Score<br>(max: {{ $componentMaxScore }})</th>
                                                     <th width="25%">Remarks (Optional)</th>
                                                 </tr>
                                             </thead>
@@ -277,23 +298,23 @@
                                                                     <div class="small text-muted">ID: {{ $student->student_id }}</div>
                                                                 </div>
                                                             </div>
-                                                            @if($index === 0)
+                                                            @if($firstTab)
                                                                 <input type="hidden" name="student_ids[]" value="{{ $student->id }}">
                                                             @endif
                                                         </td>
                                                         <td class="text-center">
                                                             <div class="score-container">
                                                                 <input type="number" class="form-control form-control-sm grade-input component-score" 
-                                                                    id="score_component{{ $index }}_student{{ $student->id }}" 
-                                                                    name="component_scores[{{ $index }}][{{ $studentIndex }}]" 
+                                                                    id="score_component{{ $component->id }}_student{{ $student->id }}" 
+                                                                    name="component_scores[{{ $component->id }}][{{ $student->id }}]" 
                                                                     min="0" 
-                                                                    max="{{ session('component_max_scores')[$component->id] ?? 100 }}" 
-                                                                    value="{{ old('component_scores.' . $index . '.' . $studentIndex, '') }}"
-                                                                    data-component="{{ $index }}"
-                                                                    data-max="{{ session('component_max_scores')[$component->id] ?? 100 }}"
+                                                                    max="{{ $componentMaxScore }}" 
+                                                                    value="{{ old('component_scores.' . $component->id . '.' . $student->id, '') }}"
+                                                                    data-component="{{ $component->id }}"
+                                                                    data-max="{{ $componentMaxScore }}"
                                                                     data-bs-toggle="tooltip"
                                                                     data-bs-placement="top"
-                                                                    title="Enter score (0-{{ session('component_max_scores')[$component->id] ?? 100 }})"
+                                                                    title="Enter score (0-{{ $componentMaxScore }})"
                                                                     required>
                                                                 <div class="score-validation">
                                                                     <i class="fas fa-check text-success d-none"></i>
@@ -302,7 +323,7 @@
                                                             </div>
                                                         </td>
                                                         <td>
-                                                            @if($index === 0)
+                                                            @if($firstTab)
                                                                 <input type="text" class="form-control form-control-sm" 
                                                                     id="remarks{{ $student->id }}" 
                                                                     name="remarks[]" 
@@ -313,7 +334,7 @@
                                                                     data-bs-placement="top"
                                                                     title="Add optional comments or feedback">
                                                             @else
-                                                                <div class="text-muted small">(Remarks entered in Music tab apply to all components)</div>
+                                                                <div class="text-muted small">(Remarks entered in first tab apply to all components)</div>
                                                             @endif
                                                         </td>
                                                     </tr>
@@ -322,6 +343,8 @@
                                         </table>
                                     </div>
                                 </div>
+                                @php $firstTab = false; @endphp
+                                @endif
                             @endforeach
                         </div>
                     @else
@@ -421,6 +444,12 @@
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Make sure Bootstrap tabs are properly initialized
+        $('#mapehTabs button').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
         });
     });
 </script>
