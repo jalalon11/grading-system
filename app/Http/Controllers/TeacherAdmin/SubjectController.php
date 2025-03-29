@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\SubjectsImport;
+use App\Exports\SubjectsTemplateExport;
 
 class SubjectController extends Controller
 {
@@ -504,6 +508,39 @@ class SubjectController extends Controller
             ]);
             
             return back()->with('error', 'Failed to update subject status: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download the template file for batch entry
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(new SubjectsTemplateExport, 'subjects_template.xlsx');
+    }
+
+    /**
+     * Handle batch store of subjects
+     */
+    public function batchStore(Request $request)
+    {
+        try {
+            $request->validate([
+                'batch_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
+            ]);
+
+            Excel::import(new SubjectsImport, $request->file('batch_file'));
+
+            return redirect()->route('teacher-admin.subjects.index')
+                ->with('success', 'Subjects imported successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error importing subjects: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return redirect()->route('teacher-admin.subjects.index')
+                ->with('error', 'Error importing subjects. Please check the file format and try again.');
         }
     }
 }

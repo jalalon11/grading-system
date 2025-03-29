@@ -9,9 +9,11 @@
                     <h4 class="mb-0">
                         <i class="fas fa-users-class me-2"></i> Manage Sections
                     </h4>
-                    <a href="{{ route('teacher-admin.sections.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add New Section
-                    </a>
+                    <div>
+                        <a href="{{ route('teacher-admin.sections.create') }}" class="btn btn-light">
+                            <i class="fas fa-plus-circle me-1"></i> Add New Section
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
