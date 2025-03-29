@@ -9,9 +9,11 @@
                     <h4 class="mb-0">
                         <i class="fas fa-book me-2"></i> Manage Subjects
                     </h4>
-                    <a href="{{ route('teacher-admin.subjects.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add New Subject
-                    </a>
+                    <div>
+                        <a href="{{ route('teacher-admin.subjects.create') }}" class="btn btn-light">
+                            <i class="fas fa-plus-circle me-1"></i> Add New Subject
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))

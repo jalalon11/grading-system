@@ -164,6 +164,13 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/profile/update', [\App\Http\Controllers\TeacherAdmin\DashboardController::class, 'updateProfile'])->name('profile.update');
             Route::put('/profile/password', [\App\Http\Controllers\TeacherAdmin\DashboardController::class, 'updatePassword'])->name('password.update');
             
+            // Subjects Management
+            Route::resource('subjects', TeacherAdminSubjectController::class);
+            Route::post('subjects/{subject}/assign-teachers', [TeacherAdminSubjectController::class, 'assignTeachers'])
+                ->name('subjects.assign-teachers');
+            Route::patch('subjects/{subject}/toggle-status', [TeacherAdminSubjectController::class, 'toggleStatus'])
+                ->name('subjects.toggle-status');
+
             // Sections Management
             Route::resource('sections', SectionController::class);
             Route::post('sections/{section}/assign-subjects', [SectionController::class, 'assignSubjects'])
@@ -172,12 +179,5 @@ Route::middleware(['auth'])->group(function () {
                 ->name('sections.toggle-status');
             Route::patch('sections/{section}/update-adviser', [SectionController::class, 'updateAdviser'])
                 ->name('sections.update-adviser');
-
-            // Subjects Management
-            Route::resource('subjects', TeacherAdminSubjectController::class);
-            Route::post('subjects/{subject}/assign-teachers', [TeacherAdminSubjectController::class, 'assignTeachers'])
-                ->name('subjects.assign-teachers');
-            Route::patch('subjects/{subject}/toggle-status', [TeacherAdminSubjectController::class, 'toggleStatus'])
-                ->name('subjects.toggle-status');
         });
 });

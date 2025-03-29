@@ -55,8 +55,31 @@ class GradeController extends Controller
                 $this->saveTransmutationPreference($teacherId, $preferredTableId);
             }
             
-            // Check if we need to clear the lock state
-            if (!$request->has('lock_table') && !session('locked_transmutation_table_id')) {
+            // Handle locking/unlocking the transmutation table
+            if ($request->has('locked_transmutation_table')) {
+                // Lock the transmutation table with the selected table ID
+                $tableIdToLock = $request->transmutation_table ?? $preferredTableId;
+                session(['locked_transmutation_table' => true]);
+                session(['locked_transmutation_table_id' => $tableIdToLock]);
+                
+                Log::info('Transmutation table locked', [
+                    'teacher_id' => $teacherId,
+                    'table_id' => $tableIdToLock,
+                    'via' => 'hidden_input'
+                ]);
+            } else if ($request->has('lock_table')) {
+                // Lock using the checkbox
+                $tableIdToLock = $request->transmutation_table ?? $preferredTableId;
+                session(['locked_transmutation_table' => true]);
+                session(['locked_transmutation_table_id' => $tableIdToLock]);
+                
+                Log::info('Transmutation table locked', [
+                    'teacher_id' => $teacherId,
+                    'table_id' => $tableIdToLock,
+                    'via' => 'checkbox'
+                ]);
+            } else {
+                // Clear lock state if no lock inputs are present
                 session()->forget('locked_transmutation_table');
             }
             
