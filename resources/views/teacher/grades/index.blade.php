@@ -3497,4 +3497,125 @@
     @endforeach
 @endif
 
+        <!-- Comprehensive View Modals -->
+        @if(isset($students) && count($students) > 0 && request()->has('view_all'))
+            @foreach($students as $index => $studentData) 
+                @php
+                    $student = $studentData['student'];
+                @endphp
+                <!-- Student Details Modal for Comprehensive View -->
+                <div class="modal fade" id="studentDetailsModal{{ $student->id }}" tabindex="-1" aria-labelledby="comprehensiveDetailsModal{{ $student->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="comprehensiveDetailsModal{{ $student->id }}">
+                                    <i class="fas fa-user-graduate me-2"></i> {{ $student->first_name }} {{ $student->last_name }}'s Detailed Grades
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Student Info -->
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                        {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">{{ $student->first_name }} {{ $student->last_name }}</h5>
+                                        <div class="text-muted">
+                                            ID: {{ $student->student_id }} | 
+                                            Section: {{ $student->section->name ?? 'Unassigned' }} |
+                                            Grade {{ $student->section->grade_level ?? 'Unassigned' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Detailed Subject Grades -->
+                                <div class="card shadow-sm mb-3">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0 fw-bold">All Subject Grades ({{ $terms[$selectedTerm] }})</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Subject</th>
+                                                        <th class="text-center">Written Works</th>
+                                                        <th class="text-center">Performance Tasks</th>
+                                                        <th class="text-center">Quarterly Exam</th>
+                                                        <th class="text-center">Initial Grade</th>
+                                                        <th class="text-center">Quarterly Grade</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($studentData['subject_grades'] ?? [] as $subjectId => $subjectGrade)
+                                                        @php
+                                                            $subject = \App\Models\Subject::find($subjectId);
+                                                            if (!$subject) continue;
+                                                            
+                                                            // Get grade components
+                                                            $writtenWorksAvg = $subjectGrade['written_works_avg'] ?? 0;
+                                                            $performanceTasksAvg = $subjectGrade['performance_tasks_avg'] ?? 0;
+                                                            $quarterlyScore = $subjectGrade['quarterly_score'] ?? 0;
+                                                            $finalGrade = $subjectGrade['final_grade'] ?? 0;
+                                                            $transmutedGrade = $subjectGrade['transmuted_grade'] ?? 0;
+                                                            
+                                                            // Determine grade status and color
+                                                            $gradeClass = 'secondary';
+                                                            if ($transmutedGrade >= 90) {
+                                                                $gradeClass = 'success';
+                                                            } elseif ($transmutedGrade >= 85) {
+                                                                $gradeClass = 'primary';
+                                                            } elseif ($transmutedGrade >= 80) {
+                                                                $gradeClass = 'info';
+                                                            } elseif ($transmutedGrade >= 75) {
+                                                                $gradeClass = 'warning';
+                                                            } else {
+                                                                $gradeClass = 'danger';
+                                                            }
+                                                        @endphp
+                                                        <tr>
+                                                            <td>
+                                                                <strong>{{ $subject->name }}</strong>
+                                                                <div class="small text-muted">{{ $subject->code }}</div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="fw-bold">{{ round($writtenWorksAvg, 1) }}%</div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="fw-bold">{{ round($performanceTasksAvg, 1) }}%</div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="fw-bold">{{ round($quarterlyScore, 1) }}%</div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <div class="fw-bold">{{ round($finalGrade, 1) }}%</div>
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <span class="badge bg-{{ $gradeClass }} grade-badge">{{ $transmutedGrade }}</span>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Transmutation Information -->
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Note:</strong> Grades are transmuted using 
+                                    {{ request('transmutation_table', 1) == 1 ? 'DepEd Order 8 s. 2015' : 'Custom Transmutation' }}.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @endif
+        
 @endsection 

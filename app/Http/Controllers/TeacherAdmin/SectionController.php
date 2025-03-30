@@ -87,42 +87,129 @@ class SectionController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validate the input
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'grade_level' => 'required|string',
-                'adviser_id' => 'required|exists:users,id',
-                'school_year' => 'required|string|max:20',
-            ]);
+            // Check if this is a batch entry - accept both string '1' and integer 1
+            $isBatch = $request->has('is_batch') && ($request->is_batch == '1' || $request->is_batch == 1);
             
-            Log::info('Creating new section', ['data' => $validated]);
-            
-            // Begin transaction
-            DB::beginTransaction();
-            
-            // Create the section directly with DB query builder
-            $sectionId = DB::table('sections')->insertGetId([
-                'name' => $request->name,
-                'grade_level' => $request->grade_level,
-                'adviser_id' => $request->adviser_id,
-                'school_id' => Auth::user()->school_id,
-                'school_year' => $request->school_year,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
-            // Log success
-            Log::info('Section created successfully', ['section_id' => $sectionId]);
-            
-            // Commit transaction
-            DB::commit();
-            
-            return redirect()->route('teacher-admin.sections.index')
-                ->with('success', 'Section created successfully.');
+            if ($isBatch) {
+                // Process batch section creation
+                Log::info('Processing batch section creation', ['is_batch' => $request->is_batch]);
+                
+                // Validate batch input
+                $validated = $request->validate([
+                    'batch_sections' => 'required|string',
+                ]);
+                
+                // Parse the batch input
+                $sections = [];
+                $lines = explode("\n", trim($validated['batch_sections']));
+                $createdCount = 0;
+                $errors = [];
+                
+                foreach ($lines as $index => $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    $parts = array_map('trim', explode(',', $line));
+                    
+                    // Check if we have all the required parts
+                    if (count($parts) < 4) {
+                        $errors[] = "Line " . ($index + 1) . ": Invalid format, expected 'Name, Grade Level, Adviser ID, School Year'";
+                        continue;
+                    }
+                    
+                    // Extract data
+                    $name = $parts[0];
+                    $gradeLevel = $parts[1];
+                    $adviserId = $parts[2];
+                    $schoolYear = $parts[3];
+                    
+                    // Validate adviser exists and belongs to the same school
+                    $teacher = User::where('id', $adviserId)
+                        ->where('school_id', Auth::user()->school_id)
+                        ->where('role', 'teacher')
+                        ->first();
+                    
+                    if (!$teacher) {
+                        $errors[] = "Line " . ($index + 1) . ": Invalid adviser ID or adviser does not belong to your school";
+                        continue;
+                    }
+                    
+                    try {
+                        // Create the section
+                        DB::table('sections')->insert([
+                            'name' => $name,
+                            'grade_level' => $gradeLevel,
+                            'adviser_id' => $adviserId,
+                            'school_id' => Auth::user()->school_id,
+                            'school_year' => $schoolYear,
+                            'is_active' => true,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        
+                        $createdCount++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Line " . ($index + 1) . ": " . $e->getMessage();
+                    }
+                }
+                
+                Log::info('Batch section creation completed', [
+                    'created' => $createdCount,
+                    'errors' => count($errors),
+                ]);
+                
+                $message = "$createdCount sections created successfully.";
+                if (count($errors) > 0) {
+                    $message .= " " . count($errors) . " errors occurred.";
+                    Log::warning('Batch section creation errors', ['errors' => $errors]);
+                    return redirect()->route('teacher-admin.sections.index')
+                        ->with('warning', $message)
+                        ->with('errors', $errors);
+                }
+                
+                return redirect()->route('teacher-admin.sections.index')
+                    ->with('success', $message);
+            } else {
+                // Process single section creation (original code)
+                // Validate the input
+                $validated = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'grade_level' => 'required|string',
+                    'adviser_id' => 'required|exists:users,id',
+                    'school_year' => 'required|string|max:20',
+                ]);
+                
+                Log::info('Creating new section', ['data' => $validated]);
+                
+                // Begin transaction
+                DB::beginTransaction();
+                
+                // Create the section directly with DB query builder
+                $sectionId = DB::table('sections')->insertGetId([
+                    'name' => $request->name,
+                    'grade_level' => $request->grade_level,
+                    'adviser_id' => $request->adviser_id,
+                    'school_id' => Auth::user()->school_id,
+                    'school_year' => $request->school_year,
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                // Log success
+                Log::info('Section created successfully', ['section_id' => $sectionId]);
+                
+                // Commit transaction
+                DB::commit();
+                
+                return redirect()->route('teacher-admin.sections.index')
+                    ->with('success', 'Section created successfully.');
+            }
         } catch (\Exception $e) {
-            // Rollback transaction
-            DB::rollBack();
+            // Rollback transaction if it was started
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             
             Log::error('Failed to create section: ' . $e->getMessage(), [
                 'file' => $e->getFile(),

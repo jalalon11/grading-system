@@ -201,8 +201,28 @@
                 <div class="modal-body">
                     <p class="mb-3">Assign this subject to sections and select teachers for each section.</p>
                     
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="sectionsTable">
+                    @php
+                        $matchingSections = ($subject->school->sections ?? collect())->filter(function($section) use ($subject) {
+                            // Extract just the number from section grade level if it contains "Grade "
+                            $sectionGradeLevel = $section->grade_level;
+                            if (is_string($sectionGradeLevel) && strpos(strtolower($sectionGradeLevel), 'grade') === 0) {
+                                $sectionGradeLevel = trim(str_replace('Grade', '', $sectionGradeLevel));
+                            }
+                            
+                            // Convert both to integers for comparison
+                            return (int)$sectionGradeLevel === (int)$subject->grade_level;
+                        });
+                    @endphp
+                    
+                    @if($matchingSections->isEmpty())
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            No sections found for Grade {{ $subject->grade_level }}. 
+                            Please create sections for this grade level first.
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="sectionsTable">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 40%">Section</th>
@@ -215,8 +235,8 @@
                                     <td>
                                         <select class="form-select section-select" name="sections[0][section_id]" required>
                                             <option value="" selected disabled>Select Section</option>
-                                            @foreach($subject->school->sections ?? [] as $section)
-                                                <option value="{{ $section->id }}">{{ $section->name }} ({{ $section->grade_level }})</option>
+                                            @foreach($matchingSections as $section)
+                                                    <option value="{{ $section->id }}">{{ $section->name }} (Grade {{ $section->grade_level }})</option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -237,8 +257,9 @@
                             </tbody>
                         </table>
                     </div>
+                    @endif
                     
-                    <button type="button" class="btn btn-secondary btn-sm mt-2" id="addSectionRow">
+                    <button type="button" class="btn btn-secondary btn-sm mt-2" id="addSectionRow" {{ $matchingSections->isEmpty() ? 'disabled' : '' }}>
                         <i class="fas fa-plus-circle me-1"></i> Add Another Section
                     </button>
                 </div>
@@ -304,8 +325,8 @@
                     <td>
                         <select class="form-select section-select" name="sections[${rowCount}][section_id]" required>
                             <option value="" selected disabled>Select Section</option>
-                            @foreach($subject->school->sections ?? [] as $section)
-                                <option value="{{ $section->id }}">{{ $section->name }} ({{ $section->grade_level }})</option>
+                            @foreach($matchingSections as $section)
+                                <option value="{{ $section->id }}">{{ $section->name }} (Grade {{ $section->grade_level }})</option>
                             @endforeach
                         </select>
                     </td>
