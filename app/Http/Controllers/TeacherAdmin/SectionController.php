@@ -87,40 +87,123 @@ class SectionController extends Controller
     public function store(Request $request)
     {
         try {
+            // Debug - log entire request
+            Log::info('Section store - complete request', [
+                'method' => $request->method(),
+                'url' => $request->url(),
+                'all' => $request->all(),
+                'is_batch_exists' => $request->has('is_batch'),
+                'is_batch_value' => $request->input('is_batch'),
+                'batch_sections_exists' => $request->has('batch_sections'),
+                'batch_sections_hidden_exists' => $request->has('batch_sections_hidden'),
+            ]);
+            
             // Check if this is a batch entry - accept both string '1' and integer 1
             $isBatch = $request->has('is_batch') && ($request->is_batch == '1' || $request->is_batch == 1);
             
             if ($isBatch) {
                 // Process batch section creation
-                Log::info('Processing batch section creation', ['is_batch' => $request->is_batch]);
-                
-                // Validate batch input
-                $validated = $request->validate([
-                    'batch_sections' => 'required|string',
+                Log::info('Processing batch section creation', [
+                    'is_batch' => $request->is_batch,
+                    'batch_sections_exists' => $request->has('batch_sections'),
+                    'batch_sections_hidden_exists' => $request->has('batch_sections_hidden'),
+                    'batch_sections_value' => $request->input('batch_sections'),
+                    'batch_sections_hidden_value' => $request->input('batch_sections_hidden')
                 ]);
+                
+                // Get batch data from either parameter
+                $batchSectionsData = null;
+                
+                if ($request->has('batch_sections_json') && !empty($request->input('batch_sections_json'))) {
+                    // Handle JSON-encoded data
+                    $batchSectionsData = json_decode($request->input('batch_sections_json'), true);
+                    Log::info('Using JSON-encoded batch_sections parameter', ['data' => $batchSectionsData]);
+                } elseif ($request->has('batch_sections') && !empty($request->input('batch_sections'))) {
+                    $batchSectionsData = $request->input('batch_sections');
+                    Log::info('Using batch_sections parameter', ['data' => $batchSectionsData]);
+                } elseif ($request->has('batch_sections_hidden') && !empty($request->input('batch_sections_hidden'))) {
+                    $batchSectionsData = urldecode($request->input('batch_sections_hidden'));
+                    Log::info('Using batch_sections_hidden parameter', ['data' => $batchSectionsData]);
+                }
+                
+                // Debug - check if batch data was found
+                if (empty($batchSectionsData)) {
+                    return back()->withInput()->with('error', 'Batch sections data is missing. Please try again.');
+                }
+                
+                // Use the batch data for validation and processing
+                $validated = ['batch_sections' => $batchSectionsData];
                 
                 // Parse the batch input
                 $sections = [];
-                $lines = explode("\n", trim($validated['batch_sections']));
+                
+                // Convert the batch data to a string if it's not already one
+                if (is_array($batchSectionsData)) {
+                    $batchSectionsData = $batchSectionsData;
+                }
+                
+                $lines = explode("\n", trim($batchSectionsData));
                 $createdCount = 0;
                 $errors = [];
+                
+                Log::info('Batch parsing', [
+                    'lines_count' => count($lines),
+                    'first_line' => count($lines) > 0 ? $lines[0] : 'none',
+                    'data_type' => gettype($batchSectionsData)
+                ]);
+                
+                // First, validate all inputs before adding to database
+                $allValid = true;
+                $allTeachersValid = true;
+                $processedLines = [];
                 
                 foreach ($lines as $index => $line) {
                     $line = trim($line);
                     if (empty($line)) continue;
                     
+                    Log::info('Processing raw line', ['line' => $line]);
+                    
+                    // Split by comma and trim each part to handle extra spaces
+                    // Use a safer explode to handle potential commas in quotes (not perfect but safer)
                     $parts = array_map('trim', explode(',', $line));
+                    
+                    // Filter out empty parts that might result from double commas
+                    $parts = array_values(array_filter($parts, function($part) {
+                        return !empty($part);
+                    }));
+                    
+                    Log::info('Parsed line ' . ($index + 1), [
+                        'line' => $line,
+                        'parts' => $parts,
+                        'parts_count' => count($parts),
+                        'values' => count($parts) >= 4 ? [
+                            'name' => $parts[0],
+                            'grade_level' => $parts[1],
+                            'adviser_id' => $parts[2],
+                            'school_year' => $parts[3]
+                        ] : 'insufficient parts'
+                    ]);
                     
                     // Check if we have all the required parts
                     if (count($parts) < 4) {
-                        $errors[] = "Line " . ($index + 1) . ": Invalid format, expected 'Name, Grade Level, Adviser ID, School Year'";
+                        $errors[] = "Line " . ($index + 1) . ": Invalid format, expected 'Name, Grade Level, Adviser ID, School Year'. Found " . count($parts) . " parts instead of 4.";
+                        $allValid = false;
                         continue;
                     }
                     
                     // Extract data
                     $name = $parts[0];
                     $gradeLevel = $parts[1];
-                    $adviserId = $parts[2];
+                    
+                    // Ensure adviser ID is a valid integer
+                    $adviserId = trim($parts[2]);
+                    if (!is_numeric($adviserId)) {
+                        $errors[] = "Line " . ($index + 1) . ": Adviser ID must be a number, got '{$adviserId}'";
+                        $allValid = false;
+                        continue;
+                    }
+                    $adviserId = (int)$adviserId;
+                    
                     $schoolYear = $parts[3];
                     
                     // Validate adviser exists and belongs to the same school
@@ -130,45 +213,82 @@ class SectionController extends Controller
                         ->first();
                     
                     if (!$teacher) {
-                        $errors[] = "Line " . ($index + 1) . ": Invalid adviser ID or adviser does not belong to your school";
+                        $errors[] = "Line " . ($index + 1) . ": Invalid adviser ID {$adviserId}. No teacher with this ID found in your school.";
+                        $allValid = false;
+                        $allTeachersValid = false;
                         continue;
                     }
                     
-                    try {
-                        // Create the section
-                        DB::table('sections')->insert([
-                            'name' => $name,
-                            'grade_level' => $gradeLevel,
-                            'adviser_id' => $adviserId,
-                            'school_id' => Auth::user()->school_id,
-                            'school_year' => $schoolYear,
-                            'is_active' => true,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
+                    // Add valid section to be processed
+                    $processedLines[] = [
+                        'name' => $name,
+                        'grade_level' => $gradeLevel,
+                        'adviser_id' => $adviserId,
+                        'school_id' => Auth::user()->school_id,
+                        'school_year' => $schoolYear,
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+                
+                // If validation failed, return with all errors
+                if (!$allValid) {
+                    Log::warning('Batch section creation validation failed', [
+                        'errors' => $errors,
+                        'all_teachers_valid' => $allTeachersValid
+                    ]);
+                    
+                    // Add extra information if teacher IDs are invalid
+                    if (!$allTeachersValid) {
+                        // Get available teacher IDs
+                        $availableTeachers = User::where('school_id', Auth::user()->school_id)
+                            ->where('role', 'teacher')
+                            ->get(['id', 'name']);
                         
-                        $createdCount++;
-                    } catch (\Exception $e) {
-                        $errors[] = "Line " . ($index + 1) . ": " . $e->getMessage();
+                        $errors[] = "Available teacher IDs in your system: " . $availableTeachers->map(function($teacher) {
+                            return "ID {$teacher->id}: {$teacher->name}";
+                        })->implode(', ');
                     }
+                    
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Batch entry validation failed. Please check the errors below.')
+                        ->with('batch_errors', $errors);
                 }
                 
-                Log::info('Batch section creation completed', [
-                    'created' => $createdCount,
-                    'errors' => count($errors),
-                ]);
+                // Begin transaction
+                DB::beginTransaction();
                 
-                $message = "$createdCount sections created successfully.";
-                if (count($errors) > 0) {
-                    $message .= " " . count($errors) . " errors occurred.";
-                    Log::warning('Batch section creation errors', ['errors' => $errors]);
+                try {
+                    // Now insert all valid records
+                    foreach ($processedLines as $sectionData) {
+                        DB::table('sections')->insert($sectionData);
+                        $createdCount++;
+                    }
+                    
+                    // Commit the transaction
+                    DB::commit();
+                    
+                    Log::info('Batch section creation completed successfully', [
+                        'created' => $createdCount
+                    ]);
+                    
                     return redirect()->route('teacher-admin.sections.index')
-                        ->with('warning', $message)
-                        ->with('errors', $errors);
+                        ->with('success', "$createdCount sections created successfully.");
+                } catch (\Exception $e) {
+                    // Rollback the transaction on error
+                    DB::rollBack();
+                    
+                    Log::error('Error during batch section insertion', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    
+                    return back()
+                        ->withInput()
+                        ->with('error', 'Database error: ' . $e->getMessage());
                 }
-                
-                return redirect()->route('teacher-admin.sections.index')
-                    ->with('success', $message);
             } else {
                 // Process single section creation (original code)
                 // Validate the input
