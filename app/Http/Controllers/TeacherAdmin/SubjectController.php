@@ -80,63 +80,146 @@ class SubjectController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validate the input
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'code' => 'nullable|string|max:50',
-                'description' => 'nullable|string',
-                'grade_level' => 'nullable|string',
-                'is_mapeh' => 'nullable|boolean',
-                'music_weight' => 'nullable|numeric|min:0|max:100',
-                'arts_weight' => 'nullable|numeric|min:0|max:100',
-                'pe_weight' => 'nullable|numeric|min:0|max:100',
-                'health_weight' => 'nullable|numeric|min:0|max:100',
+            // Log all form data for debugging
+            Log::info('Subject form data', [
+                'all_data' => $request->all(),
+                'is_batch_exists' => $request->has('is_batch'),
+                'is_batch_value' => $request->input('is_batch')
             ]);
             
-            Log::info('Creating new subject', ['data' => $validated]);
+            // Check if this is a batch entry - accept both string '1' and integer 1
+            $isBatch = $request->has('is_batch') && ($request->is_batch == '1' || $request->is_batch == 1);
             
-            // Process grade level - extract just the number if it contains "Grade X"
-            $gradeLevel = $request->grade_level;
-            if ($gradeLevel && preg_match('/Grade\s+(\d+)/i', $gradeLevel, $matches)) {
-                $gradeLevel = $matches[1]; // Extract just the number
+            if ($isBatch) {
+                // Process batch subject creation
+                Log::info('Processing batch subject creation', [
+                    'is_batch' => $request->is_batch,
+                    'batch_subjects_exists' => $request->has('batch_subjects'),
+                    'batch_subjects_value' => $request->input('batch_subjects')
+                ]);
+                
+                // Validate batch input
+                $validated = $request->validate([
+                    'batch_subjects' => 'required|string',
+                ]);
+                
+                // Parse the batch input
+                $subjects = [];
+                $lines = explode("\n", trim($validated['batch_subjects']));
+                $createdCount = 0;
+                $errors = [];
+                
+                foreach ($lines as $index => $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    $parts = array_map('trim', explode(',', $line));
+                    
+                    // Check if we have at least the required parts
+                    if (count($parts) < 3) {
+                        $errors[] = "Line " . ($index + 1) . ": Invalid format, expected 'Name, Code, Grade Level'";
+                        continue;
+                    }
+                    
+                    // Ensure grade_level is an integer
+                    $gradeLevel = trim($parts[2]);
+                    // Remove "Grade " prefix if it exists
+                    if (strpos(strtolower($gradeLevel), 'grade') === 0) {
+                        $gradeLevel = trim(substr($gradeLevel, 5));
+                    }
+                    
+                    $subjectData = [
+                        'name' => $parts[0],
+                        'code' => $parts[1],
+                        'grade_level' => (int)$gradeLevel,
+                        'description' => count($parts) > 3 ? $parts[3] : null,
+                        'school_id' => Auth::user()->school_id,
+                        'is_active' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    
+                    try {
+                        DB::table('subjects')->insert($subjectData);
+                        $createdCount++;
+                    } catch (\Exception $e) {
+                        $errors[] = "Line " . ($index + 1) . ": " . $e->getMessage();
+                    }
+                }
+                
+                Log::info('Batch subject creation completed', [
+                    'created' => $createdCount,
+                    'errors' => count($errors),
+                ]);
+                
+                $message = "$createdCount subjects created successfully.";
+                if (count($errors) > 0) {
+                    $message .= " " . count($errors) . " errors occurred.";
+                    Log::warning('Batch subject creation errors', ['errors' => $errors]);
+                    return redirect()->route('teacher-admin.subjects.index')
+                        ->with('warning', $message)
+                        ->with('errors', $errors);
+                }
+                
+                return redirect()->route('teacher-admin.subjects.index')
+                    ->with('success', $message);
+            } else {
+                // Process single subject creation (original code)
+                // Validate the request
+                $validated = $request->validate([
+                    'name' => 'required|string|max:255',
+                    'code' => 'nullable|string|max:50',
+                    'grade_level' => 'nullable|integer',
+                    'description' => 'nullable|string',
+                    'is_mapeh' => 'sometimes|boolean',
+                    'music_weight' => 'required_if:is_mapeh,1|numeric|min:0|max:100',
+                    'arts_weight' => 'required_if:is_mapeh,1|numeric|min:0|max:100',
+                    'pe_weight' => 'required_if:is_mapeh,1|numeric|min:0|max:100',
+                    'health_weight' => 'required_if:is_mapeh,1|numeric|min:0|max:100',
+                ]);
+                
+                // If MAPEH subject, check that weights add up to 100%
+                if ($request->has('is_mapeh') && $request->is_mapeh) {
+                    $totalWeight = $request->music_weight + $request->arts_weight + $request->pe_weight + $request->health_weight;
+                    if (abs($totalWeight - 100) > 0.01) {
+                        return back()->withInput()->with('error', 'The total of all MAPEH component weights must equal 100%. Currently: ' . $totalWeight . '%');
+                    }
+                }
+                
+                // Begin transaction
+                DB::beginTransaction();
+                
+                // Create the subject
+                $subject = new Subject([
+                    'name' => $request->name,
+                    'code' => $request->code ?: strtoupper(substr($request->name, 0, 4)),
+                    'grade_level' => $request->grade_level,
+                    'description' => $request->description,
+                    'school_id' => Auth::user()->school_id,
+                    'is_active' => true,
+                    'is_component' => false,
+                ]);
+                
+                $subject->save();
+                
+                // If it's a MAPEH subject, create the components
+                if ($request->has('is_mapeh') && $request->is_mapeh) {
+                    $this->createMapehComponents($subject->id, $request);
+                }
+                
+                // Commit transaction
+                DB::commit();
+                
+                return redirect()->route('teacher-admin.subjects.index')
+                    ->with('success', 'Subject created successfully.');
             }
-            
-            Log::info('Processed grade level', ['original' => $request->grade_level, 'processed' => $gradeLevel]);
-            
-            // Begin transaction
-            DB::beginTransaction();
-            
-            // Create the subject directly with DB query builder
-            $subjectId = DB::table('subjects')->insertGetId([
-                'name' => $request->name,
-                'code' => $request->code,
-                'description' => $request->description,
-                'grade_level' => $gradeLevel,
-                'school_id' => Auth::user()->school_id,
-                'is_active' => true,
-                'is_component' => false,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
-            // If this is a MAPEH subject, create its components
-            if ($request->filled('is_mapeh') && $request->is_mapeh) {
-                $this->createMAPEHComponents($subjectId, $request);
-            }
-            
-            // Log success
-            Log::info('Subject created successfully', ['subject_id' => $subjectId]);
-            
-            // Commit transaction
-            DB::commit();
-            
-            return redirect()->route('teacher-admin.subjects.index')
-                ->with('success', 'Subject created successfully.');
         } catch (\Exception $e) {
-            // Rollback transaction
-            DB::rollBack();
+            // Rollback the transaction if it was started
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             
-            Log::error('Failed to create subject: ' . $e->getMessage(), [
+            Log::error('Error creating subject: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
