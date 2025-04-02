@@ -4,7 +4,7 @@
 <style>
     .login-container {
         min-height: 100vh;
-        background: linear-gradient(135deg, #f6f8fc 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
         margin: 0;
         padding: 0;
         display: flex;
@@ -19,7 +19,7 @@
         position: absolute;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(102,126,234,0.1) 0%, rgba(118,75,162,0.1) 100%);
+        background: radial-gradient(circle, rgba(28,40,51,0.1) 0%, rgba(46,64,83,0.1) 100%);
         animation: rotate 20s linear infinite;
     }
     
@@ -44,7 +44,8 @@
         position: relative;
         z-index: 1;
         backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(244, 246, 246, 0.95);
+        border: 1px solid rgba(170, 183, 184, 0.2);
     }
     
     .login-card:hover {
@@ -55,7 +56,7 @@
     .school-logo {
         width: 90px;
         height: 90px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
         border-radius: 24px;
         display: flex;
         align-items: center;
@@ -95,15 +96,15 @@
     .login-title {
         font-size: 2rem;
         font-weight: 700;
-        color: #2d3748;
+        color: #1C2833;
         margin-bottom: 0.75rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
     
     .login-subtitle {
-        color: #718096;
+        color: #2E4053;
         font-size: 1rem;
         line-height: 1.5;
     }
@@ -144,7 +145,7 @@
         font-weight: 600;
         border-radius: 0.75rem;
         transition: all 0.2s ease;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
         border: none;
         font-size: 1rem;
         letter-spacing: 0.5px;
@@ -173,7 +174,7 @@
     }
     
     .forgot-password {
-        color: #718096;
+        color: #2E4053;
         text-decoration: none;
         font-size: 0.875rem;
         transition: all 0.2s ease;
@@ -187,14 +188,14 @@
         height: 2px;
         bottom: -2px;
         left: 0;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        background: linear-gradient(90deg, #1C2833, #2E4053);
         transform: scaleX(0);
         transform-origin: right;
         transition: transform 0.3s ease;
     }
     
     .forgot-password:hover {
-        color: #667eea;
+        color: #1C2833;
     }
     
     .forgot-password:hover::after {
@@ -371,7 +372,7 @@
                         </form>
                     </div>
                     <div class="card-footer text-center">
-                        <span class="text-muted">&copy; {{ date('Y') }} Grading System</span>
+                        <span class="text-muted">&copy; {{ date('Y') }} Grading System by Vincent Jalalon</span>
                     </div>
                 </div>
             </div>

@@ -100,6 +100,7 @@
     .status-present { background-color: #28a745; }
     .status-late { background-color: #ffc107; }
     .status-absent { background-color: #dc3545; }
+    .status-excused { background-color: #6c757d; }
     
     .attendance-table th, 
     .attendance-table td {
@@ -119,6 +120,11 @@
     .form-check-input:checked[value="absent"] {
         background-color: #dc3545;
         border-color: #dc3545;
+    }
+    
+    .form-check-input:checked[value="excused"] {
+        background-color: #6c757d;
+        border-color: #6c757d;
     }
     
     .student-table-container {
@@ -187,8 +193,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.students.length === 0) {
-                        studentsContainer.innerHTML = `
-                            <div class="alert alert-info">
+                        studentsContainer.innerHTML = `                            <div class="alert alert-info">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-info-circle fa-2x me-3"></i>
                                     <div>
@@ -284,6 +289,15 @@
                                                 <span class="status-badge status-absent"></span>Absent
                                             </label>
                                         </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                name="attendance[${student.id}]" 
+                                                id="excused_${student.id}" 
+                                                value="excused">
+                                            <label class="form-check-label" for="excused_${student.id}">
+                                                <span class="status-badge status-excused"></span>Excused
+                                            </label>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -305,6 +319,9 @@
                                     </div>
                                     <div>
                                         <span class="status-badge status-absent"></span> Absent
+                                    </div>
+                                    <div>
+                                        <span class="status-badge status-excused"></span> Excused
                                     </div>
                                 </div>
                             </div>
@@ -356,5 +373,5 @@
         });
     });
 </script>
-@endpush
-@endsection 
+@endpush@endsection 
+

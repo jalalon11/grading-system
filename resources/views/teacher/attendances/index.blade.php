@@ -75,6 +75,7 @@
                                     <th class="text-center">Present</th>
                                     <th class="text-center">Late</th>
                                     <th class="text-center">Absent</th>
+                                    <th class="text-center">Excused</th>
                                     <th class="text-center">Attendance Rate</th>
                                     <th width="150">Actions</th>
                                 </tr>
@@ -83,7 +84,7 @@
                                 @forelse ($attendances as $date => $dateGroup)
                                     @foreach ($dateGroup as $sectionId => $attendance)
                                         @php
-                                            $totalStudents = $attendance['present_count'] + $attendance['late_count'] + $attendance['absent_count'];
+                                            $totalStudents = $attendance['present_count'] + $attendance['late_count'] + $attendance['absent_count'] + $attendance['excused_count'];
                                             $attendanceRate = $totalStudents > 0 ? 
                                                 round((($attendance['present_count'] + $attendance['late_count']) / $totalStudents) * 100, 1) : 0;
                                         @endphp
@@ -98,6 +99,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-danger rounded-pill">{{ $attendance['absent_count'] }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary rounded-pill">{{ $attendance['excused_count'] ?? 0 }}</span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="progress" style="height: 8px;">
@@ -130,7 +134,7 @@
                                     @endforeach
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-4 text-muted">
+                                        <td colspan="8" class="text-center py-4 text-muted">
                                             <i class="fas fa-calendar-times fa-2x mb-3"></i>
                                             <p>No attendance records found</p>
                                             <a href="{{ route('teacher.attendances.create') }}" class="btn btn-sm btn-primary">

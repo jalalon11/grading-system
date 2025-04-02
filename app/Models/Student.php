@@ -72,4 +72,39 @@ class Student extends Model
     {
         return $this->hasMany(Attendance::class);
     }
+
+    /**
+     * Set the gender attribute.
+     *
+     * @param  string  $value
+     * @return void
+     */
+    public function setGenderAttribute($value)
+    {
+        // Ensure gender is capitalized correctly
+        if (strtolower($value) === 'male') {
+            $this->attributes['gender'] = 'Male';
+        } elseif (strtolower($value) === 'female') {
+            $this->attributes['gender'] = 'Female';
+        } else {
+            $this->attributes['gender'] = $value;
+        }
+    }
+    
+    /**
+     * Get the gender attribute.
+     *
+     * @param  string  $value
+     * @return string
+     */
+    public function getGenderAttribute($value)
+    {
+        // Ensure gender is returned capitalized correctly
+        if (strtolower($value) === 'male') {
+            return 'Male';
+        } elseif (strtolower($value) === 'female') {
+            return 'Female';
+        }
+        return $value;
+    }
 }

@@ -78,6 +78,10 @@
                         <label class="text-muted">Address:</label>
                         <p class="mb-0">{{ $school->address ?: 'No address provided' }}</p>
                     </div>
+                    <div class="mb-3 pb-3 border-bottom">
+                        <label class="text-muted">Principal:</label>
+                        <p class="mb-0 fw-bold">{{ $school->principal ?: 'No principal assigned' }}</p>
+                    </div>
                 </div>
                 <div class="card-footer bg-white d-flex justify-content-between py-3">
                     <span class="text-muted">Status: 

@@ -19,6 +19,7 @@ class SchoolDivision extends Model
         'name',
         'code',
         'address',
+        'region',
     ];
 
     /**

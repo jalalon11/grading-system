@@ -156,6 +156,9 @@
                                         <div>
                                             <h6 class="mb-0">{{ $school->name }}</h6>
                                             <small class="text-muted">{{ Str::limit($school->address, 30) ?: 'No address' }}</small>
+                                            @if($school->principal)
+                                                <small class="d-block text-primary">Principal: {{ $school->principal }}</small>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>

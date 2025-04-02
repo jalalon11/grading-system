@@ -52,7 +52,8 @@ class AttendanceController extends Controller
                     'section_name' => $sectionName,
                     'present_count' => 0,
                     'late_count' => 0,
-                    'absent_count' => 0
+                    'absent_count' => 0,
+                    'excused_count' => 0
                 ];
             }
             
@@ -60,6 +61,8 @@ class AttendanceController extends Controller
                 $attendances[$date][$sectionId]['present_count']++;
             } elseif ($record->status === 'late') {
                 $attendances[$date][$sectionId]['late_count']++;
+            } elseif ($record->status === 'excused') {
+                $attendances[$date][$sectionId]['excused_count']++;
             } else {
                 $attendances[$date][$sectionId]['absent_count']++;
             }
@@ -86,7 +89,7 @@ class AttendanceController extends Controller
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
             'attendance' => 'required|array',
-            'attendance.*' => 'required|in:present,absent,late',
+            'attendance.*' => 'required|in:present,absent,late,excused',
         ]);
         
         // Check if the section belongs to this teacher
@@ -175,18 +178,21 @@ class AttendanceController extends Controller
         
         $presentCount = 0;
         $lateCount = 0;
+        $excusedCount = 0;
         foreach ($attendanceRecords as $record) {
             $attendanceData[$record->student_id] = $record->status;
             if ($record->status === 'present') {
                 $presentCount++;
             } elseif ($record->status === 'late') {
                 $lateCount++;
+            } elseif ($record->status === 'excused') {
+                $excusedCount++;
             }
         }
         
-        $absentCount = count($students) - ($presentCount + $lateCount);
+        $absentCount = count($students) - ($presentCount + $lateCount + $excusedCount);
         
-        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'lateCount', 'absentCount'));
+        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount'));
     }
 
     /**
@@ -234,7 +240,7 @@ class AttendanceController extends Controller
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
             'attendance' => 'required|array',
-            'attendance.*' => 'required|in:present,absent,late',
+            'attendance.*' => 'required|in:present,absent,late,excused',
         ]);
         
         // Check if the section belongs to this teacher

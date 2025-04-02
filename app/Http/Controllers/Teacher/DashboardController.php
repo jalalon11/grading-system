@@ -83,11 +83,8 @@ class DashboardController extends Controller
                     'full_date' => $date
                 ]);
                 
-                // Get attendance records for this date (check both by teacher_id and section_id)
-                $attendanceRecords = Attendance::where(function($query) use ($user, $allSectionIds) {
-                        $query->where('teacher_id', $user->id)
-                              ->orWhereIn('section_id', $allSectionIds);
-                    })
+                // Get attendance records for this date (check only for sections where teacher is adviser)
+                $attendanceRecords = Attendance::whereIn('section_id', $sectionIds)
                     ->whereDate('date', $date)
                     ->get();
                     
@@ -96,6 +93,7 @@ class DashboardController extends Controller
                     $presentCount = 0;
                     $lateCount = 0;
                     $absentCount = 0;
+                    $excusedCount = 0;
                     $totalStudents = 0;
                     
                     foreach ($attendanceRecords as $record) {
@@ -112,6 +110,8 @@ class DashboardController extends Controller
                                         $lateCount++;
                                     } elseif ($data['status'] === 'absent') {
                                         $absentCount++;
+                                    } elseif ($data['status'] === 'excused') {
+                                        $excusedCount++;
                                     }
                                 }
                             }
@@ -125,20 +125,19 @@ class DashboardController extends Controller
                                 $lateCount++;
                             } elseif ($record->status === 'absent') {
                                 $absentCount++;
+                            } elseif ($record->status === 'excused') {
+                                $excusedCount++;
                             }
                         }
                     }
                     
                     // Calculate percentages ensuring we don't divide by zero
-                    $presentPercentage = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100) : 0;
-                    $latePercentage = $totalStudents > 0 ? round(($lateCount / $totalStudents) * 100) : 0;
-                    $absentPercentage = $totalStudents > 0 ? round(($absentCount / $totalStudents) * 100) : 0;
-                    
                     $attendanceTrends->push([
                         'date' => now()->subDays($i)->format('D'),
-                        'present' => $presentPercentage,
-                        'late' => $latePercentage,
-                        'absent' => $absentPercentage,
+                        'present' => $presentCount,
+                        'late' => $lateCount,
+                        'absent' => $absentCount,
+                        'excused' => $excusedCount,
                         'total' => $totalStudents
                     ]);
                 } else {
@@ -147,6 +146,7 @@ class DashboardController extends Controller
                         'present' => 0,
                         'late' => 0,
                         'absent' => 0,
+                        'excused' => 0,
                         'total' => 0
                     ]);
                 }
@@ -330,6 +330,7 @@ class DashboardController extends Controller
             'present' => [],
             'late' => [],
             'absent' => [],
+            'excused' => [],
             'total' => []
         ];
         
@@ -354,16 +355,8 @@ class DashboardController extends Controller
                     return response()->json(['error' => 'Section not found or not authorized'], 404);
                 }
             } else {
-                // Get all sections where user is adviser or teaches a subject
-                $advisedSections = Section::where('adviser_id', $user->id)->pluck('id')->toArray();
-                
-                $taughtSectionIds = DB::table('section_subject')
-                    ->where('teacher_id', $user->id)
-                    ->pluck('section_id')
-                    ->unique()
-                    ->toArray();
-                
-                $queryIds = array_unique(array_merge($advisedSections, $taughtSectionIds));
+                // Get only sections where user is adviser (not sections where they just teach)
+                $queryIds = Section::where('adviser_id', $user->id)->pluck('id')->toArray();
             }
             
             // Get attendance data based on period type
@@ -441,6 +434,7 @@ class DashboardController extends Controller
         $presentCount = 0;
         $lateCount = 0;
         $absentCount = 0;
+        $excusedCount = 0;
         $totalStudents = 0;
         
         foreach ($records as $record) {
@@ -458,6 +452,8 @@ class DashboardController extends Controller
                             $lateCount++;
                         } elseif ($attendance['status'] === 'absent') {
                             $absentCount++;
+                        } elseif ($attendance['status'] === 'excused') {
+                            $excusedCount++;
                         }
                     }
                 }
@@ -471,19 +467,17 @@ class DashboardController extends Controller
                     $lateCount++;
                 } elseif ($record->status === 'absent') {
                     $absentCount++;
+                } elseif ($record->status === 'excused') {
+                    $excusedCount++;
                 }
             }
         }
         
-        // Calculate percentages
-        $presentPercentage = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100) : 0;
-        $latePercentage = $totalStudents > 0 ? round(($lateCount / $totalStudents) * 100) : 0;
-        $absentPercentage = $totalStudents > 0 ? round(($absentCount / $totalStudents) * 100) : 0;
-        
-        // Add to data arrays
-        $data['present'][] = $presentPercentage;
-        $data['late'][] = $latePercentage;
-        $data['absent'][] = $absentPercentage;
+        // Use actual counts instead of percentages
+        $data['present'][] = $presentCount;
+        $data['late'][] = $lateCount;
+        $data['absent'][] = $absentCount;
+        $data['excused'][] = $excusedCount;
         $data['total'][] = $totalStudents;
     }
 

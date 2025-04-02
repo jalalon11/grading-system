@@ -129,6 +129,7 @@
                             <th scope="col">Code</th>
                             <th scope="col">Schools</th>
                             <th scope="col">Address</th>
+                            <th scope="col">Region</th>
                             <th scope="col" class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -156,6 +157,7 @@
                                     </span>
                                 </td>
                                 <td>{{ Str::limit($division->address, 30) ?: 'N/A' }}</td>
+                                <td>{{ Str::limit($division->region, 30) ?: 'N/A' }}</td>
                                 <td class="text-end">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="{{ route('admin.school-divisions.show', $division->id) }}" class="btn btn-info" title="View Details">
@@ -172,7 +174,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4">
+                                <td colspan="7" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-building fa-2x mb-3"></i>
                                         <h5>No School Divisions Found</h5>

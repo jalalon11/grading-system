@@ -1,6 +1,61 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    /* Dark mode styles */
+    .dark .card-header.bg-white {
+        background-color: var(--bg-card-header) !important;
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .dark .card-body {
+        background-color: var(--bg-card);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .dark .badge.bg-light.text-dark {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+    
+    .dark .form-control {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .dark .form-text {
+        color: var(--text-muted);
+    }
+    
+    .dark .text-muted {
+        color: var(--text-muted) !important;
+    }
+    
+    .dark .alert-info {
+        background-color: rgba(13, 202, 240, 0.15);
+        border-color: rgba(13, 202, 240, 0.4);
+        color: var(--text-color);
+    }
+    
+    .dark .alert-warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border-color: rgba(255, 193, 7, 0.4);
+        color: var(--text-color);
+    }
+    
+    .dark .component-card {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+    }
+    
+    .dark .component-card .card-header {
+        background-color: var(--bg-card-header) !important;
+    }
+</style>
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-12">

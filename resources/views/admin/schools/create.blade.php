@@ -75,6 +75,15 @@
                                             @enderror
                                         </div>
                                         <div class="col-md-12">
+                                            <label for="principal" class="form-label fw-bold">Principal</label>
+                                            <input type="text" class="form-control @error('principal') is-invalid @enderror" id="principal" name="principal" value="{{ old('principal') }}" placeholder="Enter principal's full name">
+                                            @error('principal')
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-12">
                                             <label for="school_division_id" class="form-label fw-bold">School Division <span class="text-danger">*</span></label>
                                             <select class="form-select @error('school_division_id') is-invalid @enderror" id="school_division_id" name="school_division_id" required>
                                                 <option value="">Select School Division</option>

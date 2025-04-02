@@ -76,6 +76,7 @@ class SchoolDivisionController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:school_divisions',
             'address' => 'nullable|string',
+            'region' => 'nullable|string|max:255',
             'schools' => 'required|array|min:1',
             'schools.*.name' => 'required|string|max:255',
             'schools.*.code' => 'required|string|max:50|unique:schools',
@@ -111,6 +112,7 @@ class SchoolDivisionController extends Controller
                 'name' => $request->name,
                 'code' => $request->code,
                 'address' => $request->address,
+                'region' => $request->region,
             ]);
             
             Log::info('Created division:', ['id' => $division->id, 'name' => $division->name]);
@@ -219,12 +221,14 @@ class SchoolDivisionController extends Controller
                 Rule::unique('school_divisions')->ignore($division->id)
             ],
             'address' => 'nullable|string',
+            'region' => 'nullable|string|max:255',
         ]);
         
         $division->update([
             'name' => $request->name,
             'code' => $request->code,
             'address' => $request->address,
+            'region' => $request->region,
         ]);
         
         return redirect()->route('admin.school-divisions.index')

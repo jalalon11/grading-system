@@ -29,6 +29,7 @@ class User extends Authenticatable
         'address',
         'school_id',
         'is_teacher_admin',
+        'dark_mode_preference',
     ];
 
     /**
@@ -52,6 +53,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_teacher_admin' => 'boolean',
+            'dark_mode_preference' => 'boolean',
         ];
     }
 

@@ -93,6 +93,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('grades/lock-transmutation-table', [GradeController::class, 'lockTransmutationTable'])->name('grades.lock-transmutation');
         Route::post('grades/update-transmutation-preference', [GradeController::class, 'updateTransmutationPreference'])->name('grades.update-transmutation-preference');
         
+        // Reports Routes
+        Route::get('reports', [\App\Http\Controllers\Teacher\ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'classRecord'])->name('reports.class-record');
+        Route::post('reports/generate-class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record');
+        Route::get('reports/section-subjects', [\App\Http\Controllers\Teacher\ReportController::class, 'getSectionSubjects'])->name('reports.section-subjects');
+        
         Route::resource('attendances', AttendanceController::class);
         
         // API endpoint to get students by section ID
@@ -149,6 +155,11 @@ Route::middleware(['auth'])->group(function () {
                 return redirect()->route('teacher-admin.subjects.edit', $subject);
             })->name('subjects.edit');
         });
+
+        // Add bulk update route
+        Route::post('/grades/bulk-update', [GradeController::class, 'bulkUpdate'])->name('grades.bulk-update');
+        // Add edit assessment route
+        Route::post('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment');
     });
 
     // Teacher Admin Routes
@@ -180,4 +191,7 @@ Route::middleware(['auth'])->group(function () {
             Route::patch('sections/{section}/update-adviser', [SectionController::class, 'updateAdviser'])
                 ->name('sections.update-adviser');
         });
+
+    // Dark mode preference update route
+    Route::post('/user/update-dark-mode', [App\Http\Controllers\UserController::class, 'updateDarkMode'])->name('user.update-dark-mode');
 });
