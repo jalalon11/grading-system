@@ -961,8 +961,8 @@
                     <td>{{ number_format($quarterlyAssessments->first()->max_score, 0) }}</td>
                     @php $quarterlyAssessmentTotal = $quarterlyAssessments->first()->max_score; @endphp
                 @else
-                    <td>75</td>
-                    @php $quarterlyAssessmentTotal = 75; @endphp
+                    <td></td>
+                    @php $quarterlyAssessmentTotal = 0; @endphp
                 @endif
                 <td>100.00</td>
                 <td>{{ number_format($gradeConfig->quarterly_assessment_percentage, 1) }}%</td>
@@ -1155,7 +1155,11 @@
                     @php
                         $initialGrade = '';
                         $quarterlyGrade = '';
-                        if ($wwWS !== '' || $ptWS !== '' || $qaWS !== '') {
+                        
+                        // Only calculate grades if the student has actual grades
+                        $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
+                        
+                        if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
                             // Initial grade is the sum of all weighted scores
                             $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
                             // Calculate quarterly grade using the transmutation table
@@ -1349,7 +1353,11 @@
                     @php
                         $initialGrade = '';
                         $quarterlyGrade = '';
-                        if ($wwWS !== '' || $ptWS !== '' || $qaWS !== '') {
+                        
+                        // Only calculate grades if the student has actual grades
+                        $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
+                        
+                        if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
                             // Initial grade is the sum of all weighted scores
                             $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
                             // Calculate quarterly grade using the transmutation table
