@@ -1874,49 +1874,79 @@ class GradeController extends Controller
             // Get the student
             $student = \App\Models\Student::findOrFail($request->student_id);
             
-            // First check if we need to update a Grade record
-            $grade = Grade::where([
-                'student_id' => $request->student_id,
-                'subject_id' => $request->subject_id,
-                'term' => $request->quarter,
-                'grade_type' => $request->assessment_type,
-                'assessment_name' => $request->assessment_name
-            ])->first();
-            
-            // If grade exists, update it
-            if ($grade) {
-                $oldScore = $grade->score;
-                $grade->score = $request->score;
-                $grade->save();
+            // Delete any existing quarterly assessment grades first to avoid duplicates
+            // This ensures we have a clean state before saving the new score
+            if ($request->assessment_type === 'quarterly') {
+                Grade::where([
+                    'student_id' => $request->student_id,
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->quarter,
+                ])->where(function($query) {
+                    $query->where('grade_type', 'quarterly')
+                          ->orWhere('grade_type', 'quarterly_assessment');
+                })->delete();
                 
-                \Illuminate\Support\Facades\Log::info('Updated existing grade', [
-                    'grade_id' => $grade->id,
-                    'old_score' => $oldScore,
-                    'new_score' => $request->score
-                ]);
-            } else {
-                // Create new grade if doesn't exist
-                // First get the max score from subject configuration
-                $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $request->subject_id)->first();
-                $maxScore = 100; // Default max score
-                
-                // Create the grade
+                // Now create a new grade record with the updated score
+                $maxScore = $request->max_score ?? 100;
                 $grade = Grade::create([
                     'student_id' => $request->student_id,
                     'subject_id' => $request->subject_id,
                     'term' => $request->quarter,
-                    'grade_type' => $request->assessment_type,
+                    'grade_type' => 'quarterly',
                     'score' => $request->score,
                     'max_score' => $maxScore,
                     'assessment_name' => $request->assessment_name
                 ]);
                 
-                \Illuminate\Support\Facades\Log::info('Created new grade', [
+                $oldScore = 0;
+                \Illuminate\Support\Facades\Log::info('Created new quarterly assessment grade', [
                     'grade_id' => $grade->id,
                     'score' => $request->score
                 ]);
+            } else {
+                // For non-quarterly assessments, use the existing logic
+                $grade = Grade::where([
+                    'student_id' => $request->student_id,
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->quarter,
+                    'grade_type' => $request->assessment_type,
+                    'assessment_name' => $request->assessment_name
+                ])->first();
                 
-                $oldScore = 0;
+                // If grade exists, update it
+                if ($grade) {
+                    $oldScore = $grade->score;
+                    $grade->score = $request->score;
+                    $grade->save();
+                    
+                    \Illuminate\Support\Facades\Log::info('Updated existing grade', [
+                        'grade_id' => $grade->id,
+                        'old_score' => $oldScore,
+                        'new_score' => $request->score
+                    ]);
+                } else {
+                    // Create new grade if doesn't exist
+                    $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $request->subject_id)->first();
+                    $maxScore = $request->max_score ?? 100;
+                    
+                    // Create the grade
+                    $grade = Grade::create([
+                        'student_id' => $request->student_id,
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->quarter,
+                        'grade_type' => $request->assessment_type,
+                        'score' => $request->score,
+                        'max_score' => $maxScore,
+                        'assessment_name' => $request->assessment_name
+                    ]);
+                    
+                    \Illuminate\Support\Facades\Log::info('Created new grade', [
+                        'grade_id' => $grade->id,
+                        'score' => $request->score
+                    ]);
+                    
+                    $oldScore = 0;
+                }
             }
             
             // Now update the grade summary
@@ -1969,17 +1999,28 @@ class GradeController extends Controller
                 $ptWeighted = ($ptPercentage / 100) * $gradeConfig->performance_task_percentage;
                 
                 // 3. Quarterly Assessment
-                $quarterlyAssessment = Grade::where([
-                    'student_id' => $request->student_id,
-                    'subject_id' => $request->subject_id,
-                    'term' => $request->quarter,
-                    'grade_type' => 'quarterly'
-                ])->first();
-                
                 $qaPercentage = 0;
-                if ($quarterlyAssessment) {
-                    $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
+                
+                // If this is a quarterly assessment update, use the current data directly
+                if ($request->assessment_type === 'quarterly') {
+                    $maxScore = $request->max_score ?? 100;
+                    $qaPercentage = ($request->score / $maxScore) * 100;
+                } else {
+                    // Otherwise, fetch from database
+                    $quarterlyAssessment = Grade::where([
+                        'student_id' => $request->student_id,
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->quarter,
+                    ])->where(function($query) {
+                        $query->where('grade_type', 'quarterly')
+                              ->orWhere('grade_type', 'quarterly_assessment');
+                    })->first();
+                    
+                    if ($quarterlyAssessment) {
+                        $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
+                    }
                 }
+                
                 $qaWeighted = ($qaPercentage / 100) * $gradeConfig->quarterly_assessment_percentage;
                 
                 // Update the grade summary
