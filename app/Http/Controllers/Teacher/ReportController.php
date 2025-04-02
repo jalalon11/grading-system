@@ -121,56 +121,6 @@ class ReportController extends Controller
         // Group grades by student_id
         $studentGrades = $grades->groupBy('student_id');
         
-        // Add missing grades for students
-        foreach ($students as $student) {
-            if (!$studentGrades->has($student->id)) {
-                $sampleGrades = collect();
-                
-                // Add Written Works
-                for ($i = 1; $i <= 3; $i++) {
-                    $maxScore = ($i == 1) ? 70 : ($i == 2 ? 30 : 20);
-                    $grade = new Grade([
-                        'student_id' => $student->id,
-                        'subject_id' => $subject->id,
-                        'term' => $validated['quarter'],
-                        'grade_type' => 'written_work',
-                        'assessment_name' => "Quiz $i",
-                        'score' => round($maxScore * 0.85), // 85% of max score
-                        'max_score' => $maxScore
-                    ]);
-                    $sampleGrades->push($grade);
-                }
-                
-                // Add Performance Tasks
-                $grade = new Grade([
-                    'student_id' => $student->id,
-                    'subject_id' => $subject->id,
-                    'term' => $validated['quarter'],
-                    'grade_type' => 'performance_task',
-                    'assessment_name' => "Task 1",
-                    'score' => 75,
-                    'max_score' => 80
-                ]);
-                $sampleGrades->push($grade);
-                
-                // Add Quarterly Assessment
-                $grade = new Grade([
-                    'student_id' => $student->id,
-                    'subject_id' => $subject->id,
-                    'term' => $validated['quarter'],
-                    'grade_type' => 'quarterly',
-                    'assessment_name' => "Quarterly Exam",
-                    'score' => 70,
-                    'max_score' => 75
-                ]);
-                $sampleGrades->push($grade);
-                
-                // Add to grades collection and student grades map
-                $grades = $grades->concat($sampleGrades);
-                $studentGrades->put($student->id, $sampleGrades);
-            }
-        }
-            
         // Get all unique written works - make sure we're getting all of them
         $writtenWorks = $grades->where('grade_type', 'written_work')
             ->unique(function($item) {

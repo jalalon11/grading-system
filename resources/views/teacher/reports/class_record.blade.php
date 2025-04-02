@@ -1,60 +1,89 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
+                    <h4 class="mb-0 fw-bold text-primary">
                         <i class="fas fa-table me-2"></i>Generate Class Record
-                    </h5>
-                    <a href="{{ route('teacher.reports.index') }}" class="btn btn-sm btn-outline-secondary">
+                    </h4>
+                    <a href="{{ route('teacher.reports.index') }}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left me-1"></i> Back to Reports
                     </a>
                 </div>
-                <div class="card-body">
-                    <form action="{{ route('teacher.reports.generate-class-record') }}" method="POST" target="_blank">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="section_id" class="form-label">Section</label>
-                                <select name="section_id" id="section_id" class="form-select @error('section_id') is-invalid @enderror" required>
-                                    <option value="">Select Section</option>
-                                    @foreach($sections as $section)
-                                    <option value="{{ $section->id }}">{{ $section->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('section_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                <div class="card-body pt-0">
+                    <p class="text-muted mb-4">Complete the form below to generate a comprehensive class record report.</p>
+                    
+                    <div class="bg-light p-4 rounded-3 mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="report-icon">
+                                <i class="fas fa-info-circle text-primary"></i>
                             </div>
-                            <div class="col-md-12 mb-3">
-                                <label for="subject_id" class="form-label">Subject</label>
-                                <select name="subject_id" id="subject_id" class="form-select @error('subject_id') is-invalid @enderror" required disabled>
-                                    <option value="">Select a section first</option>
-                                </select>
-                                @error('subject_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <label for="quarter" class="form-label">Quarter</label>
-                                <select name="quarter" id="quarter" class="form-select @error('quarter') is-invalid @enderror" required>
-                                    <option value="">Select Quarter</option>
-                                    <option value="Q1">First Quarter</option>
-                                    <option value="Q2">Second Quarter</option>
-                                    <option value="Q3">Third Quarter</option>
-                                    <option value="Q4">Fourth Quarter</option>
-                                </select>
-                                @error('quarter')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                            <div class="ms-3">
+                                <h5 class="mb-1 fw-bold">Report Information</h5>
+                                <p class="text-muted mb-0 small">The report will show student grades organized by component categories.</p>
                             </div>
                         </div>
-                        <div class="mt-3 d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-file-alt me-2"></i> Generate Report
+                    </div>
+                    
+                    <form action="{{ route('teacher.reports.generate-class-record') }}" method="POST" target="_blank" class="needs-validation" novalidate>
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-12 mb-3">
+                                <label for="section_id" class="form-label fw-semibold">Section</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-users"></i></span>
+                                    <select name="section_id" id="section_id" class="form-select @error('section_id') is-invalid @enderror" required>
+                                        <option value="">Select Section</option>
+                                        @foreach($sections as $section)
+                                        <option value="{{ $section->id }}">{{ $section->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('section_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="form-text">Select the class section for which you want to generate the report</div>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label for="subject_id" class="form-label fw-semibold">Subject</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-book"></i></span>
+                                    <select name="subject_id" id="subject_id" class="form-select @error('subject_id') is-invalid @enderror" required disabled>
+                                        <option value="">Select a section first</option>
+                                    </select>
+                                    @error('subject_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="form-text">Choose the subject for the selected class section</div>
+                            </div>
+                            
+                            <div class="col-md-12 mb-4">
+                                <label for="quarter" class="form-label fw-semibold">Quarter</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-calendar-alt"></i></span>
+                                    <select name="quarter" id="quarter" class="form-select @error('quarter') is-invalid @enderror" required>
+                                        <option value="">Select Quarter</option>
+                                        <option value="Q1">First Quarter</option>
+                                        <option value="Q2">Second Quarter</option>
+                                        <option value="Q3">Third Quarter</option>
+                                        <option value="Q4">Fourth Quarter</option>
+                                    </select>
+                                    @error('quarter')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="form-text">Select the grading period for the report</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary py-2">
+                                <i class="fas fa-file-alt me-2"></i> Generate Class Record Report
                             </button>
                         </div>
                     </form>
@@ -63,6 +92,39 @@
         </div>
     </div>
 </div>
+
+<style>
+    .report-icon {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(13, 110, 253, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .report-icon i {
+        font-size: 1.5rem;
+    }
+    
+    .form-label {
+        color: #495057;
+    }
+    
+    .input-group-text {
+        color: #495057;
+        border-color: #ced4da;
+    }
+    
+    .form-select, .form-control {
+        border-color: #ced4da;
+    }
+    
+    .form-text {
+        font-size: 0.85rem;
+    }
+</style>
 @endsection
 
 @push('scripts')
@@ -119,6 +181,26 @@
         sectionSelect.addEventListener('change', function() {
             loadSubjects(this.value);
         });
+        
+        // Form validation
+        (function() {
+            'use strict';
+            
+            // Fetch all forms we want to apply validation styles to
+            const forms = document.querySelectorAll('.needs-validation');
+            
+            // Loop over them and prevent submission
+            Array.from(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
     });
 </script>
 @endpush 
