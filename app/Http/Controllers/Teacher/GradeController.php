@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assessment;
 use App\Models\Grade;
-use App\Models\GradeConfiguration;
+use App\Models\GradeSummary;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\GradeConfiguration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -1723,5 +1725,351 @@ class GradeController extends Controller
         } else {
             return redirect()->back()->with('error', 'Failed to save transmutation table preference.');
         }
+    }
+
+    /**
+     * Bulk update grades from class record report
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $gradesData = $request->input('grades', []);
+        $updatedCount = 0;
+        $errors = [];
+
+        DB::beginTransaction();
+        
+        try {
+            foreach ($gradesData as $studentData) {
+                $studentId = $studentData['student_id'];
+                $sectionId = $studentData['section_id'];
+                $subjectId = $studentData['subject_id'];
+                $quarter = $studentData['quarter'];
+                
+                // Update individual assessment grades
+                if (isset($studentData['grades']) && is_array($studentData['grades'])) {
+                    foreach ($studentData['grades'] as $grade) {
+                        $gradeModel = Grade::where([
+                            'student_id' => $studentId,
+                            'assessment_id' => $grade['assessment_id'],
+                            'grade_type' => $grade['grade_type']
+                        ])->first();
+                        
+                        if ($gradeModel) {
+                            // Update existing grade
+                            $gradeModel->score = $grade['score'];
+                            $gradeModel->save();
+                            
+                            \Illuminate\Support\Facades\Log::info('Updated existing grade', [
+                                'grade_id' => $gradeModel->id,
+                                'old_score' => $gradeModel->score,
+                                'new_score' => $grade['score']
+                            ]);
+                        } else {
+                            // Create new grade
+                            Grade::create([
+                                'student_id' => $studentId,
+                                'assessment_id' => $grade['assessment_id'],
+                                'section_id' => $sectionId,
+                                'subject_id' => $subjectId,
+                                'quarter' => $quarter,
+                                'grade_type' => $grade['grade_type'],
+                                'score' => $grade['score'],
+                                'max_score' => $grade['max_score'],
+                                'assessment_name' => 'Assessment ' . $grade['assessment_id']
+                            ]);
+                            
+                            \Illuminate\Support\Facades\Log::info('Created new grade', [
+                                'grade_id' => $gradeModel->id,
+                                'score' => $grade['score']
+                            ]);
+                        }
+                        $updatedCount++;
+                    }
+                }
+                
+                // Update grade summary if it exists
+                $gradeSummary = GradeSummary::where([
+                    'student_id' => $studentId,
+                    'section_id' => $sectionId,
+                    'subject_id' => $subjectId,
+                    'quarter' => $quarter
+                ])->first();
+                
+                $summaryData = [
+                    'written_work_ps' => $studentData['written_work']['ps'],
+                    'written_work_ws' => $studentData['written_work']['ws'],
+                    'performance_task_ps' => $studentData['performance_task']['ps'],
+                    'performance_task_ws' => $studentData['performance_task']['ws'],
+                    'quarterly_assessment_ps' => $studentData['quarterly_assessment']['ps'],
+                    'quarterly_assessment_ws' => $studentData['quarterly_assessment']['ws'],
+                    'initial_grade' => $studentData['initial_grade'],
+                    'quarterly_grade' => $studentData['quarterly_grade'],
+                    'remarks' => $studentData['quarterly_grade'] >= 75 ? 'Passed' : 'Failed'
+                ];
+                
+                if ($gradeSummary) {
+                    $gradeSummary->update($summaryData);
+                } else {
+                    GradeSummary::create(array_merge([
+                        'student_id' => $studentId,
+                        'section_id' => $sectionId,
+                        'subject_id' => $subjectId,
+                        'quarter' => $quarter,
+                    ], $summaryData));
+                }
+                
+                $updatedCount++;
+            }
+            
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => "$updatedCount grades successfully updated.",
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating grades: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Edit assessment score for a student
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function editAssessment(Request $request)
+    {
+        $request->validate([
+            'student_id' => 'required|integer|exists:students,id',
+            'subject_id' => 'required|integer|exists:subjects,id',
+            'quarter' => 'required|string|in:Q1,Q2,Q3,Q4',
+            'assessment_type' => 'required|string|in:written_work,performance_task,quarterly',
+            'assessment_name' => 'required|string',
+            'score' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+            
+            // Log the request for debugging
+            \Illuminate\Support\Facades\Log::info('Editing assessment', [
+                'student_id' => $request->student_id,
+                'subject_id' => $request->subject_id,
+                'quarter' => $request->quarter,
+                'assessment_type' => $request->assessment_type,
+                'assessment_name' => $request->assessment_name,
+                'assessment_index' => $request->assessment_index,
+                'score' => $request->score,
+                'max_score' => $request->max_score
+            ]);
+            
+            // Get the student
+            $student = \App\Models\Student::findOrFail($request->student_id);
+            
+            // First check if we need to update a Grade record
+            $grade = Grade::where([
+                'student_id' => $request->student_id,
+                'subject_id' => $request->subject_id,
+                'term' => $request->quarter,
+                'grade_type' => $request->assessment_type,
+                'assessment_name' => $request->assessment_name
+            ])->first();
+            
+            // If grade exists, update it
+            if ($grade) {
+                $oldScore = $grade->score;
+                $grade->score = $request->score;
+                $grade->save();
+                
+                \Illuminate\Support\Facades\Log::info('Updated existing grade', [
+                    'grade_id' => $grade->id,
+                    'old_score' => $oldScore,
+                    'new_score' => $request->score
+                ]);
+            } else {
+                // Create new grade if doesn't exist
+                // First get the max score from subject configuration
+                $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $request->subject_id)->first();
+                $maxScore = 100; // Default max score
+                
+                // Create the grade
+                $grade = Grade::create([
+                    'student_id' => $request->student_id,
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->quarter,
+                    'grade_type' => $request->assessment_type,
+                    'score' => $request->score,
+                    'max_score' => $maxScore,
+                    'assessment_name' => $request->assessment_name
+                ]);
+                
+                \Illuminate\Support\Facades\Log::info('Created new grade', [
+                    'grade_id' => $grade->id,
+                    'score' => $request->score
+                ]);
+                
+                $oldScore = 0;
+            }
+            
+            // Now update the grade summary
+            $gradeSummary = \App\Models\GradeSummary::where([
+                'student_id' => $request->student_id,
+                'subject_id' => $request->subject_id,
+                'quarter' => $request->quarter,
+            ])->first();
+            
+            if ($gradeSummary) {
+                // Get the subject's grading configurations
+                $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $request->subject_id)->firstOrFail();
+                
+                // Recalculate all components based on current grades
+                
+                // 1. Written Works
+                $writtenWorks = Grade::where([
+                    'student_id' => $request->student_id,
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->quarter,
+                    'grade_type' => 'written_work'
+                ])->get();
+                
+                $wwPercentage = 0;
+                if ($writtenWorks->count() > 0) {
+                    $wwTotalPercentage = 0;
+                    foreach ($writtenWorks as $ww) {
+                        $wwTotalPercentage += ($ww->score / $ww->max_score) * 100;
+                    }
+                    $wwPercentage = $wwTotalPercentage / $writtenWorks->count();
+                }
+                $wwWeighted = ($wwPercentage / 100) * $gradeConfig->written_work_percentage;
+                
+                // 2. Performance Tasks
+                $performanceTasks = Grade::where([
+                    'student_id' => $request->student_id,
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->quarter,
+                    'grade_type' => 'performance_task'
+                ])->get();
+                
+                $ptPercentage = 0;
+                if ($performanceTasks->count() > 0) {
+                    $ptTotalPercentage = 0;
+                    foreach ($performanceTasks as $pt) {
+                        $ptTotalPercentage += ($pt->score / $pt->max_score) * 100;
+                    }
+                    $ptPercentage = $ptTotalPercentage / $performanceTasks->count();
+                }
+                $ptWeighted = ($ptPercentage / 100) * $gradeConfig->performance_task_percentage;
+                
+                // 3. Quarterly Assessment
+                $quarterlyAssessment = Grade::where([
+                    'student_id' => $request->student_id,
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->quarter,
+                    'grade_type' => 'quarterly'
+                ])->first();
+                
+                $qaPercentage = 0;
+                if ($quarterlyAssessment) {
+                    $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
+                }
+                $qaWeighted = ($qaPercentage / 100) * $gradeConfig->quarterly_assessment_percentage;
+                
+                // Update the grade summary
+                $gradeSummary->written_work_ps = $wwPercentage;
+                $gradeSummary->written_work_ws = $wwWeighted;
+                $gradeSummary->performance_task_ps = $ptPercentage;
+                $gradeSummary->performance_task_ws = $ptWeighted;
+                $gradeSummary->quarterly_assessment_ps = $qaPercentage;
+                $gradeSummary->quarterly_assessment_ws = $qaWeighted;
+                
+                // Calculate final grades
+                $initialGrade = $wwWeighted + $ptWeighted + $qaWeighted;
+                $gradeSummary->initial_grade = $initialGrade;
+                
+                // Transmute the grade according to DepEd rules
+                $quarterlyGrade = $this->transmutationTable1($initialGrade);
+                $gradeSummary->quarterly_grade = $quarterlyGrade;
+                $gradeSummary->remarks = $quarterlyGrade >= 75 ? 'Passed' : 'Failed';
+                
+                $gradeSummary->save();
+            }
+            
+            DB::commit();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Assessment score updated successfully.",
+                'old_score' => $oldScore,
+                'new_score' => $request->score,
+                'grade_summary' => $gradeSummary
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating assessment score: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    
+    /**
+     * DepEd Transmutation Table 1
+     * 
+     * @param float $initialGrade
+     * @return int
+     */
+    private function transmutationTable1($initialGrade)
+    {
+        if ($initialGrade >= 100) return 100;
+        if ($initialGrade >= 98.40) return 99;
+        if ($initialGrade >= 96.80) return 98;
+        if ($initialGrade >= 95.20) return 97;
+        if ($initialGrade >= 93.60) return 96;
+        if ($initialGrade >= 92.00) return 95;
+        if ($initialGrade >= 90.40) return 94;
+        if ($initialGrade >= 88.80) return 93;
+        if ($initialGrade >= 87.20) return 92;
+        if ($initialGrade >= 85.60) return 91;
+        if ($initialGrade >= 84.00) return 90;
+        if ($initialGrade >= 82.40) return 89;
+        if ($initialGrade >= 80.80) return 88;
+        if ($initialGrade >= 79.20) return 87;
+        if ($initialGrade >= 77.60) return 86;
+        if ($initialGrade >= 76.00) return 85;
+        if ($initialGrade >= 74.40) return 84;
+        if ($initialGrade >= 72.80) return 83;
+        if ($initialGrade >= 71.20) return 82;
+        if ($initialGrade >= 69.60) return 81;
+        if ($initialGrade >= 68.00) return 80;
+        if ($initialGrade >= 66.40) return 79;
+        if ($initialGrade >= 64.80) return 78;
+        if ($initialGrade >= 63.20) return 77;
+        if ($initialGrade >= 61.60) return 76;
+        if ($initialGrade >= 60.00) return 75;
+        if ($initialGrade >= 56.00) return 74;
+        if ($initialGrade >= 52.00) return 73;
+        if ($initialGrade >= 48.00) return 72;
+        if ($initialGrade >= 44.00) return 71;
+        if ($initialGrade >= 40.00) return 70;
+        if ($initialGrade >= 36.00) return 69;
+        if ($initialGrade >= 32.00) return 68;
+        if ($initialGrade >= 28.00) return 67;
+        if ($initialGrade >= 24.00) return 66;
+        if ($initialGrade >= 20.00) return 65;
+        if ($initialGrade >= 16.00) return 64;
+        if ($initialGrade >= 12.00) return 63;
+        if ($initialGrade >= 8.00) return 62;
+        if ($initialGrade >= 4.00) return 61;
+        if ($initialGrade >= 0.00) return 60;
+        return 60;
     }
 }

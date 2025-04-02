@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class StudentController extends Controller
@@ -27,7 +29,54 @@ class StudentController extends Controller
                 ->orderBy('first_name')
                 ->get();
             
-            return view('teacher.students.index', compact('students'));
+            // Get assigned sections where the teacher teaches subjects but is not the adviser
+            $teacherId = Auth::id();
+            $assignedSectionIds = DB::table('section_subject')
+                ->where('teacher_id', $teacherId)
+                ->join('sections', 'section_subject.section_id', '=', 'sections.id')
+                ->where(function($query) use ($teacherId) {
+                    $query->where('sections.adviser_id', '!=', $teacherId)
+                          ->orWhereNull('sections.adviser_id');
+                })
+                ->pluck('sections.id')
+                ->unique();
+            
+            $assignedSections = Section::whereIn('id', $assignedSectionIds)
+                ->get();
+            
+            // Get students from these assigned sections
+            $assignedStudents = Student::whereIn('section_id', $assignedSectionIds)
+                ->with('section')
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get();
+            
+            // Get subjects assigned to the teacher for each section
+            $teacherSubjectsData = DB::table('section_subject')
+                ->where('teacher_id', $teacherId)
+                ->join('subjects', 'section_subject.subject_id', '=', 'subjects.id')
+                ->select('section_subject.section_id', 'subjects.id', 'subjects.name', 'subjects.code')
+                ->get();
+            
+            $assignedSubjectsBySection = [];
+            
+            foreach ($teacherSubjectsData as $subjectData) {
+                if (!isset($assignedSubjectsBySection[$subjectData->section_id])) {
+                    $assignedSubjectsBySection[$subjectData->section_id] = [];
+                }
+                $assignedSubjectsBySection[$subjectData->section_id][] = (object)[
+                    'id' => $subjectData->id,
+                    'name' => $subjectData->name,
+                    'code' => $subjectData->code
+                ];
+            }
+            
+            return view('teacher.students.index', compact(
+                'students', 
+                'assignedStudents',
+                'assignedSections',
+                'assignedSubjectsBySection'
+            ));
         } catch (\Exception $e) {
             Log::error('Error in student index: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
@@ -35,8 +84,12 @@ class StudentController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            return view('teacher.students.index', ['students' => collect()])
-                ->with('error', 'Error loading students. Please contact administrator.');
+            return view('teacher.students.index', [
+                'students' => collect(),
+                'assignedStudents' => collect(),
+                'assignedSections' => collect(),
+                'assignedSubjectsBySection' => []
+            ])->with('error', 'Error loading students. Please contact administrator.');
         }
     }
 
@@ -85,12 +138,58 @@ class StudentController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        // Get sections associated with the current teacher
+        // Check if viewing from assigned section
+        $isFromAssignedSection = $request->has('from_assigned');
+        $assignedSubjectId = $request->query('subject_id');
+        
+        if ($isFromAssignedSection && $assignedSubjectId) {
+            try {
+                // Verify this teacher teaches this subject to this student
+                $student = Student::with([
+                    'section',
+                    'grades' => function($query) use ($assignedSubjectId) {
+                        $query->where('subject_id', $assignedSubjectId)
+                              ->with('subject'); // Make sure subject relation is loaded with grades
+                    },
+                    'attendances'
+                ])->findOrFail($id);
+                
+                // Check if the teacher is assigned to teach this subject in the student's section
+                $teacherAssigned = DB::table('section_subject')
+                    ->where('section_id', $student->section_id)
+                    ->where('subject_id', $assignedSubjectId)
+                    ->where('teacher_id', Auth::id())
+                    ->exists();
+                
+                if (!$teacherAssigned) {
+                    abort(403, 'You are not authorized to view this student\'s grades for this subject.');
+                }
+                
+                // Get the selected transmutation table from the request or use default (1)
+                $selectedTransmutationTable = $request->query('transmutation_table', 1);
+                
+                // Get the subject with its detailed information
+                $subject = Subject::findOrFail($assignedSubjectId);
+                
+                return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'isFromAssignedSection', 'subject'));
+            } catch (\Exception $e) {
+                Log::error('Error in student show: ' . $e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                return redirect()->route('teacher.students.index')
+                    ->with('error', 'Error loading student data. Please try again or contact administrator.');
+            }
+        }
+        
+        // Default behavior - get sections associated with the current teacher
         $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
         
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)
-            ->with(['section.subjects', 'section.adviser', 'grades', 'attendances'])
+            ->with(['section.subjects', 'section.adviser', 'grades.subject', 'attendances'])
             ->findOrFail($id);
         
         // Get the selected transmutation table from the request or use default (1)

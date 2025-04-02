@@ -22,9 +22,9 @@
             }
 
             .nav-container {
-                background: rgba(255, 255, 255, 0.95);
+                background: rgba(244, 246, 246, 0.95);
                 backdrop-filter: blur(10px);
-                border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                border-bottom: 1px solid rgba(170, 183, 184, 0.2);
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             }
 
@@ -36,7 +36,7 @@
                 align-items: center;
                 justify-content: center;
                 overflow: hidden;
-                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
             }
 
             .hero-content {
@@ -50,7 +50,7 @@
             .hero-title {
                 font-size: 2.5rem;
                 font-weight: 700;
-                color: #2d3748;
+                color: #1C2833;
                 line-height: 1.2;
                 margin-bottom: 1.5rem;
             }
@@ -63,7 +63,7 @@
 
             .hero-subtitle {
                 font-size: 1.1rem;
-                color: #4a5568;
+                color: #2E4053;
                 max-width: 600px;
                 margin: 0 auto 2.5rem;
                 line-height: 1.6;
@@ -76,7 +76,7 @@
             }
 
             .btn-primary {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
                 border: none;
                 padding: 0.75rem 2rem;
                 font-weight: 600;
@@ -91,9 +91,9 @@
             }
 
             .btn-secondary {
-                background: #fff;
-                color: #2d3748;
-                border: 2px solid #e2e8f0;
+                background: #F4F6F6;
+                color: #1C2833;
+                border: 2px solid #AAB7B8;
                 padding: 0.75rem 2rem;
                 font-weight: 600;
                 border-radius: 0.5rem;
@@ -102,7 +102,7 @@
             }
 
             .btn-secondary:hover {
-                background: #f8fafc;
+                background: #D5DBDB;
                 transform: translateY(-2px);
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             }
@@ -133,7 +133,7 @@
             .feature-icon {
                 width: 60px;
                 height: 60px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
                 border-radius: 1rem;
                 display: flex;
                 align-items: center;
@@ -146,25 +146,24 @@
             .feature-title {
                 font-size: 1.25rem;
                 font-weight: 600;
-                color: #2d3748;
+                color: #1C2833;
                 margin-bottom: 1rem;
             }
 
             .feature-description {
-                color: #718096;
+                color: #2E4053;
                 line-height: 1.6;
             }
 
             .cta-section {
                 padding: 80px 0;
                 text-align: center;
-                background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+                background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
             }
 
             .footer {
-                background: #1a202c;
-                color: #e2e8f0;
-                padding: 3rem 0;
+                background: #1C2833;
+                color: #F4F6F6;
             }
 
             @keyframes float {
@@ -276,7 +275,7 @@
             .stat-number {
                 font-size: 2.5rem;
                 font-weight: 700;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
                 -webkit-background-clip: text;
                 background-clip: text;
                 color: transparent;
@@ -284,7 +283,7 @@
             }
 
             .stat-label {
-                color: #4a5568;
+                color: #2E4053;
                 font-weight: 500;
             }
 
@@ -300,7 +299,7 @@
             .bg-blob-1 {
                 width: 300px;
                 height: 300px;
-                background: rgba(102, 126, 234, 0.3);
+                background: rgba(28, 40, 51, 0.3);
                 top: 20%;
                 left: 10%;
             }
@@ -308,7 +307,7 @@
             .bg-blob-2 {
                 width: 350px;
                 height: 350px;
-                background: rgba(118, 75, 162, 0.3);
+                background: rgba(46, 64, 83, 0.3);
                 bottom: 10%;
                 right: 15%;
             }
@@ -334,6 +333,118 @@
                 height: 150%;
                 transform: rotate(-45deg);
                 background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+            }
+
+            /* Hero content gradient text */
+            .bg-clip-text.text-transparent.bg-gradient-to-r {
+                background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-weight: 700;
+            }
+
+            /* Benefits Section styling */
+            .cta-section {
+                padding: 80px 0;
+                text-align: center;
+                background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
+            }
+
+            .cta-section .text-[#667eea] {
+                color: #1C2833;
+            }
+
+            .cta-section .bg-white {
+                background: rgba(244, 246, 246, 0.95);
+                border: 1px solid rgba(170, 183, 184, 0.2);
+            }
+
+            .cta-section h2 {
+                color: #1C2833;
+            }
+
+            .cta-section p {
+                color: #2E4053;
+            }
+
+            .cta-section .text-gray-800 {
+                color: #1C2833;
+            }
+
+            .cta-section .text-gray-600 {
+                color: #2E4053;
+            }
+
+            /* Developer section styling */
+            #developer {
+                background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
+            }
+
+            #developer .bg-white {
+                background: rgba(244, 246, 246, 0.95);
+                border: 1px solid rgba(170, 183, 184, 0.2);
+            }
+
+            #developer .text-gray-800 {
+                color: #1C2833;
+            }
+
+            #developer .text-gray-600 {
+                color: #2E4053;
+            }
+
+            #developer .bg-gray-50 {
+                background: rgba(244, 246, 246, 0.95);
+                border: 1px solid rgba(170, 183, 184, 0.2);
+            }
+
+            #developer .text-indigo-600 {
+                color: #1C2833;
+            }
+
+            #developer .bg-gradient-to-br {
+                background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+            }
+
+            /* Footer styling update */
+            .footer {
+                background: #1C2833;
+                color: #F4F6F6;
+            }
+
+            .footer .text-gray-400 {
+                color: #AAB7B8;
+            }
+
+            .footer .border-gray-700 {
+                border-color: #2E4053;
+            }
+
+            /* Update hover states */
+            .hover\:shadow-md:hover {
+                box-shadow: 0 4px 6px -1px rgba(28, 40, 51, 0.1), 0 2px 4px -1px rgba(28, 40, 51, 0.06);
+            }
+
+            .hover\:text-gray-900:hover {
+                color: #1C2833;
+            }
+
+            /* Update the navigation text colors */
+            .text-gray-700 {
+                color: #2E4053;
+            }
+
+            .text-gray-800 {
+                color: #1C2833;
+            }
+
+            /* Update social media icons */
+            .text-gray-700.hover\:text-indigo-600:hover {
+                color: #1C2833;
+            }
+
+            .bg-gray-100 {
+                background: rgba(244, 246, 246, 0.95);
             }
         </style>
     </head>
@@ -395,7 +506,7 @@
                 </div>
                 <h1 class="hero-title">
                     Streamline Your<br>
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-[#667eea] to-[#764ba2]">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r">
                         Grading Process
                     </span>
                 </h1>
@@ -536,31 +647,31 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="text-[#667eea] text-3xl mb-4">
+                        <div class="text-[#1C2833] text-3xl mb-4">
                             <i class="fas fa-clock"></i>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Save Time</h3>
-                        <p class="text-gray-600">
+                        <h3 class="text-xl font-semibold mb-2">Save Time</h3>
+                        <p>
                             Reduce grading time by up to 50% with our streamlined process and automated calculations.
                         </p>
                     </div>
 
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="text-[#667eea] text-3xl mb-4">
+                        <div class="text-[#1C2833] text-3xl mb-4">
                             <i class="fas fa-shield-alt"></i>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Secure & Reliable</h3>
-                        <p class="text-gray-600">
+                        <h3 class="text-xl font-semibold mb-2">Secure & Reliable</h3>
+                        <p>
                             Your data is protected with enterprise-grade security and regular backups.
                         </p>
                     </div>
 
                     <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-                        <div class="text-[#667eea] text-3xl mb-4">
+                        <div class="text-[#1C2833] text-3xl mb-4">
                             <i class="fas fa-chart-bar"></i>
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Data Insights</h3>
-                        <p class="text-gray-600">
+                        <h3 class="text-xl font-semibold mb-2">Data Insights</h3>
+                        <p>
                             Get valuable insights into student performance with advanced analytics tools.
                         </p>
                     </div>
@@ -707,7 +818,7 @@
                                             <h5 class="font-medium text-gray-800 mb-2">Technology Stack</h5>
                                             <ul class="list-disc pl-5 space-y-1">
                                                 <li>Backend: Laravel 12 (PHP 8.2.4)</li>
-                                                <li>Frontend: Blade templates, Tailwind CSS, Alpine.js</li>
+                                                <li>Frontend: Blade templates, Tailwind CSS, Bootstrap 5, Alpine.js</li>
                                                 <li>Database: MySQL 8.0</li>
                                                 <li>Authentication: Laravel Cloud Authentication</li>
                                                 <li>Hosting: Laravel Cloud</li>

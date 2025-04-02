@@ -168,6 +168,266 @@
         background-color: rgba(255, 193, 7, 0.15);
         color: #ffc107;
     }
+    
+    /* Dark mode styles */
+    .dark #gradeTable thead th {
+        background-color: var(--bg-card-header) !important;
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .dark #gradeTable th:first-child,
+    .dark #gradeTable td:first-child,
+    .dark #gradeTable th:nth-child(2),
+    .dark #gradeTable td:nth-child(2) {
+        background-color: var(--bg-card-header) !important;
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .dark .table-responsive::-webkit-scrollbar-track {
+        background: var(--bg-card);
+    }
+    
+    .dark .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+    }
+    
+    .dark .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #4a4a4a;
+    }
+    
+    .dark .assessment-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
+    }
+    
+    .dark .bg-light-blue {
+        background-color: rgba(78, 115, 223, 0.15) !important;
+    }
+    
+    .dark .bg-light-green {
+        background-color: rgba(28, 200, 138, 0.15) !important;
+    }
+    
+    .dark .bg-light-yellow {
+        background-color: rgba(246, 194, 62, 0.15) !important;
+    }
+    
+    .dark .music-highlight {
+        background-color: rgba(13, 110, 253, 0.25);
+    }
+    
+    .dark .arts-highlight {
+        background-color: rgba(220, 53, 69, 0.25);
+    }
+    
+    .dark .pe-highlight {
+        background-color: rgba(25, 135, 84, 0.25);
+    }
+    
+    .dark .health-highlight {
+        background-color: rgba(255, 193, 7, 0.25);
+    }
+    
+    .dark .badge.bg-light.text-dark {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+    
+    .dark .badge.bg-secondary.bg-opacity-10.text-dark {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+    }
+    
+    .dark .badge.bg-success,
+    .dark .badge.bg-primary,
+    .dark .badge.bg-warning,
+    .dark .badge.bg-danger {
+        opacity: 0.9;
+    }
+    
+    .dark .card-header.bg-white {
+        background-color: var(--bg-card-header) !important;
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .dark .card-body.bg-light {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color);
+    }
+    
+    .dark .text-gray-800 {
+        color: var(--text-color) !important;
+    }
+    
+    /* Additional dark mode fixes */
+    .dark .table-light,
+    .dark .table-light>td,
+    .dark .table-light>th {
+        background-color: var(--bg-card-header) !important;
+        color: var(--text-color);
+    }
+    
+    .dark .bg-white {
+        background-color: var(--bg-card) !important;
+    }
+    
+    .dark .bg-light {
+        background-color: var(--bg-card) !important;
+    }
+    
+    .dark .bg-f8f9fa,
+    .dark [style*="background-color: #f8f9fa"] {
+        background-color: var(--bg-card-header) !important;
+    }
+    
+    .dark .table.table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .dark .table.table-hover tbody tr:hover {
+        background-color: rgba(67, 97, 238, 0.1);
+    }
+    
+    /* Fix table header and row issues */
+    .dark table thead th,
+    .dark .table thead th {
+        color: var(--text-color) !important;
+        background-color: var(--bg-card-header) !important;
+        border-color: var(--border-color) !important;
+    }
+    
+    .dark table tbody tr,
+    .dark .table tbody tr {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+    }
+    
+    .dark table tr td,
+    .dark .table tr td {
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+    
+    /* Handle any specific card or table styling that might be causing the white background */
+    .dark .card,
+    .dark .card-body {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+    }
+    
+    .dark tr.bg-white,
+    .dark tr[class*="bg-light"],
+    .dark td.bg-white,
+    .dark td[class*="bg-light"] {
+        background-color: var(--bg-card) !important;
+    }
+    
+    /* Additional specific fixes for the student grades table */
+    .dark .student-row,
+    .dark .grade-row {
+        background-color: var(--bg-card) !important;
+    }
+    
+    /* More specific fixes for the student grades table */
+    .dark #studentGradesTable,
+    .dark .student-grades-table,
+    .dark table[id*="grade"],
+    .dark table[class*="grade"] {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+    }
+    
+    .dark #studentGradesTable tr,
+    .dark .student-grades-table tr,
+    .dark table[id*="grade"] tr,
+    .dark table[class*="grade"] tr {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+    }
+    
+    .dark #studentGradesTable td,
+    .dark .student-grades-table td,
+    .dark table[id*="grade"] td,
+    .dark table[class*="grade"] td {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+        border-color: var(--border-color) !important;
+    }
+    
+    /* Target the specific white row with student information */
+    .dark tr.student-info-row,
+    .dark tr.data-row,
+    .dark tr[style*="background-color: white"],
+    .dark tr[style*="background-color: #fff"],
+    .dark tr[style*="background-color: #ffffff"] {
+        background-color: var(--bg-card) !important;
+        color: var(--text-color) !important;
+    }
+    
+    /* Target avatar circles */
+    .dark .avatar-circle {
+        background-color: var(--border-color) !important;
+        color: var(--text-color) !important;
+    }
+    
+    /* Reset bootstrap backgrounds in dark mode */
+    .dark .bg-white,
+    .dark .bg-body,
+    .dark .bg-light {
+        background-color: var(--bg-card) !important;
+    }
+    
+    /* For any inline style backgrounds */
+    .dark [style*="background-color: white"],
+    .dark [style*="background-color: #fff"],
+    .dark [style*="background-color: #ffffff"],
+    .dark [style*="background: white"],
+    .dark [style*="background: #fff"],
+    .dark [style*="background: #ffffff"] {
+        background-color: var(--bg-card) !important;
+    }
+    
+    /* Student grades table row hover effect - blue highlight to match student page */
+    .dark table[id*="grade"] tbody tr:hover,
+    .dark table[class*="grade"] tbody tr:hover,
+    .dark .student-grades-table tbody tr:hover,
+    .dark #studentGradesTable tbody tr:hover,
+    .dark tr.student-info-row:hover,
+    .dark tr.data-row:hover,
+    .dark .container-fluid table tbody tr:hover,
+    .dark table tbody tr:hover {
+        background-color: #242e48 !important; /* Darker navy blue to match student page */
+        transition: background-color 0.2s ease !important;
+        color: white !important;
+    }
+    
+    /* Also apply to regular tables and light mode for consistency */
+    table[id*="grade"] tbody tr:hover,
+    table[class*="grade"] tbody tr:hover,
+    .student-grades-table tbody tr:hover,
+    #studentGradesTable tbody tr:hover,
+    tr.student-info-row:hover,
+    tr.data-row:hover,
+    .container-fluid table tbody tr:hover,
+    table tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        transition: background-color 0.2s ease !important;
+    }
+    
+    /* Force hover effect for student rows */
+    .dark table tr:hover td,
+    .dark .table tr:hover td {
+        background-color: #242e48 !important;
+    }
+    
+    /* Ensure no other styles are overriding our hover effect */
+    .dark table tr:hover,
+    .dark .table tr:hover {
+        background-color: #242e48 !important;
+    }
 </style>
 @endpush
 

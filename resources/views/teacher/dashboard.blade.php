@@ -5,7 +5,7 @@
     <!-- Welcome Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-sm bg-primary bg-gradient text-white">
+            <div class="card border-0 shadow-sm bg-primary text-white welcome-header">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
@@ -162,7 +162,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="attendance-chart-container" style="height: 300px;">
+                    <div class="attendance-chart-container chart-container" style="height: 300px;">
                         <canvas id="attendanceChart"></canvas>
                     </div>
                 </div>
@@ -176,7 +176,7 @@
                     <h5 class="mb-0"><i class="fas fa-chart-pie text-success me-2"></i> Grade Distribution</h5>
                 </div>
                 <div class="card-body">
-                    <div class="grade-chart-container d-flex justify-content-center align-items-center" style="height: 300px;">
+                    <div class="grade-chart-container chart-container d-flex justify-content-center align-items-center" style="height: 300px;">
                         <canvas id="gradeDistributionChart"></canvas>
                     </div>
                 </div>
@@ -252,7 +252,7 @@
                 </div>
                 <div class="card-body p-0">
                     @if($recentSections->count() > 0)
-                        <div class="table-responsive">
+                        <div class="table-responsive student-performance-metrics-table">
                             <table class="table table-hover align-middle mb-0 student-performance-table">
                                 <thead class="table-light">
                                     <tr>
@@ -369,7 +369,7 @@
                 </div>
                 <div class="card-body p-0">
                     @if($recentSections->count() > 0)
-                        <div class="table-responsive">
+                        <div class="table-responsive assigned-sections-table">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
@@ -425,7 +425,7 @@
                 </div>
                 <div class="card-body p-0">
                     @if($recentSubjects->count() > 0)
-                        <div class="table-responsive">
+                        <div class="table-responsive assigned-subjects-table">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
@@ -486,6 +486,10 @@
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
     }
     
+    .dark .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
+    }
+    
     .avatar {
         display: flex;
         align-items: center;
@@ -494,18 +498,189 @@
         height: 45px;
     }
     
+    .welcome-header {
+        background: linear-gradient(to right, #4e73df, #224abe);
+    }
+    
+    .dark .welcome-header {
+        background: linear-gradient(to right, #2d4383, #152a73) !important;
+        border-color: #152a73 !important;
+    }
+    
+    .dark .btn-light {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e4e6eb;
+    }
+    
+    .dark .btn-light:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+    }
+    
     .bg-gradient-primary {
         background: linear-gradient(to right, #4e73df, #224abe);
+    }
+    
+    .dark .bg-gradient-primary {
+        background: linear-gradient(to right, #3a5cbc, #1b3d9e);
     }
     
     .list-group-item:hover {
         background-color: #f8f9fa;
     }
     
+    .dark .list-group-item:hover {
+        background-color: #2d2d2d;
+    }
+    
+    /* Card headers dark mode support */
+    .dark .card-header.bg-white {
+        background-color: #242526 !important;
+        border-bottom: 1px solid #3a3b3c;
+        color: #e4e6eb;
+    }
+    
+    /* Better colors for text in dark mode headers */
+    .dark .card-header.bg-white h5,
+    .dark .card-header.bg-white i {
+        color: #e4e6eb;
+    }
+    
+    .dark .card-header.bg-white i.text-primary {
+        color: #4e7bff !important;
+    }
+    
+    .dark .card-header.bg-white i.text-success {
+        color: #28a745 !important;
+    }
+    
+    .dark .card-header.bg-white i.text-warning {
+        color: #ffc107 !important;
+    }
+    
+    .dark .card-header.bg-white i.text-info {
+        color: #17a2b8 !important;
+    }
+    
     .attendance-period-btn.active {
         background-color: #4e73df;
         color: white;
         border-color: #4e73df;
+    }
+    
+    .dark .attendance-period-btn {
+        color: #e4e6eb;
+        border-color: #3a3b3c;
+    }
+    
+    .dark .attendance-period-btn.active {
+        background-color: #3a5cbc;
+        border-color: #3a5cbc;
+    }
+    
+    /* Table dark mode styling improvements */
+    .dark .table {
+        color: #e4e6eb;
+        background-color: #242526;
+    }
+    
+    /* Table header styling for dark mode */
+    .dark .table-light,
+    .dark .table thead.table-light,
+    .dark .table th.table-light,
+    .dark table.table thead tr,
+    .dark table.table thead th {
+        color: #ffffff !important;
+        background-color: #1e1e1e !important;
+        border-color: #3a3b3c !important;
+        border-bottom-color: #3a3b3c !important;
+    }
+    
+    .dark .table-hover tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.075);
+        color: #e4e6eb;
+    }
+    
+    /* Fix table rows in dark mode */
+    .dark .table tr {
+        background-color: #242526;
+        border-color: #3a3b3c;
+    }
+    
+    .dark .table td,
+    .dark .table th {
+        border-color: #3a3b3c;
+    }
+    
+    /* Table cell styling for dark mode */
+    .dark .table > :not(caption) > * > * {
+        padding: 0.5rem 0.5rem;
+        color: var(--bs-table-color-state, var(--bs-table-color-type, #ebebeb));
+        background-color: #2d2d2d;
+        border-bottom-width: var(--bs-border-width);
+        box-shadow: inset 0 0 0 9999px var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));
+    }
+    
+    /* Specific fix for subject code display in dark mode */
+    .dark .table code {
+        background-color: #3a3b3c;
+        color: #ff8fa3;
+        padding: 3px 6px;
+        border-radius: 4px;
+    }
+    
+    /* Text-muted in table cells */
+    .dark .table small.text-muted,
+    .dark .table .text-muted {
+        color: #9fa6b2 !important;
+    }
+    
+    /* Specific selector for headers in specific table sections */
+    .dark div[class*="student-performance"] thead tr,
+    .dark div[class*="assigned-sections"] thead tr,
+    .dark div[class*="assigned-subjects"] thead tr,
+    .dark .student-performance-table thead,
+    .dark .table thead,
+    .dark h5 + .table-responsive .table thead {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+    }
+    
+    /* Direct fixes for specific tables */
+    .dark .student-performance-metrics-table .table thead,
+    .dark .student-performance-metrics-table .table thead tr,
+    .dark .student-performance-metrics-table .table thead th,
+    .dark .assigned-sections-table .table thead,
+    .dark .assigned-sections-table .table thead tr,
+    .dark .assigned-sections-table .table thead th,
+    .dark .assigned-subjects-table .table thead,
+    .dark .assigned-subjects-table .table thead tr,
+    .dark .assigned-subjects-table .table thead th {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+        border-color: #3a3b3c !important;
+    }
+    
+    /* Fix for the table rows */
+    .dark .student-performance-metrics-table .table tbody tr,
+    .dark .assigned-sections-table .table tbody tr,
+    .dark .assigned-subjects-table .table tbody tr {
+        background-color: #242526;
+        border-color: #3a3b3c;
+    }
+    
+    /* Ensure proper hover highlighting in dark mode */
+    .dark .table-hover tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.075) !important;
+    }
+    
+    /* Override any Bootstrap default styles that might interfere */
+    .dark .table-light th {
+        background-color: #1e1e1e !important;
+        color: #ffffff !important;
+        border-color: #3a3b3c !important;
     }
     
     .progress {
@@ -521,6 +696,122 @@
         flex-grow: 1;
         margin-right: 0.5rem;
     }
+    
+    /* Dark mode specific chart styles */
+    .dark .chart-container canvas {
+        filter: brightness(0.9) contrast(1.1);
+    }
+    
+    .dark .rounded-circle.bg-primary.bg-opacity-10 {
+        background-color: rgba(78, 115, 223, 0.2) !important;
+    }
+    
+    .dark .rounded-circle.bg-success.bg-opacity-10 {
+        background-color: rgba(40, 167, 69, 0.2) !important;
+    }
+    
+    .dark .rounded-circle.bg-info.bg-opacity-10 {
+        background-color: rgba(23, 162, 184, 0.2) !important;
+    }
+    
+    .dark .rounded-circle.bg-warning.bg-opacity-10 {
+        background-color: rgba(255, 193, 7, 0.2) !important;
+    }
+    
+    .dark .rounded-circle.bg-danger.bg-opacity-10 {
+        background-color: rgba(220, 53, 69, 0.2) !important;
+    }
+    
+    .dark code {
+        color: #e83e8c;
+        background-color: #2d2d2d;
+    }
+    
+    .dark .badge {
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .dark .badge.bg-primary {
+        background-color: #375aad !important;
+    }
+    
+    .dark .badge.bg-success {
+        background-color: #28a745 !important;
+    }
+    
+    .dark .badge.bg-info {
+        background-color: #17a2b8 !important;
+    }
+    
+    .dark .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #212529;
+    }
+    
+    .dark .badge.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .dark .btn-outline-primary {
+        color: #4e7bff;
+        border-color: #375aad;
+    }
+    
+    .dark .btn-outline-primary:hover {
+        background-color: #375aad;
+        border-color: #375aad;
+        color: #ffffff;
+    }
+    
+    .dark .btn-outline-success {
+        color: #28a745;
+        border-color: #28a745;
+    }
+    
+    .dark .btn-outline-success:hover {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: #ffffff;
+    }
+    
+    .dark .btn-outline-info {
+        color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    
+    .dark .btn-outline-info:hover {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #ffffff;
+    }
+    
+    .dark .btn-outline-warning {
+        color: #ffc107;
+        border-color: #ffc107;
+    }
+    
+    .dark .btn-outline-warning:hover {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
+    }
+    
+    /* Fix dark mode for form inputs in dashboard */
+    .dark .form-select {
+        background-color: #3a3b3c;
+        border-color: #2d2d2d;
+        color: #e4e6eb;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e4e6eb' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    }
+    
+    /* Performance empty state in dark mode */
+    .dark .avatar.bg-light {
+        background-color: #2d2d2d !important;
+    }
+    
+    .dark .avatar.bg-light i {
+        color: #6c757d !important;
+    }
 </style>
 @endpush
 
@@ -532,115 +823,194 @@
         const attendanceDataUrl = "{{ route('teacher.dashboard.attendance-data') }}";
         const performanceDataUrl = "{{ route('teacher.dashboard.performance-data') }}";
         
-        // Initialize Attendance Chart
-        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
-        const attendanceChart = new Chart(attendanceCtx, {
-            type: 'line',
-            data: {
-                labels: [
-                    @foreach($last7Days as $day)
-                        '{{ $day['date'] }}',
-                    @endforeach
-                ],
-                datasets: [
-                    {
-                        label: 'Present',
-                        data: [
-                            @foreach($attendanceTrends as $trend)
-                                {{ $trend['present'] }},
-                            @endforeach
-                        ],
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Late',
-                        data: [
-                            @foreach($attendanceTrends as $trend)
-                                {{ $trend['late'] }},
-                            @endforeach
-                        ],
-                        borderColor: '#ffc107',
-                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Absent',
-                        data: [
-                            @foreach($attendanceTrends as $trend)
-                                {{ $trend['absent'] }},
-                            @endforeach
-                        ],
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
-                    }
+        // Chart instances
+        let attendanceChart, gradeChart;
+        
+        // Function to initialize charts based on current theme
+        function initCharts() {
+            // Check if dark mode is active
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            
+            // Set chart defaults based on theme
+            const fontColor = isDarkMode ? '#e4e6eb' : '#666';
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            
+            Chart.defaults.color = fontColor;
+            Chart.defaults.scale.grid.color = gridColor;
+            
+            // Destroy existing charts if they exist
+            if (attendanceChart) attendanceChart.destroy();
+            if (gradeChart) gradeChart.destroy();
+            
+            // Initialize Attendance Chart
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            attendanceChart = new Chart(attendanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        @foreach($last7Days as $day)
+                            '{{ $day['date'] }}',
+                        @endforeach
+                    ],
+                    datasets: [
+                        {
+                            label: 'Present',
+                            data: [
+                                @foreach($attendanceTrends as $trend)
+                                    {{ $trend['present'] }},
+                                @endforeach
+                            ],
+                            backgroundColor: '#28a745',
+                            borderColor: '#28a745',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Late',
+                            data: [
+                                @foreach($attendanceTrends as $trend)
+                                    {{ $trend['late'] }},
+                                @endforeach
+                            ],
+                            backgroundColor: '#ffc107',
+                            borderColor: '#ffc107',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Absent',
+                            data: [
+                                @foreach($attendanceTrends as $trend)
+                                    {{ $trend['absent'] }},
+                                @endforeach
+                            ],
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Excused',
+                            data: [
+                                @foreach($attendanceTrends as $trend)
+                                    {{ $trend['excused'] ?? 0 }},
+                                @endforeach
+                            ],
+                            backgroundColor: '#6c757d',
+                            borderColor: '#6c757d',
+                            borderWidth: 1
+                        }
+                    ]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: fontColor
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDarkMode ? '#2d2d2d' : 'rgba(0, 0, 0, 0.7)',
+                            titleColor: isDarkMode ? '#e4e6eb' : '#fff',
+                            bodyColor: isDarkMode ? '#e4e6eb' : '#fff',
+                            borderColor: isDarkMode ? '#3a3b3c' : 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: fontColor
+                            },
+                            grid: {
+                                color: gridColor
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: fontColor
+                            },
+                            grid: {
+                                color: gridColor
                             }
                         }
                     }
                 }
+            });
+            
+            // Initialize Grade Distribution Chart
+            const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
+            gradeChart = new Chart(gradeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['A (90-100)', 'B (80-89)', 'C (70-79)', 'D (60-69)', 'F (Below 60)'],
+                    datasets: [{
+                        data: [
+                            {{ $gradeDistributionPercentage['A'] ?? 0 }},
+                            {{ $gradeDistributionPercentage['B'] ?? 0 }},
+                            {{ $gradeDistributionPercentage['C'] ?? 0 }},
+                            {{ $gradeDistributionPercentage['D'] ?? 0 }},
+                            {{ $gradeDistributionPercentage['F'] ?? 0 }}
+                        ],
+                        backgroundColor: [
+                            '#28a745',
+                            '#17a2b8',
+                            '#ffc107',
+                            '#fd7e14',
+                            '#dc3545'
+                        ],
+                        borderWidth: 1,
+                        borderColor: isDarkMode ? '#242526' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: fontColor,
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDarkMode ? '#2d2d2d' : 'rgba(0, 0, 0, 0.7)',
+                            titleColor: isDarkMode ? '#e4e6eb' : '#fff',
+                            bodyColor: isDarkMode ? '#e4e6eb' : '#fff',
+                            borderColor: isDarkMode ? '#3a3b3c' : 'rgba(0, 0, 0, 0.1)',
+                            borderWidth: 1
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+        
+        // Initialize charts
+        initCharts();
+        
+        // Listen for dark mode changes
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'darkMode') {
+                initCharts();
             }
         });
         
-        // Initialize Grade Distribution Chart
-        const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
-        const gradeChart = new Chart(gradeCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['A (90-100)', 'B (80-89)', 'C (70-79)', 'D (60-69)', 'F (Below 60)'],
-                datasets: [{
-                    data: [
-                        {{ $gradeDistributionPercentage['A'] ?? 0 }},
-                        {{ $gradeDistributionPercentage['B'] ?? 0 }},
-                        {{ $gradeDistributionPercentage['C'] ?? 0 }},
-                        {{ $gradeDistributionPercentage['D'] ?? 0 }},
-                        {{ $gradeDistributionPercentage['F'] ?? 0 }}
-                    ],
-                    backgroundColor: [
-                        '#28a745',
-                        '#17a2b8',
-                        '#ffc107',
-                        '#fd7e14',
-                        '#dc3545'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                },
-                cutout: '70%'
-            }
+        // Alternative way to detect theme changes using MutationObserver
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    initCharts();
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true
         });
         
         // Handle attendance period buttons
@@ -670,6 +1040,16 @@
                         attendanceChart.data.datasets[0].data = data.present;
                         attendanceChart.data.datasets[1].data = data.late;
                         attendanceChart.data.datasets[2].data = data.absent;
+                        attendanceChart.data.datasets[3].data = data.excused;
+                        
+                        // Determine the max value for y-axis
+                        const allValues = [...data.present, ...data.late, ...data.absent, ...data.excused];
+                        const maxValue = Math.max(...allValues, 1); // Minimum of 1
+                        
+                        // Update y-axis max value and step size
+                        const stepSize = maxValue <= 10 ? 1 : Math.ceil(maxValue / 10);
+                        attendanceChart.options.scales.y.ticks.stepSize = stepSize;
+                        
                         attendanceChart.update();
                     })
                     .catch(error => {
@@ -718,6 +1098,16 @@
                         attendanceChart.data.datasets[0].data = data.present;
                         attendanceChart.data.datasets[1].data = data.late;
                         attendanceChart.data.datasets[2].data = data.absent;
+                        attendanceChart.data.datasets[3].data = data.excused;
+                        
+                        // Determine the max value for y-axis
+                        const allValues = [...data.present, ...data.late, ...data.absent, ...data.excused];
+                        const maxValue = Math.max(...allValues, 1); // Minimum of 1
+                        
+                        // Update y-axis max value and step size
+                        const stepSize = maxValue <= 10 ? 1 : Math.ceil(maxValue / 10);
+                        attendanceChart.options.scales.y.ticks.stepSize = stepSize;
+                        
                         attendanceChart.update();
                     })
                     .catch(error => {

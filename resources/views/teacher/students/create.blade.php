@@ -1,5 +1,151 @@
 @extends('layouts.app')
 
+@push('styles')
+<style>
+    /* Form styling */
+    .form-section {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .required:after {
+        content: " *";
+        color: #dc3545;
+    }
+
+    /* Dark mode support */
+    .dark .form-section {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+    }
+
+    .dark .section-title {
+        color: var(--text-color);
+        border-bottom-color: var(--border-color);
+    }
+
+    .dark .form-control {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dark .form-control:focus {
+        background-color: var(--bg-card);
+        border-color: #4361ee;
+        color: var(--text-color);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+
+    .dark .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .dark .form-label {
+        color: var(--text-color);
+    }
+
+    .dark .form-text {
+        color: var(--text-muted);
+    }
+
+    .dark .form-select {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dark .form-select:focus {
+        border-color: #4361ee;
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+
+    .dark .input-group-text {
+        background-color: var(--bg-card-header);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dark .btn-back {
+        color: var(--text-color);
+        background-color: var(--bg-card-header);
+        border-color: var(--border-color);
+    }
+
+    .dark .btn-back:hover {
+        background-color: var(--border-color);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dark .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    .dark .card {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+    }
+
+    .dark .card-header {
+        background-color: var(--bg-card-header) !important;
+        border-bottom-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dark .card-header h5 {
+        color: var(--text-color);
+    }
+
+    .dark .card-header .text-primary {
+        color: #4361ee !important;
+    }
+
+    .dark .card-header .btn-outline-secondary {
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+
+    .dark .card-header .btn-outline-secondary:hover {
+        background-color: var(--border-color);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .dark .card-body {
+        color: var(--text-color);
+    }
+
+    .dark .breadcrumb {
+        background-color: var(--bg-card-header);
+    }
+
+    .dark .breadcrumb-item {
+        color: var(--text-muted);
+    }
+
+    .dark .breadcrumb-item.active {
+        color: var(--text-color);
+    }
+
+    .dark .breadcrumb-item + .breadcrumb-item::before {
+        color: var(--text-muted);
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">

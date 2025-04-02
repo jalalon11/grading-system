@@ -79,6 +79,16 @@
                                                         <div class="progress-bar bg-danger" style="width: {{ count($students) > 0 ? ($absentCount / count($students) * 100) : 0 }}%"></div>
                                                     </div>
                                                 </div>
+                                                
+                                                <div class="attendance-stat-item p-3 rounded bg-light mt-3">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted">Excused</span>
+                                                        <span class="badge bg-secondary rounded-pill">{{ $excusedCount }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 6px;">
+                                                        <div class="progress-bar bg-secondary" style="width: {{ count($students) > 0 ? ($excusedCount / count($students) * 100) : 0 }}%"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -156,6 +166,7 @@
                                     <span class="badge-dot bg-success me-1"></span> Present: {{ $presentCount }}
                                     <span class="badge-dot bg-warning mx-1"></span> Late: {{ $lateCount }}
                                     <span class="badge-dot bg-danger mx-1"></span> Absent: {{ $absentCount }}
+                                    <span class="badge-dot bg-secondary mx-1"></span> Excused: {{ $excusedCount }}
                                 </div>
                             </div>
                         </div>
@@ -201,6 +212,10 @@
                                                     @elseif($attendanceData[$student->id] == 'late')
                                                         <span class="badge bg-warning text-dark">
                                                             <i class="fas fa-clock me-1"></i> Late
+                                                        </span>
+                                                    @elseif($attendanceData[$student->id] == 'excused')
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-file-alt me-1"></i> Excused
                                                         </span>
                                                     @else
                                                         <span class="badge bg-danger">
@@ -259,13 +274,14 @@
         const attendanceChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Present', 'Late', 'Absent'],
+                labels: ['Present', 'Late', 'Absent', 'Excused'],
                 datasets: [{
-                    data: [{{ $presentCount }}, {{ $lateCount }}, {{ $absentCount }}],
+                    data: [{{ $presentCount }}, {{ $lateCount }}, {{ $absentCount }}, {{ $excusedCount }}],
                     backgroundColor: [
                         '#28a745',  // Present - green
                         '#ffc107',  // Late - yellow
-                        '#dc3545'   // Absent - red
+                        '#dc3545',  // Absent - red
+                        '#6c757d'   // Excused - gray
                     ],
                     borderWidth: 0,
                     borderRadius: 4

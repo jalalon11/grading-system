@@ -82,6 +82,7 @@ class SchoolController extends Controller
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:schools',
             'address' => 'nullable|string',
+            'principal' => 'nullable|string|max:255',
             'school_division_id' => 'required|exists:school_divisions,id',
             'grade_levels' => 'required|array|min:1',
             'grade_levels.*' => 'required|in:K,1,2,3,4,5,6,7,8,9,10,11,12',
@@ -108,6 +109,7 @@ class SchoolController extends Controller
                 'name' => $request->name,
                 'code' => $request->code,
                 'address' => $request->address,
+                'principal' => $request->principal,
                 'grade_levels' => json_encode($request->grade_levels),
                 'school_division_id' => $request->school_division_id,
             ]);
@@ -198,6 +200,7 @@ class SchoolController extends Controller
                 Rule::unique('schools')->ignore($school->id)
             ],
             'address' => 'nullable|string',
+            'principal' => 'nullable|string|max:255',
             'school_division_id' => 'required|exists:school_divisions,id',
             'grade_levels' => 'required|array|min:1',
             'grade_levels.*' => 'required|in:K,1,2,3,4,5,6,7,8,9,10,11,12',
@@ -207,6 +210,7 @@ class SchoolController extends Controller
             'name' => $request->name,
             'code' => $request->code,
             'address' => $request->address,
+            'principal' => $request->principal,
             'school_division_id' => $request->school_division_id,
             'grade_levels' => json_encode($request->grade_levels),
             'is_active' => $request->has('is_active') ? 1 : 0,

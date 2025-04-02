@@ -20,6 +20,7 @@ class School extends Model
         'name',
         'code',
         'address',
+        'principal',
         'grade_levels',
         'school_division_id',
         'is_active',

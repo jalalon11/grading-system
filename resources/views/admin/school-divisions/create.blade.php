@@ -74,6 +74,35 @@
                                                 </span>
                                             @enderror
                                         </div>
+                                        <div class="col-md-12">
+                                            <label for="region" class="form-label fw-bold">Region</label>
+                                            <select class="form-select @error('region') is-invalid @enderror" id="region" name="region">
+                                                <option value="">-- Select Region --</option>
+                                                <option value="Region I - Ilocos Region" {{ old('region') == 'Region I - Ilocos Region' ? 'selected' : '' }}>Region I - Ilocos Region</option>
+                                                <option value="Region II - Cagayan Valley" {{ old('region') == 'Region II - Cagayan Valley' ? 'selected' : '' }}>Region II - Cagayan Valley</option>
+                                                <option value="Region III - Central Luzon" {{ old('region') == 'Region III - Central Luzon' ? 'selected' : '' }}>Region III - Central Luzon</option>
+                                                <option value="Region IV-A - CALABARZON" {{ old('region') == 'Region IV-A - CALABARZON' ? 'selected' : '' }}>Region IV-A - CALABARZON</option>
+                                                <option value="MIMAROPA Region" {{ old('region') == 'MIMAROPA Region' ? 'selected' : '' }}>MIMAROPA Region</option>
+                                                <option value="Region V - Bicol Region" {{ old('region') == 'Region V - Bicol Region' ? 'selected' : '' }}>Region V - Bicol Region</option>
+                                                <option value="Region VI - Western Visayas" {{ old('region') == 'Region VI - Western Visayas' ? 'selected' : '' }}>Region VI - Western Visayas</option>
+                                                <option value="Region VII - Central Visayas" {{ old('region') == 'Region VII - Central Visayas' ? 'selected' : '' }}>Region VII - Central Visayas</option>
+                                                <option value="Region VIII - Eastern Visayas" {{ old('region') == 'Region VIII - Eastern Visayas' ? 'selected' : '' }}>Region VIII - Eastern Visayas</option>
+                                                <option value="Region IX - Zamboanga Peninsula" {{ old('region') == 'Region IX - Zamboanga Peninsula' ? 'selected' : '' }}>Region IX - Zamboanga Peninsula</option>
+                                                <option value="Region X - Northern Mindanao" {{ old('region') == 'Region X - Northern Mindanao' ? 'selected' : '' }}>Region X - Northern Mindanao</option>
+                                                <option value="Region XI - Davao Region" {{ old('region') == 'Region XI - Davao Region' ? 'selected' : '' }}>Region XI - Davao Region</option>
+                                                <option value="Region XII - SOCCSKSARGEN" {{ old('region') == 'Region XII - SOCCSKSARGEN' ? 'selected' : '' }}>Region XII - SOCCSKSARGEN</option>
+                                                <option value="Region XIII - Caraga" {{ old('region') == 'Region XIII - Caraga' ? 'selected' : '' }}>Region XIII - Caraga</option>
+                                                <option value="NCR - National Capital Region" {{ old('region') == 'NCR - National Capital Region' ? 'selected' : '' }}>NCR - National Capital Region</option>
+                                                <option value="CAR - Cordillera Administrative Region" {{ old('region') == 'CAR - Cordillera Administrative Region' ? 'selected' : '' }}>CAR - Cordillera Administrative Region</option>
+                                                <option value="BARMM - Bangsamoro Autonomous Region in Muslim Mindanao" {{ old('region') == 'BARMM - Bangsamoro Autonomous Region in Muslim Mindanao' ? 'selected' : '' }}>BARMM - Bangsamoro Autonomous Region in Muslim Mindanao</option>
+                                                <option value="NIR - Negros Island Region" {{ old('region') == 'NIR - Negros Island Region' ? 'selected' : '' }}>NIR - Negros Island Region</option>
+                                            </select>
+                                            @error('region')
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between mt-4">

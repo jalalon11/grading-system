@@ -60,6 +60,10 @@
                         <label class="text-muted">Address:</label>
                         <p class="mb-0">{{ $division->address ?: 'No address provided' }}</p>
                     </div>
+                    <div class="mb-3">
+                        <label class="text-muted">Region:</label>
+                        <p class="mb-0">{{ $division->region ?: 'No region specified' }}</p>
+                    </div>
                 </div>
                 <div class="card-footer bg-white py-3">
                     <small class="text-muted">

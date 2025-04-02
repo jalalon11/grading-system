@@ -66,6 +66,88 @@
     .health-border {
         border-left-color: #f39c12 !important;
     }
+    
+    /* Dark mode styles */
+    .dark .batch-header {
+        background-color: rgba(13, 110, 253, 0.15);
+        border-color: #0d6efd;
+    }
+    
+    .dark .card-header.bg-white {
+        background-color: var(--bg-card-header) !important;
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+    
+    .dark .card-body {
+        background-color: var(--bg-card);
+        color: var(--text-color);
+    }
+    
+    .dark .component-header {
+        background-color: var(--bg-card-header);
+        color: var(--text-color);
+    }
+    
+    .dark .hover-row:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .dark .form-control {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .dark .form-control:focus {
+        background-color: var(--bg-card);
+        border-color: #4361ee;
+        color: var(--text-color);
+    }
+    
+    .dark .table {
+        color: var(--text-color);
+    }
+    
+    .dark .table th, 
+    .dark .table td {
+        border-color: var(--border-color);
+    }
+    
+    .dark .alert-info {
+        background-color: rgba(13, 202, 240, 0.15);
+        border-color: rgba(13, 202, 240, 0.4);
+        color: var(--text-color);
+    }
+    
+    .dark .alert-secondary {
+        background-color: rgba(108, 117, 125, 0.15);
+        border-color: rgba(108, 117, 125, 0.4);
+        color: var(--text-color);
+    }
+    
+    .dark .text-muted {
+        color: var(--text-muted) !important;
+    }
+    
+    .dark .nav-tabs {
+        border-bottom-color: var(--border-color);
+    }
+    
+    .dark .nav-tabs .nav-link {
+        color: var(--text-muted);
+    }
+    
+    .dark .nav-tabs .nav-link:hover {
+        border-color: var(--border-color);
+        color: var(--text-color);
+    }
+    
+    .dark .nav-tabs .nav-link.active {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        border-bottom-color: var(--bg-card);
+    }
 </style>
 @endpush
 
