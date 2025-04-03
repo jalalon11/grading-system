@@ -53,6 +53,12 @@ class ReportController extends Controller
                   ->where('section_subject.teacher_id', $teacher->id);
         })->get();
         
+        // Include component information for each subject
+        $subjects->each(function($subject) {
+            // Load components for all subjects
+            $subject->load('components');
+        });
+        
         return response()->json($subjects);
     }
     
@@ -68,6 +74,21 @@ class ReportController extends Controller
         // Get the section and subject
         $section = Section::findOrFail($validated['section_id']);
         $subject = Subject::findOrFail($validated['subject_id']);
+        
+        // Check if this is a MAPEH component (MUSIC, ARTS, PHYSICAL EDUCATION, HEALTH)
+        $isMapehComponent = false;
+        $parentMapehSubject = null;
+        
+        if ($subject->is_component && $subject->parentSubject) {
+            $parent = $subject->parentSubject;
+            if ($parent->getIsMAPEHAttribute()) {
+                $isMapehComponent = true;
+                $parentMapehSubject = $parent;
+                
+                // Log for debugging
+                error_log('MAPEH Component detected: ' . $subject->name . ' is part of ' . $parent->name);
+            }
+        }
         
         // Dump for debugging
         error_log('Selected section: ' . $section->name . ', ID: ' . $section->id);
@@ -121,6 +142,21 @@ class ReportController extends Controller
         // Group grades by student_id
         $studentGrades = $grades->groupBy('student_id');
         
+        // Pass information about MAPEH component to the view
+        $mapehInfo = null;
+        if ($isMapehComponent) {
+            $mapehInfo = [
+                'is_component' => true,
+                'component_name' => $subject->name,
+                'parent_subject' => $parentMapehSubject,
+            ];
+        } elseif ($subject->getIsMAPEHAttribute()) {
+            $mapehInfo = [
+                'is_mapeh' => true,
+                'components' => $subject->components,
+            ];
+        }
+        
         // Get all unique written works - make sure we're getting all of them
         $writtenWorks = $grades->where('grade_type', 'written_work')
             ->unique(function($item) {
@@ -169,6 +205,7 @@ class ReportController extends Controller
             'writtenWorks' => $writtenWorks,
             'performanceTasks' => $performanceTasks,
             'quarterlyAssessments' => $quarterlyAssessments,
+            'mapehInfo' => $mapehInfo,
         ]);
     }
 } 

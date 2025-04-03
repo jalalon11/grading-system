@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Record - {{ is_object($subject) ? $subject->name : 'Subject' }} ({{ is_string($quarter) ? $quarter : 'Q' . $quarter }})</title>
+    
+    @php
+        // Set title to include MAPEH component if needed
+        $pageTitle = is_object($subject) ? $subject->name : 'Subject';
+        $displaySubjectName = $pageTitle;
+        
+        // Check if this is a MAPEH component
+        if (isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component']) {
+            $pageTitle = $mapehInfo['component_name'] . ' (MAPEH Component)';
+            $displaySubjectName = "MAPEH " . $mapehInfo['component_name'];
+        }
+    @endphp
+    
+    <title>Class Record - {{ $displaySubjectName }} ({{ is_string($quarter) ? $quarter : 'Q' . $quarter }})</title>
+    
     @php
         // Transmutation Table 1 function
         function transmutationTable1($initialGrade) {
@@ -70,8 +84,16 @@
                 size: landscape;
                 margin: 0.5cm;
             }
-            .no-print {
-                display: none;
+            .no-print-during-actual-printing {
+                display: none !important;
+            }
+            #helpButton, 
+            button[onclick*="window.print"],
+            .btn-print,
+            .action-buttons,
+            [id*="print"],
+            [id*="help"] {
+                display: none !important;
             }
         }
         
@@ -246,7 +268,7 @@
             vertical-align: middle;
         }
         .btn-print {
-            background-color: #4CAF50;
+            background-color: #5f6163;
             color: white;
             padding: 10px 15px;
             border: none;
@@ -256,7 +278,7 @@
             margin-right: 5px;
         }
         .btn-print:hover {
-            background-color: #45a049;
+            background-color: #5f6163;
         }
         .no-print {
             margin-bottom: 20px;
@@ -383,7 +405,7 @@
             }
         }
         
-        /* Toast notification */
+        /* Toast notification - modernized, professional design */
         .toast-container {
             position: fixed;
             top: 20px;
@@ -393,15 +415,17 @@
         
         .toast {
             padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             min-width: 300px;
             transform: translateX(400px);
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-left: 4px solid transparent;
+            background-color: #fff;
         }
         
         .toast.show {
@@ -410,20 +434,39 @@
         }
         
         .toast.success {
-            background-color: #d4edda;
-            border-left: 4px solid #28a745;
-            color: #155724;
+            border-left-color: #4caf50;
         }
         
         .toast.error {
-            background-color: #f8d7da;
-            border-left: 4px solid #dc3545;
-            color: #721c24;
+            border-left-color: #f44336;
+        }
+        
+        .toast.info {
+            border-left-color: #2196F3;
         }
         
         .toast-icon {
-            margin-right: 10px;
-            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.05);
+            color: #666;
+        }
+        
+        .toast.success .toast-icon {
+            color: #4caf50;
+        }
+        
+        .toast.error .toast-icon {
+            color: #f44336;
+        }
+        
+        .toast.info .toast-icon {
+            color: #2196F3;
         }
         
         .toast-content {
@@ -432,12 +475,15 @@
         
         .toast-title {
             font-weight: 600;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
             font-size: 14px;
+            color: #333;
         }
         
         .toast-message {
             font-size: 13px;
+            color: #666;
+            line-height: 1.4;
         }
         
         .toast-close {
@@ -445,10 +491,13 @@
             font-size: 18px;
             margin-left: 10px;
             opacity: 0.7;
+            color: #999;
+            transition: all 0.2s ease;
         }
         
         .toast-close:hover {
             opacity: 1;
+            color: #666;
         }
         
         /* Cell types styling */
@@ -750,11 +799,11 @@
 <body>
 
     <!-- Action buttons with refresh button added -->
-    <div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; gap: 10px;">
-        <button onclick="window.print(); return false;" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+    <div class="action-buttons" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; gap: 10px;">
+        <button onclick="printPage(); return false;" class="print-button" style="padding: 8px 15px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer;">
             <span style="margin-right: 5px;">🖨️</span> Print Now
         </button>
-        <button id="helpButton" style="padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        <button id="helpButton" class="help-button" style="padding: 8px 15px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer;">
             <span style="margin-right: 5px;">ℹ️</span> Help
         </button>
     </div>
@@ -806,7 +855,7 @@
     @endphp
     
     <!-- Just keep the Close button -->
-    <div class="no-print">
+    <div>
         <button class="btn-print" onclick="window.close();">Close</button>
     </div>
     
@@ -835,14 +884,18 @@
         <div class="header">
             <div class="header-row">
                 <div class="logo-left">
-                    <img src="{{ asset('images/school_logo.png') }}" alt="School Logo" onerror="this.src='https://via.placeholder.com/80'">
+                    @if(isset($section) && $section->school && $section->school->logo_path)
+                        <img src="{{ asset($section->school->logo_path) }}" alt="School Logo" style="max-height: 80px;">
+                    @else
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNDAiIHk9IjQwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWFhYWEiPkxvZ288L3RleHQ+PC9zdmc+" alt="School Logo" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjZjVmNWY1Ii8+PHRleHQgeD0iNDAiIHk9IjQwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiNhYWFhYWEiPkxvZ288L3RleHQ+PC9zdmc+'">
+                    @endif
                 </div>
                 <div class="title-center">
                     <h1>Class Record</h1>
                     <p>(Pursuant to DepEd Order 8 series of 2015)</p>
                 </div>
                 <div class="logo-right">
-                    <img src="{{ asset('images/deped_logo.jpg') }}" alt="DepEd Logo" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wQOEBQyFaFPugAAEOdJREVUeNrtnHl0VFWexz/vVaWSkIWQhIQshLAGwhISEAhL2JdAOgiitrYg6rhM22o709PTPd0ep8+Z7tOnji0eZ85oe2yrM47YrTLuC8giKEvYQlgChAAhZCVkJZVUvTd/vFeVqkpVUlUJhO7D755Tr+q9uvf+7u/+7u/+fvc+IYSg76JZQNr0UlRxnfNI6vfA8EeVLq8VwPu1WYTGzUGWjPS+BPn/KYBDH1FjWsKTiRP5SvUfkIhGQEd4Vn1AQbsvHgNGAPjwXdvot3obhpF3owsbdskU9L4QgBCCgZs2Y5h5NzgiEUIBIKnAGdEGjga7LbB7VJrG/Qy5djcZD+5DGPth79qBEKJP/YkRC4ZXJC5bdsPtm+mX/QJI4U5QCglkY3XXIvfS3+GyDU7lzpEQNW02Db+4iYgV29DOZ0II0Wf+pJnDo4zZS9Zj6JeKy14Ljk5AAc0AagS4LBpwRmQNHIPAwPi/zyVy+Vbs+3Mo3HOI9k+O4+rs7Ct84c2h0cnxybdPQwofCy4raHYQCgLZa4G2TkATKoMFpFrJCDUiYfP/GkbH5V9AGTyC0LRMjPevw3ngMMX7P8Z0qQwhhK2vMB7WnDhx4i3D6Zc2GGP0RHBYwWUFhwVcNty9kxuPKoADJCNIDlmyoBlVnLYKiJlF/yfmEL5wA5Ubf0vnx0dw2Wy9MoLy8nKampow//Iewudl8eiC58mOXoGw1YLLPRKVwbWAZHK7swQyoKp3p4JQxVvoQPPsGQKXqRjbvmIM4eOJXJJF2IJ1dLxXgv3IOYQQrb0xgtLSUlpaWmhsbOTtt0r42u1TmDBxKmnSLyDsAkLDLRuE8AbQ4D50HU/QNTcOJBBaGIrpS2tHE13Np8hesonQ+beimc6fEULU9vQIzpw5Q0tLCw0NDeTk5LB582ZKS0sZPz6Ve9OuR9L8FdFdD5oRNHWqCsO7ywsQHYEsScjaQOyN5WRZO4hYtA1D/1GP1tfX/0UIcaSnRlBQUEBzczP19fXs27ePLVu2UFZWxqhRo1i1ahUVFRX079+fRYsWMXXqVKKiosjMzKSsrAyHw8G0adMwGo2MHTuWtLQ0QkJCSE1NJSoqiri4ODIyMrBarYwfP54JEyagKArjxo1j7NixJCUlMXv2bGJiYmhoaCAzM5OoqCjS09OJiIjA4XAwZcoUvva1r9He3k5aWhohISGEhIQQGRnJwIEDA5eYw/Nct2zRnQzgM5BbWlq4cOECJSUlVFdXo9FoWLhwIffffz9Dhw5l8+bNXLx4EUVRiI+P57HHHmPcuHFs3LiRhIQEZs2axfLly/m///s/nn/+ecLDw1m4cCEbN25EURQyMzNJTk6mqqqKjRs3UlJSwrJly5g1axZvvfUWb775Jg6Hg1mzZrF27Vqqq6vZsmULRUVFGI1GlixZwkMPPURRUREbNmxAp9MxZswYJk+ejF6vJz09neXLl6PT6YIyRfWZDynKysqoq6ujqakJg8GAVqvF5XJht9vRarXodDqsVivR0dFYrVY0Gg0OhwOTyYTBYKCtrY2QkBDCwsJobW1Fr9djs9lQFIWIiAisViuKohAaGopcW1tLZ2cnOp2OmJgYr5QagMPhwGKxEBkZidVqRVEUQkNDcTqdbjeR0Ol0KIqCxWIhLCzM63NISDcfmPmM4Ov6VJ8Vj4+P58iRI3gKEG0CysrK0Gq1jBo1yt2eUCRJwmg0YjQaMRgMCCGYOHEilZWVxMXFERYWxrRplysrK4mOjiYyMhKj0Yjer+fSpUt0dXXRv39/EhMTef/99ykqKiI2NpaYmBgSEhLQaDRMnjzZ3ZcwEhMTiYyMZNKkSZjNZkwmE0lJSdxxxx3odDrs9uCfbXivpvPrdPqMeE+vNBoN9957L0IIRo0aRVdXFzU1NezcuZNp06YRHh7OuHHj6OjooLq6mueee47Zs2ejKArHjh3j2LFj3H777URHR5OWlsbjjz9OZWUlzz33HFFRUaSlpaHRaNiyZQtpaWlMmTKF4cOHM2jQICRJ4uzZs3g+vBWCYJ6AeNfsRwjhBVT37r/b5ydJEp2dndTW1qLX67FYLJw9e1Z93i4EVRUVJCQk0NHRQVhYGCdOnKC6uppbb70VrVZLc3MzsbGxaLVaXC4XFRUVREZGotPpqK+vJzIyEgCTyYTD4aCrq4uwsDDsdruXqQjz9UGCAHD2ySeRrsXYZ4UQwuvBsMfjF9c6J8nXbuSvCUn/8U1DnwXQB6ivWuD/Ac14HdCKxeQUAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIzLTA0LTE0VDEwOjE4OjAyKzAwOjAwDwyJXQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMy0wNC0xNFQxMDoxODowMiswMDowMH5RMeEAAABXelRYdFJhdyBwcm9maWxlIHR5cGUgaXB0YwAAeJzj8gwIcVYoKMpPy8xJ5VIAAyMLLmMLEyMTS5MUAxMgRIA0w2QDI7NUIMvY1MjEzMQcxAfLgEigSi4A6hcRdPJCNZUAAAAASUVORK5CYII='">
+                    <img src="{{ asset('images/logo.jpg') }}" alt="DepEd Logo">
                 </div>
             </div>
         </div>
@@ -851,27 +904,34 @@
             <tr>
                 <td class="info-label">REGION</td>
                 <td class="info-value">{{ $region }}</td>
-                <td class="info-spacer"></td>
                 <td class="info-label">QUARTER</td>
-                <td class="info-value">{{ $quarterText }}</td>
+                <td class="info-value">{{ $quarter }}</td>
             </tr>
             <tr>
                 <td class="info-label">DIVISION</td>
                 <td class="info-value">{{ $division }}</td>
-                <td class="info-spacer"></td>
                 <td class="info-label">SCHOOL YEAR</td>
                 <td class="info-value">{{ $schoolYear }}</td>
             </tr>
             <tr>
                 <td class="info-label">SCHOOL NAME</td>
-                <td class="info-value" colspan="4">{{ $schoolName }}</td>
+                <td class="info-value">{{ $schoolName }}</td>
+                <td class="info-label">SUBJECT</td>
+                <td class="info-value">
+                    @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
+                        MAPEH - {{ $mapehInfo['component_name'] }}
+                    @else
+                        {{ $subject->name ?? 'Subject Name' }}
+                    @endif
+                </td>
             </tr>
         </table>
         
-        <table>
+        
+        <table style="table-layout: fixed;">
             <tr>
                 <td style="width: 20%;" class="table-header">
-                    {{ $quarterText }} QUARTER
+                    {{ $quarterText ?? $quarter }} QUARTER
                 </td>
                 <td style="width: 30%;" class="table-header">
                     GRADE & SECTION: {{ isset($section->grade_level) ? $section->grade_level : 'Grade' }} {{ $section->name ?? 'Section' }}
@@ -880,7 +940,12 @@
                     TEACHER: {{ auth()->user()->name ?? 'Teacher Name' }}
                 </td>
                 <td style="width: 25%;" class="table-header">
-                    SUBJECT: {{ $subject->name ?? 'Subject Name' }}
+                    SUBJECT: 
+                    @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
+                        MAPEH - {{ $mapehInfo['component_name'] }}
+                    @else
+                        {{ $subject->name ?? 'Subject Name' }}
+                    @endif
                 </td>
             </tr>
         </table>
@@ -1012,7 +1077,8 @@
                             data-quarter="{{ $quarter }}" 
                             data-grade-type="written_work" 
                             data-assessment-name="{{ $work->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}">
+                            data-assessment-index="{{ $index + 1 }}"
+                            data-max-score="{{ $work->max_score }}">
                             {{ $grade ? number_format($grade->score, 0) : '' }}
                         </td>
                     @endforeach
@@ -1083,7 +1149,8 @@
                             data-quarter="{{ $quarter }}" 
                             data-grade-type="performance_task" 
                             data-assessment-name="{{ $task->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}">
+                            data-assessment-index="{{ $index + 1 }}"
+                            data-max-score="{{ $task->max_score }}">
                             {{ $grade ? number_format($grade->score, 0) : '' }}
                         </td>
                     @endforeach
@@ -1210,7 +1277,8 @@
                             data-quarter="{{ $quarter }}" 
                             data-grade-type="written_work" 
                             data-assessment-name="{{ $work->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}">
+                            data-assessment-index="{{ $index + 1 }}"
+                            data-max-score="{{ $work->max_score }}">
                             {{ $grade ? number_format($grade->score, 0) : '' }}
                         </td>
                     @endforeach
@@ -1281,7 +1349,8 @@
                             data-quarter="{{ $quarter }}" 
                             data-grade-type="performance_task" 
                             data-assessment-name="{{ $task->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}">
+                            data-assessment-index="{{ $index + 1 }}"
+                            data-max-score="{{ $task->max_score }}">
                             {{ $grade ? number_format($grade->score, 0) : '' }}
                         </td>
                     @endforeach
@@ -1404,6 +1473,58 @@
             // Uncomment to automatically print when page loads
             // window.print();
         };
+        
+        // Print function that doesn't hide buttons afterward
+        function printPage() {
+            try {
+                // Cancel any pending page reload timer
+                if (window.pageReloadTimer) {
+                    clearTimeout(window.pageReloadTimer);
+                    window.pageReloadTimer = null;
+                }
+                
+                // Hide any modals or controls before printing
+                const helpModal = document.getElementById('helpModal');
+                const editControls = document.querySelector('.edit-controls');
+                const toastContainer = document.querySelector('.toast-container');
+                const actionButtons = document.querySelector('.action-buttons');
+                const closeButton = document.querySelector('.btn-print');
+                const allNoprint = document.querySelectorAll('.no-print');
+                
+                // Force hide all no-print elements
+                allNoprint.forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Hide specific buttons and controls
+                if (helpModal) helpModal.style.display = 'none';
+                if (editControls) editControls.style.display = 'none';
+                if (toastContainer) toastContainer.innerHTML = '';
+                if (actionButtons) actionButtons.style.display = 'none';
+                if (closeButton) closeButton.style.display = 'none';
+                
+                // Add one-time print stylesheet
+                document.body.insertAdjacentHTML('beforeend', 
+                    '<style id="temp-print-styles">.no-print{display:none !important} .btn-print{display:none !important} #helpButton{display:none !important}</style>');
+                
+                // Directly trigger print
+                setTimeout(() => {
+                    window.print();
+                    
+                    // Remove the temporary print styles after printing
+                    setTimeout(() => {
+                        const tempStyles = document.getElementById('temp-print-styles');
+                        if (tempStyles) tempStyles.remove();
+                        
+                        // Remove this toast notification
+                        // showToast('Print', 'Print dialog opened', 'success');
+                    }, 500);
+                }, 100);
+            } catch (e) {
+                // If there's an error, show it
+                showToast('Error', 'Could not open print dialog: ' + e.message, 'error');
+            }
+        }
     </script>
 
     <!-- Add edit controls -->
@@ -1446,9 +1567,7 @@
                 </div>
                 <div class="help-section">
                     <h5><i class="help-icon">ℹ️</i> Important Notes</h5>
-                    <p>After changing a score, the system will automatically recalculate all grades. The page will reload after 2 seconds to show updated values.</p>
-                    <p><strong>Printing Tip:</strong> If you need to print after editing, press the <kbd>ESC</kbd> key when you see "Press ESC key to stop page reload" message to prevent the page from refreshing.</p>
-                </div>
+                    <p>After changing a score, the system will automatically recalculate all grades. The page will reload after 3 seconds to show updated values.</p>                </div>
             </div>
             <div class="modal-footer">
                 <button id="closeHelpBtn" class="modal-btn">Got it</button>
@@ -1465,6 +1584,34 @@
             
             // Setup row highlighting
             setupRowHighlighting();
+            
+            // Hide buttons when page is being printed
+            window.addEventListener('beforeprint', function() {
+                // Force hide during ACTUAL printing only
+                const actionButtons = document.querySelector('.action-buttons');
+                const closeButton = document.querySelector('.btn-print');
+                const helpButton = document.getElementById('helpButton');
+                
+                if (actionButtons) actionButtons.classList.add('no-print-during-actual-printing');
+                if (closeButton) closeButton.classList.add('no-print-during-actual-printing');
+                if (helpButton) helpButton.classList.add('no-print-during-actual-printing');
+            });
+            
+            // Restore visibility after printing
+            window.addEventListener('afterprint', function() {
+                // Ensure buttons are visible
+                const actionButtons = document.querySelector('.action-buttons');
+                const closeButton = document.querySelector('.btn-print');
+                
+                if (actionButtons) {
+                    actionButtons.classList.remove('no-print-during-actual-printing');
+                    actionButtons.style.display = 'flex';
+                }
+                if (closeButton) {
+                    closeButton.classList.remove('no-print-during-actual-printing');
+                    closeButton.style.display = 'inline-block';
+                }
+            });
             
             // Print button functionality - make it reliable
             const printButton = document.getElementById('printButton');
@@ -1517,7 +1664,7 @@
             
             // Icon based on type
             let icon = '✓';
-            if (type === 'error') icon = '✗';
+            if (type === 'error') icon = '✕';
             if (type === 'info') icon = 'ℹ';
             
             toast.innerHTML = `
@@ -1904,13 +2051,10 @@
                                 row.classList.remove('highlight-row');
                             }
                             
-                            // Show toast notification
+                            // Show toast notification - removed printing tip
                             showToast('Success', 'Score updated successfully. Page will reload in 2 seconds.', 'success');
-
-                            // Show clear notification about ESC key for printing
-                            showToast('Printing Tip', 'Press ESC key to stop page reload for printing', 'info');
                             
-                            // Set reload timer
+                            // Restore the reload timer to show updated grades
                             let reloadTimer = setTimeout(function() {
                                 window.location.reload();
                             }, 2000);
@@ -1919,7 +2063,7 @@
                             const escHandler = function(e) {
                                 if (e.key === 'Escape') {
                                     clearTimeout(reloadTimer);
-                                    showToast('Reload Canceled', 'Page reload stopped. You can now print the report.', 'info');
+                                    showToast('Reload Canceled', 'Page reload stopped.', 'info');
                                     document.removeEventListener('keydown', escHandler);
                                 }
                             };
@@ -2046,7 +2190,7 @@
                     if (failed > 0) {
                         showToast('Partial Success', `Updated ${successful} scores, ${failed} failed`, 'error');
                     } else {
-                        showToast('Success', `All ${successful} scores updated successfully`, 'success');
+                        showToast('Success', `All ${successful} scores updated successfully. Page will reload in 2 seconds.`, 'success');
                     }
                     
                     // Reset bulk mode
@@ -2054,20 +2198,17 @@
                     bulkEditCells = [];
                     activeCell = null;
                     
-                    // Add ESC reminder for printing
-                    showToast('Tip', 'Press ESC key to stop page reload for printing', 'info');
-                    
-                    // Setup page reload after 2 seconds
+                    // Restore reload timer to show recalculated grades
                     window.pageReloadTimer = setTimeout(() => {
                         location.reload();
-                    }, 2000); // 2 second delay
+                    }, 2000);
                     
                     // Allow cancelling the reload with ESC key
                     document.addEventListener('keydown', function escHandler(e) {
                         if (e.key === 'Escape' && window.pageReloadTimer) {
                             clearTimeout(window.pageReloadTimer);
                             window.pageReloadTimer = null;
-                            showToast('Reload Cancelled', 'Page reload stopped. You can print now.', 'success');
+                            showToast('Reload Cancelled', 'Page reload stopped.', 'info');
                             document.removeEventListener('keydown', escHandler);
                         }
                     });
@@ -2118,29 +2259,67 @@
                 if (window.pageReloadTimer) {
                     clearTimeout(window.pageReloadTimer);
                     window.pageReloadTimer = null;
-                    showToast('Reload Cancelled', 'Page reload stopped for printing', 'success');
                 }
                 
                 // Hide any modals or controls before printing
                 const helpModal = document.getElementById('helpModal');
                 const editControls = document.querySelector('.edit-controls');
                 const toastContainer = document.querySelector('.toast-container');
+                const actionButtons = document.querySelector('.action-buttons');
+                const closeButton = document.querySelector('.btn-print');
+                const allNoprint = document.querySelectorAll('.no-print');
                 
+                // Force hide all no-print elements
+                allNoprint.forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Hide specific buttons and controls
                 if (helpModal) helpModal.style.display = 'none';
                 if (editControls) editControls.style.display = 'none';
                 if (toastContainer) toastContainer.innerHTML = '';
+                if (actionButtons) actionButtons.style.display = 'none';
+                if (closeButton) closeButton.style.display = 'none';
+                
+                // Add one-time print stylesheet
+                document.body.insertAdjacentHTML('beforeend', 
+                    '<style id="temp-print-styles">.no-print{display:none !important} .btn-print{display:none !important} #helpButton{display:none !important}</style>');
                 
                 // Directly trigger print
-                window.print();
-                
-                // Show success toast after printing
-                setTimeout(function() {
-                    showToast('Print', 'Print dialog opened', 'success');
-                }, 500);
+                setTimeout(() => {
+                    window.print();
+                    
+                    // Remove the temporary print styles after printing
+                    setTimeout(() => {
+                        const tempStyles = document.getElementById('temp-print-styles');
+                        if (tempStyles) tempStyles.remove();
+                        
+                        // Remove this toast notification
+                        // showToast('Print', 'Print dialog opened', 'success');
+                    }, 500);
+                }, 100);
             } catch (e) {
                 // If there's an error, show it
                 showToast('Error', 'Could not open print dialog: ' + e.message, 'error');
             }
+        }
+    </script>
+
+    <!-- Add this script after the existing scripts -->
+    <script>
+        function simulateEscKey() {
+            // Create and dispatch Escape key event
+            const escEvent = new KeyboardEvent('keydown', {
+                key: 'Escape',
+                code: 'Escape',
+                keyCode: 27,
+                which: 27,
+                bubbles: true
+            });
+            document.dispatchEvent(escEvent);
+            
+            // Show a message
+            showToast('Reload Canceled', 'Page reload stopped. You can now print the report.', 'info');
         }
     </script>
 </body>

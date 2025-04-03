@@ -27,9 +27,15 @@
                     <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i>Teacher Admin Profile</h5>
                 </div>
                 <div class="card-body d-flex flex-column align-items-center">
+                    @if(Auth::user()->school && Auth::user()->school->logo_path)
+                    <div class="mb-4 mt-2">
+                        <img src="{{ asset(Auth::user()->school->logo_path) }}" alt="{{ Auth::user()->school->name }} Logo" class="img-fluid rounded" style="max-height: 70px;">
+                    </div>
+                    @else
                     <div class="avatar mb-4 mt-2">
                         <span class="avatar-text bg-gradient-primary">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                     </div>
+                    @endif
                     <h4 class="mb-1">{{ Auth::user()->name }}</h4>
                     <p class="text-muted mb-3">{{ Auth::user()->email }}</p>
                     <div class="badge bg-success mb-3 px-3 py-2">

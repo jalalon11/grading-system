@@ -33,7 +33,7 @@
                     <h5 class="mb-0"><i class="fas fa-edit me-2"></i> School Information</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ route('admin.schools.update', $school->id) }}">
+                    <form method="POST" action="{{ route('admin.schools.update', $school->id) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         
@@ -76,6 +76,24 @@
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="logo" class="form-label fw-bold">School Logo</label>
+                                    <div class="mb-2">
+                                        @if($school->logo_path)
+                                            <img src="{{ asset($school->logo_path) }}" class="img-thumbnail" alt="School Logo" style="max-height: 100px;">
+                                            <p class="form-text">Current logo</p>
+                                        @else
+                                            <p class="form-text">No logo uploaded</p>
+                                        @endif
+                                    </div>
+                                    <input type="file" class="form-control @error('logo') is-invalid @enderror" id="logo" name="logo" accept="image/*">
+                                    @error('logo')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                    <div class="form-text">Upload a new school logo (JPEG, PNG, GIF - max 2MB)</div>
                                 </div>
                                 <div class="col-md-12">
                                     <label for="school_division_id" class="form-label fw-bold">School Division <span class="text-danger">*</span></label>

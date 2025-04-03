@@ -45,6 +45,11 @@
                     <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> School Information</h5>
                 </div>
                 <div class="card-body">
+                    @if($school->logo_path)
+                    <div class="text-center mb-4">
+                        <img src="{{ asset($school->logo_path) }}" alt="{{ $school->name }} Logo" class="img-fluid" style="max-height: 150px;">
+                    </div>
+                    @endif
                     <div class="mb-3 pb-3 border-bottom">
                         <label class="text-muted">School Name:</label>
                         <p class="fw-bold mb-0">{{ $school->name }}</p>

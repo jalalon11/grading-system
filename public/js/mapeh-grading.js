@@ -56,6 +56,39 @@ $(document).ready(function() {
         $(`input[data-component="${componentId}"]`).val(maxScore).trigger('input');
     });
     
+    // Transfer scores to all other MAPEH components
+    $('.transfer-to-all').on('click', function() {
+        var sourceComponentId = $(this).data('component');
+        console.log('Transferring scores from component:', sourceComponentId, 'to all other components');
+        
+        // Get all student scores from source component
+        var sourceScores = {};
+        $(`input[data-component="${sourceComponentId}"]`).each(function() {
+            var studentId = $(this).attr('id').split('_').pop();
+            var score = $(this).val();
+            if (score !== '') {
+                sourceScores[studentId] = score;
+            }
+        });
+        
+        // Apply these scores to all other components
+        $('.component-score').each(function() {
+            var componentId = $(this).data('component');
+            if (componentId != sourceComponentId) {
+                var studentId = $(this).attr('id').split('_').pop();
+                if (sourceScores[studentId] !== undefined) {
+                    $(this).val(sourceScores[studentId]).trigger('input');
+                }
+            }
+        });
+        
+        // Show confirmation message
+        alert('Scores have been transferred from ' + 
+              $('#mapehTabs button[data-bs-target="#' + 
+              $(`input[data-component="${sourceComponentId}"]`).first().closest('.tab-pane').attr('id') + 
+              '"]').text().trim() + ' to all other components.');
+    });
+    
     // Handle MAPEH form validation
     function validateMapehForm() {
         var validForm = true;

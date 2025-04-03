@@ -198,10 +198,10 @@
                                                 <i class="fas fa-copy me-1"></i> Use This Example
                                             </button>
                                         </div>
-                                        <pre class="mb-0 bg-light p-2 rounded code-sample">St. Matthew, Grade 7, 4, 2025-2026
-St. Mark, Grade 7, 2, 2025-2026
-St. Luke, Grade 8, 4, 2025-2026
-St. John, Grade 8, 2, 2025-2026</pre>
+                                        <pre class="mb-0 bg-light p-2 rounded code-sample">Section A, Grade 7, 4, 2025-2026
+Section B, Grade 7, 2, 2025-2026
+Section C, Grade 8, 4, 2025-2026
+Section D, Grade 8, 2, 2025-2026</pre>
                                         <div class="mt-2 small">
                                             <strong>Note:</strong> Make sure to use the exact format above with commas separating each field.
                                             <span class="text-danger">Do not use special characters in section names.</span>
@@ -210,7 +210,7 @@ St. John, Grade 8, 2, 2025-2026</pre>
                                     
                                     <div class="mb-3">
                                         <label for="batch_sections" class="form-label fw-bold">Sections (one per line) <span class="text-danger">*</span></label>
-                                        <textarea class="form-control @error('batch_sections') is-invalid @enderror" id="batch_sections" name="batch_sections" rows="10" placeholder="St. Matthew, Grade 7, 4, 2025-2026&#10;St. Mark, Grade 7, 2, 2025-2026&#10;St. Luke, Grade 8, 4, 2025-2026">{{ old('batch_sections') }}</textarea>
+                                        <textarea class="form-control @error('batch_sections') is-invalid @enderror" id="batch_sections" name="batch_sections" rows="10" placeholder="Section A, Grade 7, 4, 2025-2026&#10;Section B, Grade 7, 2, 2025-2026&#10;Section C, Grade 8, 4, 2025-2026&#10;Section D, Grade 8, 2, 2025-2026">{{ old('batch_sections') }}</textarea>
                                         @error('batch_sections')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -235,7 +235,7 @@ St. John, Grade 8, 2, 2025-2026</pre>
                                                         <div class="col-md-4">
                                                             <ul class="list-unstyled small">
                                                                 @foreach($chunk as $teacher)
-                                                                    <li class="mb-1"><span class="badge bg-info">ID {{ $teacher->id }}</span> {{ $teacher->name }}</li>
+                                                                    <li class="mb-1"><span class="badge bg-dark">ID {{ $teacher->id }}</span> {{ $teacher->name }}</li>
                                                                 @endforeach
                                                             </ul>
                                                         </div>
