@@ -9,17 +9,26 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-3">
-                            <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                            @if(Auth::user()->school && Auth::user()->school->logo_path)
+                            <div class="me-3">
+                                <img src="{{ asset(Auth::user()->school->logo_path) }}" alt="{{ Auth::user()->school->name }} Logo" class="rounded" style="max-height: 60px;">
                             </div>
+                            @else
+                            <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-3">
+                                <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                            </div>
+                            @endif
                             <div>
                                 <h2 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}</h2>
                                 <p class="mb-0 opacity-75">{{ now()->format('l, F d, Y') }}</p>
+                                @if(Auth::user()->school)
+                                <p class="mb-0 opacity-75">{{ Auth::user()->school->name }}</p>
+                                @endif
                             </div>
                         </div>
                         <div>
                         <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light btn-lg">
-                                <i class="fas fa-plus-circle me-2"></i> Create New Section
+                                <i class="fas fa-plus-circle me-2"></i> Manage Attendance
                             </a>
                         </div>
                     </div>

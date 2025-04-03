@@ -38,7 +38,7 @@
                 </div>
                 
                 <div class="card-body p-4">
-                    <form method="POST" action="{{ route('admin.schools.store') }}" id="schoolForm">
+                    <form method="POST" action="{{ route('admin.schools.store') }}" id="schoolForm" enctype="multipart/form-data">
                         @csrf
                         <div class="tab-content" id="schoolTabsContent">
                             <!-- School Information Tab -->
@@ -82,6 +82,16 @@
                                                     <strong>{{ $message }}</strong>
                                                 </span>
                                             @enderror
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label for="logo" class="form-label fw-bold">School Logo</label>
+                                            <input type="file" class="form-control @error('logo') is-invalid @enderror" id="logo" name="logo" accept="image/*">
+                                            @error('logo')
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
+                                            @enderror
+                                            <div class="form-text">Upload a school logo (JPEG, PNG, GIF - max 2MB)</div>
                                         </div>
                                         <div class="col-md-12">
                                             <label for="school_division_id" class="form-label fw-bold">School Division <span class="text-danger">*</span></label>

@@ -21,6 +21,7 @@ class School extends Model
         'code',
         'address',
         'principal',
+        'logo_path',
         'grade_levels',
         'school_division_id',
         'is_active',

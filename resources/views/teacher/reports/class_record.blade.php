@@ -62,6 +62,18 @@
                                 <div class="form-text">Choose the subject for the selected class section</div>
                             </div>
                             
+                            <!-- MAPEH Component Selection (initially hidden) -->
+                            <div class="col-md-12 mb-3" id="mapeh_component_container" style="display: none;">
+                                <label for="mapeh_component_id" class="form-label fw-semibold">MAPEH Component</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-info text-white"><i class="fas fa-puzzle-piece"></i></span>
+                                    <select name="subject_id" id="mapeh_component_id" class="form-select" disabled>
+                                        <option value="">Select a MAPEH component</option>
+                                    </select>
+                                </div>
+                                <div class="form-text">For MAPEH subjects, select which component to generate a class record for</div>
+                            </div>
+                            
                             <div class="col-md-12 mb-4">
                                 <label for="quarter" class="form-label fw-semibold">Quarter</label>
                                 <div class="input-group">
@@ -132,8 +144,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         const sectionSelect = document.getElementById('section_id');
         const subjectSelect = document.getElementById('subject_id');
+        const mapehComponentContainer = document.getElementById('mapeh_component_container');
+        const mapehComponentSelect = document.getElementById('mapeh_component_id');
         
-        // Function to load subjects based on selected section
+        // Keep track of MAPEH components for each subject
+        let mapehComponents = {};
+        
+        // Function to load subjects for a section
         function loadSubjects(sectionId) {
             if (!sectionId) {
                 subjectSelect.innerHTML = '<option value="">Select a section first</option>';
@@ -141,11 +158,9 @@
                 return;
             }
             
-            // Show loading
-            subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
             subjectSelect.disabled = true;
+            subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
             
-            // Make API call to get subjects for this section
             fetch(`{{ route('teacher.reports.section-subjects') }}?section_id=${sectionId}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -154,22 +169,34 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Clear and populate subjects dropdown
-                subjectSelect.innerHTML = '';
+                subjectSelect.innerHTML = '<option value="">Select Subject</option>';
                 
-                if (data.length === 0) {
-                    subjectSelect.innerHTML = '<option value="">No subjects assigned</option>';
-                    subjectSelect.disabled = true;
-                } else {
-                    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-                    data.forEach(subject => {
-                        const option = document.createElement('option');
-                        option.value = subject.id;
-                        option.textContent = subject.name;
-                        subjectSelect.appendChild(option);
-                    });
-                    subjectSelect.disabled = false;
-                }
+                data.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject.id;
+                    option.textContent = subject.name;
+                    
+                    // Add a data attribute to indicate if this is a MAPEH subject
+                    if (subject.components && subject.components.length === 4) {
+                        // Check if it has the MAPEH components
+                        const componentNames = subject.components.map(c => c.name.toLowerCase());
+                        const isMAPEH = 
+                            (componentNames.some(name => name.includes('music')) &&
+                             componentNames.some(name => name.includes('art')) &&
+                             (componentNames.some(name => name.includes('physical')) || componentNames.some(name => name.includes('pe'))) &&
+                             componentNames.some(name => name.includes('health')));
+                             
+                        if (isMAPEH) {
+                            option.dataset.isMapeh = 'true';
+                            // Store the components for this subject ID
+                            mapehComponents[subject.id] = subject.components;
+                        }
+                    }
+                    
+                    subjectSelect.appendChild(option);
+                });
+                
+                subjectSelect.disabled = false;
             })
             .catch(error => {
                 console.error('Error loading subjects:', error);
@@ -177,9 +204,54 @@
             });
         }
         
+        // Function to handle subject change
+        function handleSubjectChange() {
+            const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+            const isMapeh = selectedOption.dataset.isMapeh === 'true';
+            
+            // If it's a MAPEH subject, show the component selection
+            if (isMapeh) {
+                mapehComponentContainer.style.display = 'block';
+                mapehComponentSelect.disabled = false;
+                mapehComponentSelect.innerHTML = '<option value="">Select MAPEH Component</option>';
+                
+                // Add the components as options
+                const subjectId = selectedOption.value;
+                if (mapehComponents[subjectId]) {
+                    mapehComponents[subjectId].forEach(component => {
+                        const option = document.createElement('option');
+                        option.value = component.id;
+                        option.textContent = component.name;
+                        mapehComponentSelect.appendChild(option);
+                    });
+                }
+            } else {
+                // Hide the component selection for non-MAPEH subjects
+                mapehComponentContainer.style.display = 'none';
+                mapehComponentSelect.disabled = true;
+            }
+        }
+        
         // Event listener for section change
         sectionSelect.addEventListener('change', function() {
             loadSubjects(this.value);
+            // Reset MAPEH component display
+            mapehComponentContainer.style.display = 'none';
+        });
+        
+        // Event listener for subject change
+        subjectSelect.addEventListener('change', handleSubjectChange);
+        
+        // Form submission handler to use the correct subject_id
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+            const isMapeh = selectedOption.dataset.isMapeh === 'true';
+            
+            if (isMapeh && mapehComponentSelect.value) {
+                // If a MAPEH component is selected, use that ID instead
+                subjectSelect.disabled = true; // Disable to avoid sending the parent subject ID
+                mapehComponentSelect.name = 'subject_id'; // Ensure this has the correct name
+            }
         });
         
         // Form validation

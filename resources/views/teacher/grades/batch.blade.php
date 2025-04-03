@@ -351,6 +351,9 @@
                                                     <button type="button" class="btn btn-sm btn-outline-success fill-perfect" data-component="{{ $component->id }}" data-max="{{ $componentMaxScore }}">
                                                         <i class="fas fa-check-circle me-1"></i> Fill With Perfect Scores
                                                     </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary transfer-to-all" data-component="{{ $component->id }}">
+                                                        <i class="fas fa-exchange-alt me-1"></i> Transfer to All Components
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

@@ -3,7 +3,10 @@
     darkMode: {{ Auth::check() && Auth::user()->dark_mode_preference !== null ? (Auth::user()->dark_mode_preference ? 'true' : 'false') : "localStorage.getItem('darkMode') === 'true'" }} 
 }" x-init="$watch('darkMode', val => { 
     localStorage.setItem('darkMode', val); 
-    document.documentElement.classList.toggle('dark', val);
+    // Only apply dark mode if not on login page
+    if (window.location.pathname !== '/login') {
+        document.documentElement.classList.toggle('dark', val);
+    }
     @if(Auth::check())
     // Send AJAX request to update user preference
     fetch('{{ route('user.update-dark-mode') }}', {
@@ -15,7 +18,7 @@
         body: JSON.stringify({ dark_mode: val })
     });
     @endif
-})" x-bind:class="{ 'dark': darkMode }">
+})" x-bind:class="{ 'dark': darkMode && window.location.pathname !== '/login' }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,6 +33,7 @@
             @if(Auth::check() && Auth::user()->dark_mode_preference !== null)
             // Use the user's preference from the database if logged in
             const userPrefersDark = {{ Auth::user()->dark_mode_preference ? 'true' : 'false' }};
+            // Never apply dark mode on login page
             if (!isLoginPage && userPrefersDark) {
                 document.documentElement.classList.add('dark');
                 document.documentElement.style.backgroundColor = '#121212';

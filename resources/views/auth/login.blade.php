@@ -2,6 +2,56 @@
 
 @push('styles')
 <style>
+    /* Force light mode styles for login page */
+    html.dark .login-container {
+        background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%) !important;
+        color: initial !important;
+    }
+    
+    html.dark .login-card {
+        background: rgba(244, 246, 246, 0.95) !important;
+        color: initial !important;
+    }
+    
+    html.dark .form-control {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-color: #e2e8f0 !important;
+        color: #333 !important;
+    }
+    
+    html.dark .input-group-text {
+        background-color: rgba(247, 250, 252, 0.9) !important;
+        border-color: #e2e8f0 !important;
+        color: #718096 !important;
+    }
+    
+    html.dark .login-title {
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+    }
+    
+    html.dark .login-subtitle {
+        color: #2E4053 !important;
+    }
+    
+    html.dark .btn-login {
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%) !important;
+    }
+    
+    html.dark .forgot-password {
+        color: #2E4053 !important;
+    }
+    
+    html.dark .form-check-label {
+        color: initial !important;
+    }
+    
+    html.dark .card-footer {
+        background: transparent !important;
+        color: initial !important;
+    }
+
     .login-container {
         min-height: 100vh;
         background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
