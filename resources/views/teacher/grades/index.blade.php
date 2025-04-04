@@ -920,29 +920,6 @@
                     <i class="fas fa-user-graduate me-2"></i> Student Grades
                     </h5>
                 <div class="d-flex">
-                    @if($selectedSubject && $selectedSubject->getIsMAPEHAttribute())
-                    <div class="mapeh-selector me-3">
-                        <select id="mapehComponentSelector" class="form-select form-select-sm" onchange="switchMAPEHComponent(this.value)">
-                            <option value="average" selected>MAPEH Average Grade</option>
-                            @foreach($selectedSubject->components as $component)
-                                @php
-                                    $componentKey = '';
-                                    $componentName = strtolower($component->name);
-                                    if (stripos($componentName, 'music') !== false) {
-                                        $componentKey = 'music';
-                                    } elseif (stripos($componentName, 'art') !== false) {
-                                        $componentKey = 'arts';
-                                    } elseif (stripos($componentName, 'physical') !== false || stripos($componentName, 'pe') !== false) {
-                                        $componentKey = 'pe';
-                                    } elseif (stripos($componentName, 'health') !== false) {
-                                        $componentKey = 'health';
-                                    }
-                                @endphp
-                                <option value="{{ $componentKey }}">{{ $component->name }} Component</option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
                     <div class="d-flex align-items-center">
                         <div class="me-3">
                             <button class="btn btn-sm btn-outline-primary" id="toggleTableView">
@@ -969,21 +946,23 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body p-2">
                             <div class="d-flex align-items-center justify-content-between">
-                                <!-- <div class="form-check form-switch">
+                                <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="compactViewToggle">
                                     <label class="form-check-label" for="compactViewToggle">
                                         <i class="fas fa-compress me-1"></i> Compact View
                                     </label>
-                                </div> -->
+                                </div>
                                 <div>
                                     <span class="badge bg-light text-secondary border"><i class="fas fa-arrows-left-right me-1"></i> Scroll horizontally to view all subjects</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
                     <div class="table-responsive">
                         <table class="table table-striped table-hover grade-table mb-0" id="gradeTable">
                             <thead class="table-light">
@@ -1018,6 +997,7 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        
                                         @foreach($studentData['subject_grades'] as $subjectId => $subjectGrade)
                                             <td class="text-center subject-grade">
                                                 @php
@@ -1025,21 +1005,7 @@
                                                     $subject = \App\Models\Subject::find($subjectId);
                                                     
                                                     // Check if this is a MAPEH subject
-                                                    $isMAPEH = false;
-                                                    if ($subject && isset($subject->components) && $subject->components->count() > 0) {
-                                                        $componentNames = $subject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
-                                                        $requiredComponents = ['music', 'arts', 'physical education', 'health'];
-                                                        
-                                                        $matchedComponents = 0;
-                                                        foreach ($requiredComponents as $component) {
-                                                            if (in_array($component, $componentNames) || 
-                                                                in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
-                                                                $matchedComponents++;
-                                                            }
-                                                        }
-                                                        
-                                                        $isMAPEH = $matchedComponents == 4;
-                                                    }
+                                                    $isMAPEH = $subject && $subject->getIsMAPEHAttribute();
                                                     
                                                     // Get subject's grade configuration
                                                     $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
@@ -1048,13 +1014,13 @@
                                                     $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
                                                     $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
                                                     
-                                                    if ($isMAPEH && $subject->components) {
+                                                    if ($isMAPEH && $subject->components->count() > 0) {
                                                         // For MAPEH subjects, calculate component grades individually
                                                         $componentGrades = [];
                                                         $componentTransmuted = [];
                                                         
                                                         foreach ($subject->components as $component) {
-                                                            // Get component grades from database for this term
+                                                            // Get component grades for this term
                                                             $componentWrittenWorks = \App\Models\Grade::where('student_id', $studentData['student']->id)
                                                                 ->where('subject_id', $component->id)
                                                                 ->where('term', request('term', 'q1'))
@@ -1073,7 +1039,7 @@
                                                                 ->where('grade_type', 'quarterly')
                                                                 ->first();
                                                             
-                                                            // Calculate component grade using weighted formula identical to regular subjects
+                                                            // Calculate component averages
                                                             $componentWrittenWorksAvg = $componentWrittenWorks->count() > 0 ? 
                                                                 $componentWrittenWorks->average(function($grade) {
                                                                     return ($grade->score / $grade->max_score) * 100;
@@ -1087,7 +1053,7 @@
                                                             $componentQuarterlyScore = $componentQuarterlyAssessment ? 
                                                                 ($componentQuarterlyAssessment->score / $componentQuarterlyAssessment->max_score) * 100 : 0;
                                                             
-                                                            // Get component's grade configuration (or use parent if not set)
+                                                            // Get component's grade configuration
                                                             $componentConfig = \App\Models\GradeConfiguration::where('subject_id', $component->id)->first();
                                                             
                                                             $compWrittenWorkPercentage = $componentConfig ? 
@@ -1120,7 +1086,6 @@
                                                             
                                                             if ($hasComponentGrades) {
                                                                 $componentGrades[$component->name] = round($componentFinalGrade, 1);
-                                                                // Also get transmuted grade for each component
                                                                 $componentTransmuted[$component->name] = getTransmutedGrade(
                                                                     $componentFinalGrade, 
                                                                     request('transmutation_table', 1)
@@ -1136,45 +1101,12 @@
                                                             return $grade !== null;
                                                         });
                                                         
-                                                        // Debug component detection
-                                                        $componentDebug = [];
-                                                        foreach ($subject->components as $component) {
-                                                            $componentDebug[] = [
-                                                                'id' => $component->id,
-                                                                'name' => $component->name,
-                                                                'included' => isset($validComponentGrades[$component->name]),
-                                                                'grade' => $validComponentGrades[$component->name] ?? null
-                                                            ];
-                                                        }
-                                                        
-                                                        // Check if we have all necessary MAPEH components
-                                                        $hasMusic = false;
-                                                        $hasArts = false;
-                                                        $hasPE = false;
-                                                        $hasHealth = false;
-                                                        
-                                                        foreach ($validComponentGrades as $name => $grade) {
-                                                            $lowerName = strtolower($name);
-                                                            if (stripos($lowerName, 'music') !== false) {
-                                                                $hasMusic = true;
-                                                            } else if (stripos($lowerName, 'art') !== false) {
-                                                                $hasArts = true;
-                                                            } else if (stripos($lowerName, 'physical') !== false || stripos($lowerName, 'pe') !== false || stripos($lowerName, 'p.e') !== false) {
-                                                                $hasPE = true;
-                                                            } else if (stripos($lowerName, 'health') !== false) {
-                                                                $hasHealth = true;
-                                                            }
-                                                        }
-                                                        
                                                         if (count($validComponentGrades) > 0) {
-                                                            // Calculate the MAPEH average - this is the average of all component initial grades
                                                             $mapehAverage = array_sum($validComponentGrades) / count($validComponentGrades);
                                                             $avgGrade = round($mapehAverage, 1);
-                                                            
-                                                            // Get the transmuted grade from this average
                                                             $transmutedGrade = getTransmutedGrade($avgGrade, request('transmutation_table', 1));
                                                             
-                                                            // Update grade class
+                                                            // Grade class based on value
                                                             $gradeClass = 'secondary';
                                                             if ($transmutedGrade >= 90) {
                                                                 $gradeClass = 'success';
@@ -1186,233 +1118,277 @@
                                                                 $gradeClass = 'danger';
                                                             }
                                                         } else {
-                                                            // No component grades available
                                                             $avgGrade = 0;
                                                             $transmutedGrade = 0;
                                                             $gradeClass = 'secondary';
                                                         }
                                                     } else {
-                                                        // Regular (non-MAPEH) subject calculation
-                                                    $writtenWorks = collect($subjectGrade['written_works']);
-                                                    $performanceTasks = collect($subjectGrade['performance_tasks']);
-                                                    $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
-                                                    
-                                                    $writtenWorksAvg = $writtenWorks->count() > 0 ? 
-                                                        $writtenWorks->average(function($grade) {
-                                                            return ($grade->score / $grade->max_score) * 100;
-                                                        }) : 0;
-                                                    
-                                                    $performanceTasksAvg = $performanceTasks->count() > 0 ? 
-                                                        $performanceTasks->average(function($grade) {
-                                                            return ($grade->score / $grade->max_score) * 100;
-                                                        }) : 0;
-                                                    
-                                                    $quarterlyScore = $quarterlyAssessment ? 
-                                                        ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                                    
-                                                    // Calculate weighted final grade
-                                                    $finalGrade = 0;
-                                                    if ($writtenWorksAvg > 0) {
-                                                        $finalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
-                                                    }
-                                                    if ($performanceTasksAvg > 0) {
-                                                        $finalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
-                                                    }
-                                                    if ($quarterlyScore > 0) {
-                                                        $finalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
-                                                    }
-                                                    
-                                                    $avgGrade = round($finalGrade, 1);
-                                                    
-                                                    // Get the transmuted grade
-                                                    $transmutedGrade = getTransmutedGrade($avgGrade, request('transmutation_table', 1));
-                                                    
-                                                    // Determine grade color class
-                                                    $gradeClass = 'secondary';
-                                                    if ($transmutedGrade >= 90) {
-                                                        $gradeClass = 'success';
-                                                    } elseif ($transmutedGrade >= 80) {
-                                                        $gradeClass = 'primary';
-                                                    } elseif ($transmutedGrade >= 75) {
-                                                        $gradeClass = 'info';
-                                                    } elseif ($transmutedGrade > 0) {
-                                                        $gradeClass = 'danger';
+                                                        // Regular subject calculation
+                                                        $writtenWorks = collect($subjectGrade['written_works']);
+                                                        $performanceTasks = collect($subjectGrade['performance_tasks']);
+                                                        $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
+                                                        
+                                                        $writtenWorksAvg = $writtenWorks->count() > 0 ? 
+                                                            $writtenWorks->average(function($grade) {
+                                                                return ($grade->score / $grade->max_score) * 100;
+                                                            }) : 0;
+                                                        
+                                                        $performanceTasksAvg = $performanceTasks->count() > 0 ? 
+                                                            $performanceTasks->average(function($grade) {
+                                                                return ($grade->score / $grade->max_score) * 100;
+                                                            }) : 0;
+                                                        
+                                                        $quarterlyScore = $quarterlyAssessment ? 
+                                                            ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
+                                                        
+                                                        // Calculate weighted final grade
+                                                        $finalGrade = 0;
+                                                        
+                                                        if ($writtenWorksAvg > 0) {
+                                                            $finalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
+                                                        }
+                                                        
+                                                        if ($performanceTasksAvg > 0) {
+                                                            $finalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
+                                                        }
+                                                        
+                                                        if ($quarterlyScore > 0) {
+                                                            $finalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
+                                                        }
+                                                        
+                                                        $avgGrade = round($finalGrade, 1);
+                                                        $transmutedGrade = getTransmutedGrade($avgGrade, request('transmutation_table', 1));
+                                                        
+                                                        // Grade class based on value
+                                                        $gradeClass = 'secondary';
+                                                        if ($transmutedGrade >= 90) {
+                                                            $gradeClass = 'success';
+                                                        } elseif ($transmutedGrade >= 80) {
+                                                            $gradeClass = 'primary';
+                                                        } elseif ($transmutedGrade >= 75) {
+                                                            $gradeClass = 'info';
+                                                        } elseif ($transmutedGrade > 0) {
+                                                            $gradeClass = 'danger';
                                                         }
                                                     }
                                                 @endphp
                                                 
                                                 @if($isMAPEH && isset($componentGrades) && count(array_filter($componentGrades)) > 0)
-                                                    <!-- Average MAPEH grade display -->
-                                                    <div class="mapeh-average-display">
-                                                    <div class="mb-1">
+                                                    <!-- MAPEH Grade Display -->
+                                                    <div class="mapeh-grade-display">
+                                                        <div class="mb-1">
                                                             <span class="badge bg-{{ $gradeClass }} grade-badge">{{ $transmutedGrade }}</span>
-                                                    </div>
-                                                        <div class="small text-muted mb-1">Initial: {{ $avgGrade }}%</div>
-                                                    </div>
-                                                    
-                                                    <!-- Component-specific displays -->
-                                                    @foreach(['music', 'arts', 'pe', 'health'] as $componentKey)
-                                                        @php
-                                                            $found = false;
-                                                            $componentName = '';
-                                                            $componentGrade = 0;
-                                                            $componentTrans = 0;
-                                                            
-                                                            // Match component key to actual component data
-                                                            foreach($componentGrades as $name => $grade) {
-                                                                $lowerName = strtolower($name);
-                                                                if (
-                                                                    ($componentKey == 'music' && stripos($lowerName, 'music') !== false) ||
-                                                                    ($componentKey == 'arts' && stripos($lowerName, 'art') !== false) ||
-                                                                    ($componentKey == 'pe' && (
-                                                                        stripos($lowerName, 'physical') !== false || 
-                                                                        stripos($lowerName, 'pe') !== false || 
-                                                                        stripos($lowerName, 'p.e') !== false || 
-                                                                        stripos($lowerName, 'physical education') !== false
-                                                                    )) ||
-                                                                    ($componentKey == 'health' && stripos($lowerName, 'health') !== false)
-                                                                ) {
-                                                                    $found = true;
-                                                                    $componentName = $name;
-                                                                    $componentGrade = $grade;
-                                                                    $componentTrans = isset($componentTransmuted[$name]) ? $componentTransmuted[$name] : 'N/A';
-                                                                    break;
-                                                                }
-                                                            }
-                                                            
-                                                            if (!$found) continue;
-                                                            
-                                                            // Set styles based on component
-                                                                $componentClass = 'secondary';
-                                                            $iconClass = 'fas fa-book';
-                                                                
-                                                            switch($componentKey) {
-                                                                case 'music':
-                                                                    $componentClass = 'primary';
-                                                                    $iconClass = 'fas fa-music';
-                                                                    break;
-                                                                case 'arts':
-                                                                    $componentClass = 'danger';
-                                                                    $iconClass = 'fas fa-paint-brush';
-                                                                    break;
-                                                                case 'pe':
-                                                                    $componentClass = 'success';
-                                                                    $iconClass = 'fas fa-running';
-                                                                    break;
-                                                                case 'health':
-                                                                    $componentClass = 'warning';
-                                                                    $iconClass = 'fas fa-heartbeat';
-                                                                    break;
-                                                            }
-                                                            
-                                                            // Set grade class based on value
-                                                            $compGradeClass = 'secondary';
-                                                            if (is_numeric($componentTrans)) {
-                                                                if ($componentTrans >= 90) {
-                                                                    $compGradeClass = 'success';
-                                                                } elseif ($componentTrans >= 80) {
-                                                                    $compGradeClass = 'primary';
-                                                                } elseif ($componentTrans >= 75) {
-                                                                    $compGradeClass = 'info';
-                                                                } elseif ($componentTrans > 0) {
-                                                                    $compGradeClass = 'danger';
-                                                                }
-                                                            }
-                                                            @endphp
-                                                        
-                                                        @if($found)
-                                                        <div class="mapeh-component-single d-none" data-component="{{ $componentKey }}">
-                                                            <div class="mb-1">
-                                                                <span class="badge bg-{{ $compGradeClass }} grade-badge">{{ $componentTrans }}</span>
-                                                            </div>
-                                                            <div class="d-flex align-items-center justify-content-center">
-                                                                <span class="badge bg-{{ $componentClass }} bg-opacity-25 text-{{ $componentClass }} me-1">
-                                                                    <i class="{{ $iconClass }}"></i>
-                                                                </span>
-                                                                <small class="text-muted">{{ $componentGrade }}%</small>
-                                                    </div>
                                                         </div>
-                                                        @endif
-                                                    @endforeach
-                                                    
-                                                    <!-- Component badges for the compact view -->
-                                                    <div class="mapeh-components mt-2 mapeh-component-badge">
-                                                        @foreach(['music', 'arts', 'pe', 'health'] as $componentKey)
-                                                            @php
-                                                                $found = false;
-                                                                $componentName = '';
-                                                                $componentGrade = 0;
-                                                                $componentTrans = 0;
-                                                                
-                                                                // Match component key to actual component data
-                                                                foreach($componentGrades as $name => $grade) {
-                                                                    $lowerName = strtolower($name);
-                                                                    if (
-                                                                        ($componentKey == 'music' && stripos($lowerName, 'music') !== false) ||
-                                                                        ($componentKey == 'arts' && stripos($lowerName, 'art') !== false) ||
-                                                                        ($componentKey == 'pe' && (
-                                                                            stripos($lowerName, 'physical') !== false || 
-                                                                            stripos($lowerName, 'pe') !== false || 
-                                                                            stripos($lowerName, 'p.e') !== false || 
-                                                                            stripos($lowerName, 'physical education') !== false
-                                                                        )) ||
-                                                                        ($componentKey == 'health' && stripos($lowerName, 'health') !== false)
-                                                                    ) {
-                                                                        $found = true;
-                                                                        $componentName = $name;
-                                                                        $componentGrade = $grade;
-                                                                        $componentTrans = isset($componentTransmuted[$name]) ? $componentTransmuted[$name] : 'N/A';
-                                                                        break;
+                                                        <div class="small text-muted mb-1">Initial: {{ $avgGrade }}%</div>
+                                                        
+                                                        <!-- Component badges -->
+                                                        <div class="mapeh-components mt-2">
+                                                            @foreach(['Music', 'Arts', 'PE', 'Health'] as $componentKey)
+                                                                @php
+                                                                    $found = false;
+                                                                    $componentName = '';
+                                                                    $componentGrade = 0;
+                                                                    $componentTrans = 0;
+                                                                    $componentClass = 'secondary';
+                                                                    $iconClass = 'fas fa-book';
+                                                                    
+                                                                    // Match component key to actual component data
+                                                                    foreach($componentGrades as $name => $grade) {
+                                                                        $lowerName = strtolower($name);
+                                                                        if (
+                                                                            ($componentKey == 'Music' && stripos($lowerName, 'music') !== false) ||
+                                                                            ($componentKey == 'Arts' && stripos($lowerName, 'art') !== false) ||
+                                                                            ($componentKey == 'PE' && (
+                                                                                stripos($lowerName, 'physical') !== false || 
+                                                                                stripos($lowerName, 'pe') !== false || 
+                                                                                stripos($lowerName, 'p.e') !== false
+                                                                            )) ||
+                                                                            ($componentKey == 'Health' && stripos($lowerName, 'health') !== false)
+                                                                        ) {
+                                                                            $found = true;
+                                                                            $componentName = $name;
+                                                                            $componentGrade = $grade;
+                                                                            $componentTrans = isset($componentTransmuted[$name]) ? $componentTransmuted[$name] : 'N/A';
+                                                                            break;
+                                                                        }
                                                                     }
-                                                                }
+                                                                    
+                                                                    if (!$found) continue;
+                                                                    
+                                                                    // Set styles based on component
+                                                                    switch($componentKey) {
+                                                                        case 'Music':
+                                                                            $componentClass = 'primary';
+                                                                            $iconClass = 'fas fa-music';
+                                                                            break;
+                                                                        case 'Arts':
+                                                                            $componentClass = 'danger';
+                                                                            $iconClass = 'fas fa-paint-brush';
+                                                                            break;
+                                                                        case 'PE':
+                                                                            $componentClass = 'success';
+                                                                            $iconClass = 'fas fa-running';
+                                                                            break;
+                                                                        case 'Health':
+                                                                            $componentClass = 'warning';
+                                                                            $iconClass = 'fas fa-heartbeat';
+                                                                            break;
+                                                                    }
+                                                                @endphp
                                                                 
-                                                                if (!$found) continue;
-                                                                
-                                                                // Set styles based on component
-                                                            $componentClass = 'secondary';
-                                                                $iconClass = 'fas fa-book';
-                                                            
-                                                                switch($componentKey) {
-                                                                    case 'music':
-                                                                $componentClass = 'primary';
-                                                                        $iconClass = 'fas fa-music';
-                                                                        break;
-                                                                    case 'arts':
-                                                                $componentClass = 'danger';
-                                                                        $iconClass = 'fas fa-paint-brush';
-                                                                        break;
-                                                                    case 'pe':
-                                                                $componentClass = 'success';
-                                                                        $iconClass = 'fas fa-running';
-                                                                        break;
-                                                                    case 'health':
-                                                                $componentClass = 'warning';
-                                                                        $iconClass = 'fas fa-heartbeat';
-                                                                        break;
-                                                            }
-                                                        @endphp
-                                                            
-                                                            @if($found)
-                                                            <span class="badge bg-{{ $componentClass }} bg-opacity-25 text-{{ $componentClass }}" title="{{ $componentName }}: {{ $componentGrade }}%">
-                                                                <i class="{{ $iconClass }}"></i> {{ $componentTrans }}
-                                                            </span>
-                                                            @endif
-                                                    @endforeach
+                                                                @if($found)
+                                                                    <span class="badge bg-{{ $componentClass }} bg-opacity-25 text-{{ $componentClass }}" 
+                                                                          title="{{ $componentName }}: {{ $componentGrade }}%">
+                                                                        <i class="{{ $iconClass }}"></i> {{ $componentTrans }}
+                                                                    </span>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
                                                     </div>
                                                 @else
+                                                    <!-- Regular Subject Grade Display -->
                                                     <span class="badge bg-{{ $gradeClass }} grade-badge">{{ $transmutedGrade }}</span>
                                                     <div class="small text-muted">Initial: {{ $avgGrade }}%</div>
                                                 @endif
                                             </td>
                                         @endforeach
+                                        
+                                        <!-- Initial Average Column -->
                                         <td class="text-center bg-light">
                                             @php
-                                                // Calculate the average grade across all subjects
+                                                // Calculate the average grade across all subjects assigned to this section
                                                 $totalSubjectGrade = 0;
-                                                $subjectCount = count($studentData['subject_grades']);
                                                 $validSubjectCount = 0;
+                                                $debugInfo = [];
                                                 
-                                                foreach($studentData['subject_grades'] as $subjectId => $subjectGrade) {
+                                                // Get section subjects directly from the current grades data 
+                                                // (these are guaranteed to be the subjects assigned to this section)
+                                                $sectionSubjectIds = array_keys($studentData['subject_grades']);
+                                                $debugInfo[] = "Found " . count($sectionSubjectIds) . " subject(s) assigned to this section";
+                                                
+                                                // Special handling for MAPEH subjects
+                                                $mapehParentIds = [];
+                                                $mapehComponentIds = [];
+                                                $mapehComponentGrades = [];
+                                                
+                                                // First identify MAPEH subjects and their components
+                                                foreach($sectionSubjectIds as $subjectId) {
+                                                    $subject = \App\Models\Subject::find($subjectId);
+                                                    if ($subject && $subject->getIsMAPEHAttribute()) {
+                                                        $mapehParentIds[] = $subjectId;
+                                                        
+                                                        // Get component subjects
+                                                        $components = $subject->components;
+                                                        foreach($components as $component) {
+                                                            $mapehComponentIds[$component->id] = $subjectId; // Map component to parent
+                                                        }
+                                                        
+                                                        $debugInfo[] = "Found MAPEH subject: " . $subject->name . " with " . $components->count() . " components";
+                                                    } else if ($subject && $subject->is_component && $subject->parent_subject_id) {
+                                                        $parentSubject = \App\Models\Subject::find($subject->parent_subject_id);
+                                                        if ($parentSubject && $parentSubject->getIsMAPEHAttribute()) {
+                                                            $mapehComponentIds[$subjectId] = $subject->parent_subject_id;
+                                                            $debugInfo[] = "Found MAPEH component: " . $subject->name;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Process all subjects that have grades
+                                                foreach($sectionSubjectIds as $subjectId) {
+                                                    // Skip MAPEH components as they will be calculated as part of MAPEH
+                                                    if (isset($mapehComponentIds[$subjectId])) {
+                                                        continue;
+                                                    }
+                                                    
+                                                    $subject = \App\Models\Subject::find($subjectId);
+                                                    $subjectName = $subject ? $subject->name : "Subject ID: ".$subjectId;
+                                                    $subjectGrade = $studentData['subject_grades'][$subjectId];
+                                                    
+                                                    // Special handling for MAPEH subjects
+                                                    if ($subject && $subject->getIsMAPEHAttribute()) {
+                                                        // Get all MAPEH component grades
+                                                        $componentsWithGrades = 0;
+                                                        $componentGradeSum = 0;
+                                                        
+                                                        foreach($subject->components as $component) {
+                                                            // Check if the student has grades for this component
+                                                            $componentGrades = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                                ->where('subject_id', $component->id)
+                                                                ->where('term', $selectedTerm)
+                                                                ->get();
+                                                                
+                                                            if ($componentGrades->isNotEmpty()) {
+                                                                $writtenWorks = $componentGrades->where('grade_type', 'written_work');
+                                                                $performanceTasks = $componentGrades->where('grade_type', 'performance_task');
+                                                                $quarterlyAssessment = $componentGrades->where('grade_type', 'quarterly')->first();
+                                                                
+                                                                $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
+                                                                
+                                                                if ($hasGrades) {
+                                                                    // Calculate the component grade the same way as in Performance Report modal
+                                                                    
+                                                                    // 1. Get Written Works average
+                                                                    $writtenWorksAvg = $writtenWorks->count() > 0 ? 
+                                                                        $writtenWorks->average(function($grade) {
+                                                                            return ($grade->score / $grade->max_score) * 100;
+                                                                        }) : 0;
+                                                                    
+                                                                    // 2. Get Performance Tasks average
+                                                                    $performanceTasksAvg = $performanceTasks->count() > 0 ? 
+                                                                        $performanceTasks->average(function($grade) {
+                                                                            return ($grade->score / $grade->max_score) * 100;
+                                                                        }) : 0;
+                                                                    
+                                                                    // 3. Get Quarterly Assessment
+                                                                    $quarterlyScore = $quarterlyAssessment ? 
+                                                                        ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
+                                                                    
+                                                                    // Get component's grade configuration
+                                                                    $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $component->id)->first();
+                                                                    
+                                                                    $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 25;
+                                                                    $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
+                                                                    $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 25;
+                                                                    
+                                                                    // Calculate weighted contributions
+                                                                    $writtenWorkContribution = $writtenWorksAvg * ($writtenWorkPercentage / 100);
+                                                                    $performanceTaskContribution = $performanceTasksAvg * ($performanceTaskPercentage / 100);
+                                                                    $quarterlyAssessmentContribution = $quarterlyScore * ($quarterlyAssessmentPercentage / 100);
+                                                                    
+                                                                    // Final component grade
+                                                                    $componentFinalGrade = $writtenWorkContribution + $performanceTaskContribution + $quarterlyAssessmentContribution;
+                                                                    
+                                                                    // Get component weight from the database or calculate dynamically
+                                                                    $componentWeight = $component->component_weight ?: (100 / count($subject->components));
+                                                                    $componentGradeSum += $componentFinalGrade * ($componentWeight / 100);
+                                                                    $componentsWithGrades++;
+                                                                    
+                                                                    $debugInfo[] = "MAPEH Component " . $component->name . ": " . round($componentFinalGrade, 1) . "% (WW:" . 
+                                                                        round($writtenWorkContribution, 1) . " + PT:" . 
+                                                                        round($performanceTaskContribution, 1) . " + QE:" . 
+                                                                        round($quarterlyAssessmentContribution, 1) . ", weight: " . $componentWeight . "%)";
+                                                                }
+                                                            }
+                                                        }
+                                                        
+                                                        // If we have component grades, calculate MAPEH average
+                                                        if ($componentsWithGrades > 0) {
+                                                            // Calculate weighted average using actual component weights
+                                                            $mapehAverage = $componentGradeSum;
+                                                            
+                                                            // If some components are missing, indicate in the debug info
+                                                            if ($componentsWithGrades < count($subject->components)) {
+                                                                $debugInfo[] = "Note: " . (count($subject->components) - $componentsWithGrades) . " component(s) missing grades";
+                                                            }
+                                                            
+                                                            $totalSubjectGrade += $mapehAverage;
+                                                            $validSubjectCount++;
+                                                            $debugInfo[] = "MAPEH Average (from " . $componentsWithGrades . " components): " . round($mapehAverage, 1) . "%";
+                                                        } else {
+                                                            $debugInfo[] = "MAPEH has no component grades, skipping";
+                                                        }
+                                                    } else {
+                                                        // Regular subjects processing
                                                         $writtenWorks = collect($subjectGrade['written_works']);
                                                         $performanceTasks = collect($subjectGrade['performance_tasks']);
                                                         $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
@@ -1454,11 +1430,17 @@
                                                             
                                                             $totalSubjectGrade += $subjectFinalGrade;
                                                             $validSubjectCount++;
+                                                            $debugInfo[] = "Subject " . $subjectName . ": " . round($subjectFinalGrade, 1) . "%";
+                                                        } else {
+                                                            $debugInfo[] = "Subject " . $subjectName . " has no grades.";
+                                                        }
                                                     }
                                                 }
                                                 
                                                 $finalAverage = $validSubjectCount > 0 ? $totalSubjectGrade / $validSubjectCount : 0;
                                                 $finalAverage = round($finalAverage, 1);
+                                                $debugInfo[] = "Total Subjects: " . $validSubjectCount;
+                                                $debugInfo[] = "Final Average: " . $finalAverage . "%";
                                                 
                                                 // Grade color class
                                                 $avgGradeClass = 'secondary';
@@ -1476,93 +1458,57 @@
                                             @endphp
                                             
                                             <span class="badge bg-{{ $avgGradeClass }} bg-opacity-25 text-{{ $avgGradeClass }} fs-5 px-3">{{ $finalAverage }}%</span>
+                                            
+                                            <!-- Debug Information -->
+                                            {{-- <div class="mt-2 small text-start" style="max-height: 200px; overflow-y: auto;">
+                                                @foreach($debugInfo as $info)
+                                                    <div class="text-muted">{{ $info }}</div>
+                                                @endforeach
+                                            </div> --}}
                                         </td>
+                                        
+                                        <!-- Quarterly Average Column -->
                                         <td class="text-center bg-primary bg-opacity-10">
                                             @php
-                                                // Calculate the average grade across all subjects
-                                                $totalSubjectGrade = 0;
-                                                $subjectCount = count($studentData['subject_grades']);
-                                                $validSubjectCount = 0;
-                                                
-                                                foreach($studentData['subject_grades'] as $subjectId => $subjectGrade) {
-                                                        $writtenWorks = collect($subjectGrade['written_works']);
-                                                        $performanceTasks = collect($subjectGrade['performance_tasks']);
-                                                        $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
-                                                        
-                                                        $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
-                                                        
-                                                        if($hasGrades) {
-                                                            $writtenWorksAvg = $writtenWorks->count() > 0 ? 
-                                                                $writtenWorks->average(function($grade) {
-                                                                    return ($grade->score / $grade->max_score) * 100;
-                                                                }) : 0;
-                                                            
-                                                            $performanceTasksAvg = $performanceTasks->count() > 0 ? 
-                                                                $performanceTasks->average(function($grade) {
-                                                                    return ($grade->score / $grade->max_score) * 100;
-                                                                }) : 0;
-                                                            
-                                                            $quarterlyScore = $quarterlyAssessment ? 
-                                                                ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                                            
-                                                            // Get subject's grade configuration
-                                                            $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
-                                                            
-                                                            $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
-                                                            $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
-                                                            $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
-                                                            
-                                                            // Calculate weighted final grade for this subject
-                                                            $subjectFinalGrade = 0;
-                                                            if ($writtenWorksAvg > 0) {
-                                                                $subjectFinalGrade += ($writtenWorksAvg * ($writtenWorkPercentage / 100));
-                                                            }
-                                                            if ($performanceTasksAvg > 0) {
-                                                                $subjectFinalGrade += ($performanceTasksAvg * ($performanceTaskPercentage / 100));
-                                                            }
-                                                            if ($quarterlyScore > 0) {
-                                                                $subjectFinalGrade += ($quarterlyScore * ($quarterlyAssessmentPercentage / 100));
-                                                            }
-                                                            
-                                                            $totalSubjectGrade += $subjectFinalGrade;
-                                                            $validSubjectCount++;
-                                                    }
-                                                }
-                                                
-                                                $finalAverage = $validSubjectCount > 0 ? $totalSubjectGrade / $validSubjectCount : 0;
-                                                $finalAverage = round($finalAverage, 1);
-                                                
-                                                // Grade color class
-                                                $avgGradeClass = 'secondary';
-                                                if ($finalAverage >= 90) {
-                                                    $avgGradeClass = 'success';
-                                                } elseif ($finalAverage >= 80) {
-                                                    $avgGradeClass = 'primary';
-                                                } elseif ($finalAverage >= 70) {
-                                                    $avgGradeClass = 'info';
-                                                } elseif ($finalAverage >= 60) {
-                                                    $avgGradeClass = 'warning';
-                                                } elseif ($finalAverage > 0) {
-                                                    $avgGradeClass = 'danger';
-                                                }
+                                                // Use the same finalAverage but get the transmuted grade
+                                                $transmutedFinalGrade = getTransmutedGrade($finalAverage, request('transmutation_table', 1));
                                             @endphp
                                             
-                                            <span class="badge bg-{{ $avgGradeClass }} fs-5 px-3">{{ getTransmutedGrade($finalAverage, request('transmutation_table', 1)) }}</span>
+                                            <span class="badge bg-{{ $avgGradeClass }} fs-5 px-3">{{ $transmutedFinalGrade }}</span>
                                         </td>
+                                        
+                                        <!-- Actions Column -->
                                         <td class="text-center">
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-outline-success" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#wholeGradeModal{{ $studentData['student']->id }}">
-                                                    <i class="fas fa-chart-line me-1"></i> Details
-                                                </button>
-                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#wholeGradeModal{{ $studentData['student']->id }}">
+                                                <i class="fas fa-chart-line me-1"></i> Details
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- JavaScript for Table Functionality -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Compact view toggle
+                            const compactViewToggle = document.getElementById('compactViewToggle');
+                            const gradeTable = document.getElementById('gradeTable');
+                            
+                            if (compactViewToggle && gradeTable) {
+                                compactViewToggle.addEventListener('change', function() {
+                                    if (this.checked) {
+                                        gradeTable.classList.add('compact-view');
+                                    } else {
+                                        gradeTable.classList.remove('compact-view');
+                                    }
+                                });
+                            }
+                        });
+                    </script>
                 @else
                     <!-- Single Subject View -->
                     @if(empty($students) || count($students) == 0)
@@ -2726,6 +2672,12 @@
                                 $calculatedSubjectFinalGrades = [];
                                 
                                 foreach($studentData['subject_grades'] as $subjectId => $subjectGrade) {
+                                    // Get the subject
+                                    $subject = \App\Models\Subject::find($subjectId);
+                                    
+                                    // Check if this is a MAPEH subject
+                                    $isMAPEH = $subject && $subject->getIsMAPEHAttribute();
+                                    
                                     $writtenWorks = collect($subjectGrade['written_works']);
                                     $performanceTasks = collect($subjectGrade['performance_tasks']);
                                     $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
@@ -2867,182 +2819,448 @@
                                 <div class="row">
                                     @foreach($studentData['subject_grades'] as $subjectId => $subjectGrade)
                                         @php
-                                            // Calculate all values for this subject
-                                            $writtenWorks = collect($subjectGrade['written_works']);
-                                            $performanceTasks = collect($subjectGrade['performance_tasks']);
-                                            $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
-                                                                
-                                                                // Get the actual weighted score from written works
-                                                                $writtenTotal = 0;
-                                                                $writtenMaxTotal = 0;
-                                                                
-                                            foreach($writtenWorks as $grade) {
-                                                $writtenTotal += $grade->score;
-                                                $writtenMaxTotal += $grade->max_score;
-                                                                }
-                                                                
-                                                                $writtenPercentage = $writtenMaxTotal > 0 ? 
-                                                                    ($writtenTotal / $writtenMaxTotal) * 100 : 0;
-                                                                
-                                                                // Get the actual weighted score from performance tasks
-                                                                $performanceTotal = 0;
-                                                                $performanceMaxTotal = 0;
-                                                                
-                                            foreach($performanceTasks as $grade) {
-                                                $performanceTotal += $grade->score;
-                                                $performanceMaxTotal += $grade->max_score;
-                                                                }
-                                                                
-                                                                $performancePercentage = $performanceMaxTotal > 0 ? 
-                                                                    ($performanceTotal / $performanceMaxTotal) * 100 : 0;
-                                                                
-                                                                // Use the actual quarterly score
-                                                                $quarterlyPercentage = $quarterlyAssessment ? 
-                                                                    ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                                                
-                                                                // Get subject's grade configuration
-                                                                $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $subjectId)->first();
-                                                                
-                                                                $writtenWorkPercentage = $gradeConfig ? $gradeConfig->written_work_percentage : 30;
-                                                                $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
-                                                                $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
-                                                                
-                                            // Calculate weighted final grade
-                                            $finalGrade = 0;
-                                            if ($writtenPercentage > 0) {
-                                                $finalGrade += ($writtenPercentage * ($writtenWorkPercentage / 100));
-                                            }
-                                            if ($performancePercentage > 0) {
-                                                $finalGrade += ($performancePercentage * ($performanceTaskPercentage / 100));
-                                            }
-                                            if ($quarterlyPercentage > 0) {
-                                                $finalGrade += ($quarterlyPercentage * ($quarterlyAssessmentPercentage / 100));
-                                            }
+                                            // Get the subject
+                                            $subject = \App\Models\Subject::find($subjectId);
                                             
-                                            $avgGrade = round($finalGrade, 1);
-                                            $transmutedGrade = getTransmutedGrade($avgGrade, $selectedTransmutationTable);
+                                            // Check if this is a MAPEH subject
+                                            $isMAPEH = $subject && $subject->getIsMAPEHAttribute();
                                             
-                                            // Grade color class
-                                            $gradeClass = 'secondary';
-                                            if ($transmutedGrade >= 90) {
-                                                $gradeClass = 'success';
-                                            } elseif ($transmutedGrade >= 80) {
-                                                $gradeClass = 'primary';
-                                            } elseif ($transmutedGrade >= 75) {
-                                                $gradeClass = 'info';
-                                            } elseif ($transmutedGrade > 0) {
-                                                $gradeClass = 'danger';
-                                            }
-
-                                            $hasGrades = $writtenWorks->count() > 0 || $performanceTasks->count() > 0 || $quarterlyAssessment;
-                                                            @endphp
-                                        
-                                        <div class="col-md-6 mb-3">
-                                            <div class="card shadow-sm h-100">
-                                                <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                                                    <h6 class="mb-0 fw-bold">{{ $subjectGrade['subject_name'] }}</h6>
-                                                    @if($hasGrades)
-                                                        <span class="badge bg-{{ $gradeClass }} px-3 py-2">{{ $transmutedGrade }}</span>
-                                                    @else
-                                                        <span class="badge bg-secondary px-3 py-2">Not Graded</span>
-                                                    @endif
-                                                                            </div>
-                                                <div class="card-body">
-                                                    @if($hasGrades)
-                                                        <div class="d-flex justify-content-around mb-3">
-                                                            <div class="text-center">
-                                                                <div class="small fw-bold text-primary mb-1">Written</div>
-                                                                <div class="badge bg-light text-dark border px-2 py-1">
-                                                                    @php
-                                                                        // Get the actual weighted score from written works
-                                                                        $writtenTotal = 0;
-                                                                        $writtenMaxTotal = 0;
-                                                                        
-                                                                        foreach($writtenWorks as $grade) {
-                                                                            $writtenTotal += $grade->score;
-                                                                            $writtenMaxTotal += $grade->max_score;
-                                                                        }
-                                                                        
-                                                                        $writtenPercentage = $writtenMaxTotal > 0 ? 
-                                                                            ($writtenTotal / $writtenMaxTotal) * 100 : 0;
-                                                                        
-                                                                        $weightedWritten = $writtenPercentage * ($writtenWorkPercentage / 100);
-                                                                        
-                                                                        // Format to match the individual subject view
-                                                                        echo number_format($writtenPercentage, 1);
-                                                                    @endphp%
-                                                                        </div>
-                                                                <div class="small text-muted">{{ $writtenWorkPercentage }}% weight</div>
-                                                                <div class="small text-primary mt-1">
-                                                                    <strong>{{ number_format($weightedWritten, 1) }}</strong> pts
-                                                                        </div>
-                                                                    </div>
-                                                            <div class="text-center">
-                                                                <div class="small fw-bold text-success mb-1">Performance</div>
-                                                                <div class="badge bg-light text-dark border px-2 py-1">
-                                                                    @php
-                                                                        // Get the actual weighted score from performance tasks
-                                                                        $performanceTotal = 0;
-                                                                        $performanceMaxTotal = 0;
-                                                                        
-                                                                        foreach($performanceTasks as $grade) {
-                                                                            $performanceTotal += $grade->score;
-                                                                            $performanceMaxTotal += $grade->max_score;
-                                                                        }
-                                                                        
-                                                                        $performancePercentage = $performanceMaxTotal > 0 ? 
-                                                                            ($performanceTotal / $performanceMaxTotal) * 100 : 0;
-                                                                        
-                                                                        $weightedPerformance = $performancePercentage * ($performanceTaskPercentage / 100);
-                                                                        
-                                                                        // Format to match the individual subject view
-                                                                        echo number_format($performancePercentage, 1);
-                                                                    @endphp%
-                                                                            </div>
-                                                                <div class="small text-muted">{{ $performanceTaskPercentage }}% weight</div>
-                                                                <div class="small text-success mt-1">
-                                                                    <strong>{{ number_format($weightedPerformance, 1) }}</strong> pts
-                                                                        </div>
-                                                                        </div>
-                                                            <div class="text-center">
-                                                                <div class="small fw-bold text-warning mb-1">Quarterly</div>
-                                                                <div class="badge bg-light text-dark border px-2 py-1">
-                                                                    @php
-                                                                        // Use the actual quarterly score
-                                                                        $quarterlyPercentage = $quarterlyAssessment ? 
-                                                                            ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                                                        
-                                                                        $weightedQuarterly = $quarterlyPercentage * ($quarterlyAssessmentPercentage / 100);
-                                                                        
-                                                                        // Format to match the individual subject view
-                                                                        echo number_format($quarterlyPercentage, 1);
-                                                                    @endphp%
-                                                                            </div>
-                                                                <div class="small text-muted">{{ $quarterlyAssessmentPercentage }}% weight</div>
-                                                                <div class="small text-warning mt-1">
-                                                                    <strong>{{ number_format($weightedQuarterly, 1) }}</strong> pts
-                                                                        </div>
-                                                                        </div>
-                                                                    </div>
+                                            // Handle MAPEH with its components
+                                            $mapehComponentGrades = [];
+                                            $mapehFinalGrade = 0;
+                                            
+                                            if ($isMAPEH && isset($subject->components) && $subject->components->count() > 0) {
+                                                $totalWeightedGrade = 0;
+                                                $totalWeight = 0;
+                                                
+                                                foreach ($subject->components as $component) {
+                                                    // Get component grades for this student and term
+                                                    $componentGrades = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                        ->where('subject_id', $component->id)
+                                                        ->where('term', $selectedTerm)
+                                                        ->get();
+                                                    
+                                                    if ($componentGrades->isNotEmpty()) {
+                                                        $compWrittenWorks = $componentGrades->where('grade_type', 'written_work');
+                                                        $compPerformanceTasks = $componentGrades->where('grade_type', 'performance_task');
+                                                        $compQuarterlyAssessment = $componentGrades->where('grade_type', 'quarterly')->first();
                                                         
-                                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                                            <span class="text-muted">Initial Grade:</span>
-                                                            <span class="fw-bold">{{ $avgGrade }}%</span>
-                                        </div>
+                                                        // Calculate component grade
+                                                        $compWrittenWorksAvg = $compWrittenWorks->count() > 0 ? 
+                                                            $compWrittenWorks->average(function($grade) {
+                                                                return ($grade->score / $grade->max_score) * 100;
+                                                            }) : 0;
+                                                        
+                                                        $compPerformanceTasksAvg = $compPerformanceTasks->count() > 0 ? 
+                                                            $compPerformanceTasks->average(function($grade) {
+                                                                return ($grade->score / $grade->max_score) * 100;
+                                                            }) : 0;
+                                                        
+                                                        $compQuarterlyScore = $compQuarterlyAssessment ? 
+                                                            ($compQuarterlyAssessment->score / $compQuarterlyAssessment->max_score) * 100 : 0;
+                                                        
+                                                        // Get component's grade configuration
+                                                        $compConfig = \App\Models\GradeConfiguration::where('subject_id', $component->id)->first();
+                                                        
+                                                        $cWrittenWorkPercentage = $compConfig ? 
+                                                            $compConfig->written_work_percentage : $writtenWorkPercentage;
+                                                            
+                                                        $cPerformanceTaskPercentage = $compConfig ? 
+                                                            $compConfig->performance_task_percentage : $performanceTaskPercentage;
+                                                            
+                                                        $cQuarterlyPercentage = $compConfig ? 
+                                                            $compConfig->quarterly_assessment_percentage : $quarterlyAssessmentPercentage;
+                                                        
+                                                        // Calculate component final grade
+                                                        $componentFinalGrade = 0;
+                                                        $hasComponentGrades = false;
+                                                        
+                                                        if ($compWrittenWorksAvg > 0) {
+                                                            $componentFinalGrade += ($compWrittenWorksAvg * ($cWrittenWorkPercentage / 100));
+                                                            $hasComponentGrades = true;
+                                                        }
+                                                        
+                                                        if ($compPerformanceTasksAvg > 0) {
+                                                            $componentFinalGrade += ($compPerformanceTasksAvg * ($cPerformanceTaskPercentage / 100));
+                                                            $hasComponentGrades = true;
+                                                        }
+                                                        
+                                                        if ($compQuarterlyScore > 0) {
+                                                            $componentFinalGrade += ($compQuarterlyScore * ($cQuarterlyPercentage / 100));
+                                                            $hasComponentGrades = true;
+                                                        }
+                                                        
+                                                        if ($hasComponentGrades) {
+                                                            $componentFinalGrade = round($componentFinalGrade, 1);
+                                                            $mapehComponentGrades[$component->name] = $componentFinalGrade;
+                                                            
+                                                            // Add to weighted total
+                                                            $totalWeightedGrade += ($componentFinalGrade * $component->component_weight);
+                                                            $totalWeight += $component->component_weight;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                // Calculate MAPEH final grade as weighted average of components
+                                                if ($totalWeight > 0) {
+                                                    $mapehFinalGrade = round($totalWeightedGrade / $totalWeight, 1);
+                                                    
+                                                    // Update the calculated grade for MAPEH
+                                                    if (isset($calculatedSubjectFinalGrades[$subjectId])) {
+                                                        $calculatedSubjectFinalGrades[$subjectId] = $mapehFinalGrade;
+                                                    }
+                                                }
+                                            }
+                                        @endphp
                                         
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <span class="text-muted">Transmuted (Table {{ $selectedTransmutationTable }}):</span>
-                                                            <span class="fw-bold text-{{ $gradeClass }}">{{ $transmutedGrade }}</span>
-                                                    </div>
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100 {{ isset($calculatedSubjectFinalGrades[$subjectId]) ? 'border-0 shadow-sm' : 'bg-light border-0' }}">
+                                                <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                                    <h6 class="mb-0">{{ $studentData['subject_grades'][$subjectId]['subject_name'] }}</h6>
+                                                    
+                                                    @if(isset($calculatedSubjectFinalGrades[$subjectId]))
+                                                        @php
+                                                            $finalGrade = $calculatedSubjectFinalGrades[$subjectId];
+                                                            $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTransmutationTable);
+                                                            
+                                                            $gradeClass = 'success';
+                                                            if ($transmutedGrade < 75) {
+                                                                $gradeClass = 'danger';
+                                                            } elseif ($transmutedGrade < 80) {
+                                                                $gradeClass = 'warning';
+                                                            } elseif ($transmutedGrade < 85) {
+                                                                $gradeClass = 'info';
+                                                            } elseif ($transmutedGrade < 90) {
+                                                                $gradeClass = 'primary';
+                                                            }
+                                                        @endphp
+                                                        
+                                                        <span class="badge bg-{{ $gradeClass }} rounded-pill">
+                                                            {{ $transmutedGrade }}
+                                                        </span>
                                                     @else
-                                                        <div class="text-center text-muted py-3">
-                                                            <i class="fas fa-exclamation-circle mb-2" style="font-size: 2rem;"></i>
-                                                            <p class="mb-0">No grades have been entered for this subject.</p>
-                                                        </div>
+                                                        @if($isMAPEH && isset($subject->components) && $subject->components->count() > 0)
+                                                            @php
+                                                                // Check if any component has grades
+                                                                $hasComponentGrades = false;
+                                                                $mapehGrade = 0;
+                                                                $totalWeightedGrade = 0;
+                                                                $totalWeight = 0;
+                                                                
+                                                                foreach ($subject->components as $component) {
+                                                                    // Get component grades for this student and term
+                                                                    $componentGrades = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                                        ->where('subject_id', $component->id)
+                                                                        ->where('term', $selectedTerm)
+                                                                        ->get();
+                                                                    
+                                                                    if ($componentGrades->isNotEmpty()) {
+                                                                        $compWrittenWorks = $componentGrades->where('grade_type', 'written_work');
+                                                                        $compPerformanceTasks = $componentGrades->where('grade_type', 'performance_task');
+                                                                        $compQuarterlyAssessment = $componentGrades->where('grade_type', 'quarterly')->first();
+                                                                        
+                                                                        // Calculate component grade
+                                                                        $compWrittenWorksAvg = $compWrittenWorks->count() > 0 ? 
+                                                                            $compWrittenWorks->average(function($grade) {
+                                                                                return ($grade->score / $grade->max_score) * 100;
+                                                                            }) : 0;
+                                                                        
+                                                                        $compPerformanceTasksAvg = $compPerformanceTasks->count() > 0 ? 
+                                                                            $compPerformanceTasks->average(function($grade) {
+                                                                                return ($grade->score / $grade->max_score) * 100;
+                                                                            }) : 0;
+                                                                        
+                                                                        $compQuarterlyScore = $compQuarterlyAssessment ? 
+                                                                            ($compQuarterlyAssessment->score / $compQuarterlyAssessment->max_score) * 100 : 0;
+                                                                        
+                                                                        // Get component's grade configuration
+                                                                        $compConfig = \App\Models\GradeConfiguration::where('subject_id', $component->id)->first();
+                                                                        
+                                                                        $cWrittenWorkPercentage = $compConfig ? 
+                                                                            $compConfig->written_work_percentage : $writtenWorkPercentage;
+                                                                            
+                                                                        $cPerformanceTaskPercentage = $compConfig ? 
+                                                                            $compConfig->performance_task_percentage : $performanceTaskPercentage;
+                                                                            
+                                                                        $cQuarterlyPercentage = $compConfig ? 
+                                                                            $compConfig->quarterly_assessment_percentage : $quarterlyAssessmentPercentage;
+                                                                        
+                                                                        // Calculate component final grade
+                                                                        $componentFinalGrade = 0;
+                                                                        $componentHasGrades = false;
+                                                                        
+                                                                        if ($compWrittenWorksAvg > 0) {
+                                                                            $componentFinalGrade += ($compWrittenWorksAvg * ($cWrittenWorkPercentage / 100));
+                                                                            $componentHasGrades = true;
+                                                                        }
+                                                                        
+                                                                        if ($compPerformanceTasksAvg > 0) {
+                                                                            $componentFinalGrade += ($compPerformanceTasksAvg * ($cPerformanceTaskPercentage / 100));
+                                                                            $componentHasGrades = true;
+                                                                        }
+                                                                        
+                                                                        if ($compQuarterlyScore > 0) {
+                                                                            $componentFinalGrade += ($compQuarterlyScore * ($cQuarterlyPercentage / 100));
+                                                                            $componentHasGrades = true;
+                                                                        }
+                                                                        
+                                                                        if ($componentHasGrades) {
+                                                                            $componentFinalGrade = round($componentFinalGrade, 1);
+                                                                            // Add to weighted total
+                                                                            $totalWeightedGrade += ($componentFinalGrade * $component->component_weight);
+                                                                            $totalWeight += $component->component_weight;
+                                                                            $hasComponentGrades = true;
+                                                                        }
+                                                                    }
+                                                                }
+                                                                
+                                                                // Calculate MAPEH final grade as weighted average of components
+                                                                if ($totalWeight > 0) {
+                                                                    $mapehGrade = round($totalWeightedGrade / $totalWeight, 1);
+                                                                    $calculatedSubjectFinalGrades[$subjectId] = $mapehGrade;
+                                                                }
+                                                                
+                                                                if ($hasComponentGrades) {
+                                                                    $transmutedGrade = getTransmutedGrade($mapehGrade, $selectedTransmutationTable);
+                                                                    
+                                                                    $gradeClass = 'success';
+                                                                    if ($transmutedGrade < 75) {
+                                                                        $gradeClass = 'danger';
+                                                                    } elseif ($transmutedGrade < 80) {
+                                                                        $gradeClass = 'warning';
+                                                                    } elseif ($transmutedGrade < 85) {
+                                                                        $gradeClass = 'info';
+                                                                    } elseif ($transmutedGrade < 90) {
+                                                                        $gradeClass = 'primary';
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            
+                                                            @if($hasComponentGrades)
+                                                                <span class="badge bg-{{ $gradeClass }} rounded-pill">
+                                                                    {{ $transmutedGrade }}
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-secondary rounded-pill">
+                                                                    Not Graded
+                                                                </span>
+                                                            @endif
+                                                        @else
+                                                            <span class="badge bg-secondary rounded-pill">
+                                                                Not Graded
+                                                            </span>
+                                                        @endif
                                                     @endif
-                                                    </div>
-                                                    </div>
                                                 </div>
+                                                
+                                                <div class="card-body p-3">
+                                                    @if(isset($calculatedSubjectFinalGrades[$subjectId]))
+                                                        @if($isMAPEH && count($mapehComponentGrades) > 0)
+                                                            <!-- MAPEH specific display -->
+                                                            <div class="mb-3">
+                                                                <h6 class="text-muted small mb-2">MAPEH Components</h6>
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-sm table-borderless mb-0">
+                                                                        <tbody>
+                                                                            @foreach($mapehComponentGrades as $componentName => $componentGrade)
+                                                                                <tr>
+                                                                                    <td>{{ $componentName }}</td>
+                                                                                    <td class="text-end">{{ $componentGrade }}%</td>
+                                                                                    <td class="text-end">{{ getTransmutedGrade($componentGrade, $selectedTransmutationTable) }}</td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                            <tr class="border-top">
+                                                                                <td class="fw-bold">MAPEH Average</td>
+                                                                                <td class="text-end fw-bold">{{ $mapehFinalGrade }}%</td>
+                                                                                <td class="text-end fw-bold">{{ $transmutedGrade }}</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <!-- Regular subject grades display -->
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <div class="text-muted small">Written Works ({{ $writtenWorkPercentage }}%)</div>
+                                                                <div class="small fw-medium">{{ number_format($writtenPercentage, 1) }}%</div>
+                                                            </div>
+                                                            <div class="progress mb-3" style="height: 6px;">
+                                                                <div class="progress-bar bg-primary" style="width: {{ min(100, $writtenPercentage) }}%"></div>
+                                                            </div>
+                                                            
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <div class="text-muted small">Performance Tasks ({{ $performanceTaskPercentage }}%)</div>
+                                                                <div class="small fw-medium">{{ number_format($performancePercentage, 1) }}%</div>
+                                                            </div>
+                                                            <div class="progress mb-3" style="height: 6px;">
+                                                                <div class="progress-bar bg-success" style="width: {{ min(100, $performancePercentage) }}%"></div>
+                                                            </div>
+                                                            
+                                                            <div class="d-flex justify-content-between mb-2">
+                                                                <div class="text-muted small">Quarterly Assessment ({{ $quarterlyAssessmentPercentage }}%)</div>
+                                                                <div class="small fw-medium">{{ number_format($quarterlyPercentage, 1) }}%</div>
+                                                            </div>
+                                                            <div class="progress mb-3" style="height: 6px;">
+                                                                <div class="progress-bar bg-warning" style="width: {{ min(100, $quarterlyPercentage) }}%"></div>
+                                                            </div>
+                                                            
+                                                            <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                                                                <div class="fw-medium">Final Grade:</div>
+                                                                <div class="fw-bold">{{ $finalGrade }}% → {{ $transmutedGrade }}</div>
+                                                            </div>
+                                                        @endif
+                                                    @else
+                                                        @if($isMAPEH)
+                                                            @php
+                                                                // For MAPEH, try to fetch component grades even if there's no direct grade for MAPEH
+                                                                $mapehComponentGrades = [];
+                                                                $mapehFinalGrade = 0;
+                                                                $hasComponentData = false;
+                                                                $totalWeightedGrade = 0;
+                                                                $totalWeight = 0;
+                                                                
+                                                                // Initialize the grade for this MAPEH subject
+                                                                if (!isset($calculatedSubjectFinalGrades[$subjectId])) {
+                                                                    $calculatedSubjectFinalGrades[$subjectId] = 0;
+                                                                }
+                                                                
+                                                                if (isset($subject->components) && $subject->components->count() > 0) {
+                                                                    foreach ($subject->components as $component) {
+                                                                        // Get component grades for this student and term
+                                                                        $componentGrades = \App\Models\Grade::where('student_id', $studentData['student']->id)
+                                                                            ->where('subject_id', $component->id)
+                                                                            ->where('term', $selectedTerm)
+                                                                            ->get();
+                                                                        
+                                                                        if ($componentGrades->isNotEmpty()) {
+                                                                            $compWrittenWorks = $componentGrades->where('grade_type', 'written_work');
+                                                                            $compPerformanceTasks = $componentGrades->where('grade_type', 'performance_task');
+                                                                            $compQuarterlyAssessment = $componentGrades->where('grade_type', 'quarterly')->first();
+                                                                            
+                                                                            // Calculate component grade
+                                                                            $compWrittenWorksAvg = $compWrittenWorks->count() > 0 ? 
+                                                                                $compWrittenWorks->average(function($grade) {
+                                                                                    return ($grade->score / $grade->max_score) * 100;
+                                                                                }) : 0;
+                                                                            
+                                                                            $compPerformanceTasksAvg = $compPerformanceTasks->count() > 0 ? 
+                                                                                $compPerformanceTasks->average(function($grade) {
+                                                                                    return ($grade->score / $grade->max_score) * 100;
+                                                                                }) : 0;
+                                                                            
+                                                                            $compQuarterlyScore = $compQuarterlyAssessment ? 
+                                                                                ($compQuarterlyAssessment->score / $compQuarterlyAssessment->max_score) * 100 : 0;
+                                                                            
+                                                                            // Get component's grade configuration
+                                                                            $compConfig = \App\Models\GradeConfiguration::where('subject_id', $component->id)->first();
+                                                                            
+                                                                            $cWrittenWorkPercentage = $compConfig ? 
+                                                                                $compConfig->written_work_percentage : $writtenWorkPercentage;
+                                                                                
+                                                                            $cPerformanceTaskPercentage = $compConfig ? 
+                                                                                $compConfig->performance_task_percentage : $performanceTaskPercentage;
+                                                                                
+                                                                            $cQuarterlyPercentage = $compConfig ? 
+                                                                                $compConfig->quarterly_assessment_percentage : $quarterlyAssessmentPercentage;
+                                                                            
+                                                                            // Calculate component final grade
+                                                                            $componentFinalGrade = 0;
+                                                                            $hasComponentGrades = false;
+                                                                            
+                                                                            if ($compWrittenWorksAvg > 0) {
+                                                                                $componentFinalGrade += ($compWrittenWorksAvg * ($cWrittenWorkPercentage / 100));
+                                                                                $hasComponentGrades = true;
+                                                                            }
+                                                                            
+                                                                            if ($compPerformanceTasksAvg > 0) {
+                                                                                $componentFinalGrade += ($compPerformanceTasksAvg * ($cPerformanceTaskPercentage / 100));
+                                                                                $hasComponentGrades = true;
+                                                                            }
+                                                                            
+                                                                            if ($compQuarterlyScore > 0) {
+                                                                                $componentFinalGrade += ($compQuarterlyScore * ($cQuarterlyPercentage / 100));
+                                                                                $hasComponentGrades = true;
+                                                                            }
+                                                                            
+                                                                            if ($hasComponentGrades) {
+                                                                                $componentFinalGrade = round($componentFinalGrade, 1);
+                                                                                $mapehComponentGrades[$component->name] = $componentFinalGrade;
+                                                                                
+                                                                                // Add to weighted total
+                                                                                $totalWeightedGrade += ($componentFinalGrade * $component->component_weight);
+                                                                                $totalWeight += $component->component_weight;
+                                                                                $hasComponentData = true;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    
+                                                                    // Calculate MAPEH final grade as weighted average of components
+                                                                    if ($totalWeight > 0) {
+                                                                        $mapehFinalGrade = round($totalWeightedGrade / $totalWeight, 1);
+                                                                        // Update the main subject grade
+                                                                        $calculatedSubjectFinalGrades[$subjectId] = $mapehFinalGrade;
+                                                                    }
+                                                                }
+                                                                
+                                                                $finalGrade = $mapehFinalGrade;
+                                                                $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTransmutationTable);
+                                                                
+                                                                $gradeClass = 'success';
+                                                                if ($transmutedGrade < 75) {
+                                                                    $gradeClass = 'danger';
+                                                                } elseif ($transmutedGrade < 80) {
+                                                                    $gradeClass = 'warning';
+                                                                } elseif ($transmutedGrade < 85) {
+                                                                    $gradeClass = 'info';
+                                                                } elseif ($transmutedGrade < 90) {
+                                                                    $gradeClass = 'primary';
+                                                                }
+                                                            @endphp
+                                                            
+                                                            @if($hasComponentData)
+                                                                <!-- MAPEH specific display with component data -->
+                                                                <div class="mb-3">
+                                                                    <h6 class="text-muted small mb-2">MAPEH Components</h6>
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-sm table-borderless mb-0">
+                                                                            <tbody>
+                                                                                @foreach($mapehComponentGrades as $componentName => $componentGrade)
+                                                                                    <tr>
+                                                                                        <td>{{ $componentName }}</td>
+                                                                                        <td class="text-end">{{ $componentGrade }}%</td>
+                                                                                        <td class="text-end">{{ getTransmutedGrade($componentGrade, $selectedTransmutationTable) }}</td>
+                                                                                    </tr>
+                                                                                @endforeach
+                                                                                <tr class="border-top">
+                                                                                    <td class="fw-bold">MAPEH Average</td>
+                                                                                    <td class="text-end fw-bold">{{ $mapehFinalGrade }}%</td>
+                                                                                    <td class="text-end fw-bold">{{ $transmutedGrade }}</td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                    
+                                                                    <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                                                                        <div class="fw-medium">Final Grade:</div>
+                                                                        <div class="fw-bold">{{ $mapehFinalGrade }}% → {{ $transmutedGrade }}</div>
+                                                                    </div>
+                                                                </div>
+                                                            @else
+                                                                <div class="text-center text-muted py-4">
+                                                                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                                                                    <p class="mb-0">No component grades have been entered for this MAPEH subject.</p>
+                                                                </div>
+                                                            @endif
+                                                        @else
+                                                            <div class="text-center text-muted py-4">
+                                                                <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                                                                <p class="mb-0">No grades have been entered for this subject.</p>
+                                                            </div>
+                                                        @endif
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
                                 </div>
                             </div>
@@ -3106,155 +3324,155 @@
                                             $performanceTaskPercentage = $gradeConfig ? $gradeConfig->performance_task_percentage : 50;
                                             $quarterlyAssessmentPercentage = $gradeConfig ? $gradeConfig->quarterly_assessment_percentage : 20;
                                             
-                                                                $weightedWritten = number_format($writtenPercentage * ($writtenWorkPercentage / 100), 1);
-                                                                $weightedPerformance = number_format($performancePercentage * ($performanceTaskPercentage / 100), 1);
-                                                                $weightedQuarterly = number_format($quarterlyPercentage * ($quarterlyAssessmentPercentage / 100), 1);
-                                                            @endphp
-                                                            <tr>
-                                                                <td>{{ $studentData['subject_grades'][$subjectId]['subject_name'] }}</td>
-                                                                <td>{{ $grade }}%</td>
-                                                                <td>
-                                                                    <small>
-                                                                        ({{ number_format($writtenPercentage, 1) }}% × {{ $writtenWorkPercentage }}%) + 
-                                                                        ({{ number_format($performancePercentage, 1) }}% × {{ $performanceTaskPercentage }}%) + 
-                                                                        ({{ number_format($quarterlyPercentage, 1) }}% × {{ $quarterlyAssessmentPercentage }}%) = 
-                                                                        {{ $weightedWritten }} + {{ $weightedPerformance }} + {{ $weightedQuarterly }}
-                                                                    </small>
-                                                                </td>
-                                                                <td>{{ number_format(100/$validSubjectCount, 1) }}%</td>
-                                                            </tr>
-                                                        @endforeach
-                                                        <tr class="fw-bold border-top">
-                                                            <td colspan="3" class="text-end">Final Initial Grade:</td>
-                                                            <td>{{ $finalAverage }}%</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                        
-                                        <div>
-                                            <h6 class="text-primary mb-2"><i class="fas fa-exchange-alt me-2"></i>Transmutation (Table {{ $selectedTransmutationTable }}):</h6>
-                                            <div class="d-flex align-items-center justify-content-center">
-                                                <div class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2 fs-5">{{ $finalAverage }}%</div>
-                                                <i class="fas fa-long-arrow-alt-right mx-3 text-muted"></i>
-                                                <div class="badge bg-{{ $avgGradeClass }} px-3 py-2 fs-5">{{ $transmutedFinalAverage }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                            $weightedWritten = number_format($writtenPercentage * ($writtenWorkPercentage / 100), 1);
+                                            $weightedPerformance = number_format($performancePercentage * ($performanceTaskPercentage / 100), 1);
+                                            $weightedQuarterly = number_format($quarterlyPercentage * ($quarterlyAssessmentPercentage / 100), 1);
+                                        @endphp
+                                        <tr>
+                                            <td>{{ $studentData['subject_grades'][$subjectId]['subject_name'] }}</td>
+                                            <td>{{ $grade }}%</td>
+                                            <td>
+                                                <small>
+                                                    ({{ number_format($writtenPercentage, 1) }}% × {{ $writtenWorkPercentage }}%) + 
+                                                    ({{ number_format($performancePercentage, 1) }}% × {{ $performanceTaskPercentage }}%) + 
+                                                    ({{ number_format($quarterlyPercentage, 1) }}% × {{ $quarterlyAssessmentPercentage }}%) = 
+                                                    {{ $weightedWritten }} + {{ $weightedPerformance }} + {{ $weightedQuarterly }}
+                                                </small>
+                                            </td>
+                                            <td>{{ number_format(100/$validSubjectCount, 1) }}%</td>
+                                        </tr>
+                                    @endforeach
+                                    <tr class="fw-bold border-top">
+                                        <td colspan="3" class="text-end">Final Initial Grade:</td>
+                                        <td>{{ $finalAverage }}%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary print-detail" data-student-id="{{ $studentData['student']->id }}">
-                                <i class="fas fa-print me-1"></i> Print Report
-                            </button>
+                    </div>
+                    
+                    <div>
+                        <h6 class="text-primary mb-2"><i class="fas fa-exchange-alt me-2"></i>Transmutation (Table {{ $selectedTransmutationTable }}):</h6>
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="badge bg-secondary bg-opacity-10 text-dark px-3 py-2 fs-5">{{ $finalAverage }}%</div>
+                            <i class="fas fa-long-arrow-alt-right mx-3 text-muted"></i>
+                            <div class="badge bg-{{ $avgGradeClass }} px-3 py-2 fs-5">{{ $transmutedFinalAverage }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-        @endforeach
-    @endif
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+        {{-- <button type="button" class="btn btn-primary print-detail" data-student-id="{{ $studentData['student']->id }}">
+            <i class="fas fa-print me-1"></i> Print Report
+        </button> --}}
+    </div>
+</div>
+</div>
+</div>
+@endforeach
+@endif
 
-        <!-- Comprehensive View Modals -->
-        @if(isset($students) && count($students) > 0)
-            @foreach($students as $index => $studentData) 
-                @php
-                    $student = $studentData['student'];
-                @endphp
-                <!-- Student Details Modal for Comprehensive View -->
-                <div class="modal fade" id="studentDetailsModal{{ $student->id }}" tabindex="-1" aria-labelledby="comprehensiveDetailsModal{{ $student->id }}" aria-hidden="true">
-                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title" id="comprehensiveDetailsModal{{ $student->id }}">
-                                    <i class="fas fa-user-graduate me-2"></i> {{ $student->first_name }} {{ $student->last_name }}'s {{ $selectedSubject->name }} Performance Report
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Comprehensive View Modals -->
+@if(isset($students) && count($students) > 0)
+@foreach($students as $index => $studentData) 
+@php
+$student = $studentData['student'];
+@endphp
+<!-- Student Details Modal for Comprehensive View -->
+<div class="modal fade" id="studentDetailsModal{{ $student->id }}" tabindex="-1" aria-labelledby="comprehensiveDetailsModal{{ $student->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="comprehensiveDetailsModal{{ $student->id }}">
+                    <i class="fas fa-user-graduate me-2"></i> {{ $student->first_name }} {{ $student->last_name }}'s {{ $selectedSubject->name }} Performance Report
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Student Info Card -->
+                <div class="bg-light p-4 border-bottom">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
+                                {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
                             </div>
-                            <div class="modal-body p-0">
-                                <!-- Student Info Card -->
-                                <div class="bg-light p-4 border-bottom">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
-                                                {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
-                                            </div>
-                                        </div>
-                                        <div class="col">
-                                            <h4 class="mb-1 fw-bold">{{ $student->first_name }} {{ $student->last_name }}</h4>
-                                            <div class="d-flex flex-wrap gap-3 text-secondary">
-                                                <div><i class="fas fa-id-card me-1"></i> ID: <span class="fw-medium">{{ $student->student_id }}</span></div>
-                                                <div><i class="fas fa-users me-1"></i> Section: <span class="fw-medium">{{ $student->section->name ?? 'Unassigned' }}</span></div>
-                                                <div><i class="fas fa-graduation-cap me-1"></i> Grade Level: <span class="fw-medium">{{ $student->section->grade_level ?? 'Unassigned' }}</span></div>
-                                                <div><i class="fas fa-calendar-alt me-1"></i> Term: <span class="fw-medium">{{ $terms[$selectedTerm] }}</span></div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            @php
-                                                // Calculate subject grade
-                                                $isViewAll = isset($studentData['view_all']) && $studentData['view_all'];
-                                                
-                                                if (!$isViewAll) {
-                                                    $writtenWorks = $studentData['written_works'] ?? [];
-                                                    $performanceTasks = $studentData['performance_tasks'] ?? [];
-                                                    $quarterlyAssessment = $studentData['quarterly_assessment'] ?? null;
-                                                    
-                                                    // Calculate grades
-                                                    $writtenWorksAvg = calculateAverage($writtenWorks);
-                                                    $performanceTasksAvg = calculateAverage($performanceTasks);
-                                                    $quarterlyScore = $quarterlyAssessment ? ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
-                                                    
-                                                    // Calculate final grade
-                                                    $finalGrade = (($writtenWorksAvg * $writtenWorkPercentage) + 
-                                                                   ($performanceTasksAvg * $performanceTaskPercentage) + 
-                                                                   ($quarterlyScore * $quarterlyAssessmentPercentage)) / 100;
-                                                }
-                                                
-                                                // Get the transmuted grade using the selected table
-                                                $selectedTableId = request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1));
-                                                $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTableId);
-                                                
-                                                $subjectGradeInfo = [
-                                                    'written_works_avg' => $writtenWorksAvg,
-                                                    'performance_tasks_avg' => $performanceTasksAvg,
-                                                    'quarterly_score' => $quarterlyScore,
-                                                    'final_grade' => $finalGrade,
-                                                    'transmuted_grade' => $transmutedGrade
-                                                ];
-                                                
-                                                // Determine grade status color
-                                                $gradeClass = 'danger';
-                                            if ($transmutedGrade >= 90) {
-                                                $gradeClass = 'success';
-                                                    $descriptor = 'Outstanding';
-                                                } elseif ($transmutedGrade >= 85) {
-                                                    $gradeClass = 'primary';
-                                                    $descriptor = 'Very Satisfactory';
-                                            } elseif ($transmutedGrade >= 80) {
-                                                    $gradeClass = 'info';
-                                                    $descriptor = 'Satisfactory';
-                                                } elseif ($transmutedGrade >= 75) {
-                                                    $gradeClass = 'warning';
-                                                    $descriptor = 'Fairly Satisfactory';
-                                                } else {
-                                                    $gradeClass = 'danger';
-                                                    $descriptor = 'Did Not Meet Expectations';
-                                                }
-                                            @endphp
-                                            <div class="card bg-white shadow-sm border-0 h-100">
-                                                <div class="card-body p-3 text-center">
-                                                    <h6 class="text-uppercase text-secondary mb-2 small">{{ $selectedSubject->name }} Grade</h6>
-                                                    <div class="display-4 fw-bold text-{{ $gradeClass }}">{{ $transmutedGrade }}</div>
-                                                    <div class="mt-2 small text-{{ $gradeClass }}">
-                                                        {{ $descriptor }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                        </div>
+                        <div class="col">
+                            <h4 class="mb-1 fw-bold">{{ $student->first_name }} {{ $student->last_name }}</h4>
+                            <div class="d-flex flex-wrap gap-3 text-secondary">
+                                <div><i class="fas fa-id-card me-1"></i> ID: <span class="fw-medium">{{ $student->student_id }}</span></div>
+                                <div><i class="fas fa-users me-1"></i> Section: <span class="fw-medium">{{ $student->section->name ?? 'Unassigned' }}</span></div>
+                                <div><i class="fas fa-graduation-cap me-1"></i> Grade Level: <span class="fw-medium">{{ $student->section->grade_level ?? 'Unassigned' }}</span></div>
+                                <div><i class="fas fa-calendar-alt me-1"></i> Term: <span class="fw-medium">{{ $terms[$selectedTerm] }}</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            @php
+                                // Calculate subject grade
+                                $isViewAll = isset($studentData['view_all']) && $studentData['view_all'];
+                                
+                                if (!$isViewAll) {
+                                    $writtenWorks = $studentData['written_works'] ?? [];
+                                    $performanceTasks = $studentData['performance_tasks'] ?? [];
+                                    $quarterlyAssessment = $studentData['quarterly_assessment'] ?? null;
+                                    
+                                    // Calculate grades
+                                    $writtenWorksAvg = calculateAverage($writtenWorks);
+                                    $performanceTasksAvg = calculateAverage($performanceTasks);
+                                    $quarterlyScore = $quarterlyAssessment ? ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
+                                    
+                                    // Calculate final grade
+                                    $finalGrade = (($writtenWorksAvg * $writtenWorkPercentage) + 
+                                                   ($performanceTasksAvg * $performanceTaskPercentage) + 
+                                                   ($quarterlyScore * $quarterlyAssessmentPercentage)) / 100;
+                                }
+                                
+                                // Get the transmuted grade using the selected table
+                                $selectedTableId = request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1));
+                                $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTableId);
+                                
+                                $subjectGradeInfo = [
+                                    'written_works_avg' => $writtenWorksAvg,
+                                    'performance_tasks_avg' => $performanceTasksAvg,
+                                    'quarterly_score' => $quarterlyScore,
+                                    'final_grade' => $finalGrade,
+                                    'transmuted_grade' => $transmutedGrade
+                                ];
+                                
+                                // Determine grade status color
+                                $gradeClass = 'danger';
+                            if ($transmutedGrade >= 90) {
+                                $gradeClass = 'success';
+                                    $descriptor = 'Outstanding';
+                                } elseif ($transmutedGrade >= 85) {
+                                    $gradeClass = 'primary';
+                                    $descriptor = 'Very Satisfactory';
+                            } elseif ($transmutedGrade >= 80) {
+                                    $gradeClass = 'info';
+                                    $descriptor = 'Satisfactory';
+                                } elseif ($transmutedGrade >= 75) {
+                                    $gradeClass = 'warning';
+                                    $descriptor = 'Fairly Satisfactory';
+                                } else {
+                                    $gradeClass = 'danger';
+                                    $descriptor = 'Did Not Meet Expectations';
+                                }
+                            @endphp
+                            <div class="card bg-white shadow-sm border-0 h-100">
+                                <div class="card-body p-3 text-center">
+                                    <h6 class="text-uppercase text-secondary mb-2 small">{{ $selectedSubject->name }} Grade</h6>
+                                    <div class="display-4 fw-bold text-{{ $gradeClass }}">{{ $transmutedGrade }}</div>
+                                    <div class="mt-2 small text-{{ $gradeClass }}">
+                                        {{ $descriptor }}
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                                 
                                 <div class="p-4">
                                     <!-- Subject Performance Details -->
@@ -3759,10 +3977,10 @@
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-primary" onclick="window.print()">
+                                {{-- <button type="button" class="btn btn-primary" onclick="window.print()">
                                     <i class="fas fa-print me-1"></i> Print Report
-                                </button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </button> --}}
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -3985,4 +4203,4 @@
                                                     @endforeach
                                             @endif
         
-@endsection 
+@Endsection 
