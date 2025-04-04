@@ -95,6 +95,217 @@
             [id*="help"] {
                 display: none !important;
             }
+            
+            /* Optimize tables for print */
+            table {
+                font-size: 8pt !important;
+            }
+            th, td {
+                padding: 2px !important;
+                font-size: 8pt !important;
+                white-space: nowrap !important;
+            }
+            .column-header {
+                padding: 1px !important;
+                font-size: 8pt !important;
+            }
+            
+            /* Reduce column widths */
+            th[rowspan="2"][style*="width: 20%"] {
+                width: 15% !important;
+            }
+            th[colspan="10"][style*="width: 25%"] {
+                width: 30% !important;
+            }
+            th[colspan="11"][style*="width: 35%"] {
+                width: 35% !important;
+            }
+            th[colspan="3"][style*="width: 10%"] {
+                width: 10% !important;
+            }
+            th[rowspan="2"][style*="width: 5%"] {
+                width: 5% !important;
+            }
+            
+            /* Optimize header, reduce its size */
+            .header {
+                margin-bottom: 5px !important;
+            }
+            .title-center h1 {
+                font-size: 14pt !important;
+                margin-bottom: 2px !important;
+            }
+            .title-center p {
+                font-size: 9pt !important;
+            }
+            .logo-left img, .logo-right img {
+                max-height: 60px !important;
+            }
+            
+            /* Remove extra margins and padding */
+            .info-table {
+                margin-bottom: 5px !important;
+            }
+            .signature-section {
+                margin-top: 10px !important;
+            }
+            .gender-label {
+                padding: 3px 5px !important;
+                font-size: 9pt !important;
+            }
+            .text-left {
+                padding-left: 5px !important;
+                font-size: 8pt !important;
+            }
+            
+            /* Compress table-responsive margin */
+            .table-responsive {
+                margin-bottom: 5px !important;
+            }
+        }
+
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 11px;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+            }
+            .header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 60px !important; /* Give more space at the top */
+            }
+            /* Hide the container div for the close button in mobile view */
+            .close-button-container {
+                margin: 0;
+                height: 0;
+                overflow: visible;
+            }
+            .header-row {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+            .logo-left, .logo-right {
+                display: inline-block;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .title-center {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+            .title-center h1 {
+                font-size: 18px;
+            }
+            .title-center p {
+                font-size: 12px;
+            }
+            /* Make the table header row larger on mobile */
+            .table-header {
+                padding: 8px 4px !important;
+                font-size: 10px !important;
+                white-space: normal !important;
+                height: auto !important;
+            }
+            table[style*="table-layout: fixed"] td {
+                white-space: normal !important;
+                height: auto !important;
+                padding: 8px 4px !important;
+            }
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+                display: block;
+            }
+            .info-table {
+                table-layout: auto;
+            }
+            .info-label {
+                width: 30%;
+                font-size: 10px;
+            }
+            .info-value {
+                width: 70%;
+                font-size:.9em;
+            }
+            th, td {
+                padding: 3px;
+                font-size: 9pt;
+                white-space: nowrap;
+            }
+            .signature-section {
+                flex-direction: column;
+            }
+            .signature-item {
+                margin: 10px 0;
+            }
+            .signature-line {
+                width: 150px;
+            }
+            .scroll-indicator {
+                display: block;
+                text-align: center;
+                color: #666;
+                margin: 5px 0;
+                font-style: italic;
+            }
+            /* Make sure buttons are big enough to tap on mobile */
+            button, .btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 10px 15px;
+            }
+            /* Modal styling for mobile */
+            .modal-content {
+                width: 95% !important;
+                max-width: 95% !important;
+                margin: 10px auto !important;
+                max-height: 90vh !important;
+                overflow-y: auto !important;
+            }
+            /* Action buttons styling */
+            .action-buttons {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 999;
+                display: flex;
+                flex-direction: column;
+            }
+            .action-buttons button {
+                margin-bottom: 10px;
+                border-radius: 50%;
+                width: 56px;
+                height: 56px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            }
+            /* Make the close button sticky in mobile view */
+            .btn-print {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 999;
+                box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            }
+            /* Disable fixed positioning for print view */
+            @media print {
+                .action-buttons, .btn-print {
+                    position: static;
+                    display: none !important;
+                }
+            }
         }
         
         body {
@@ -123,6 +334,25 @@
         }
         th {
             background-color: #f2f2f2;
+            font-weight: bold;
+            border: 1px solid #000;
+        }
+        
+        /* Enhanced table header styling */
+        .table-header {
+            font-weight: bold;
+            text-align: center;
+            background-color: #e0e0e0;
+            border: 1px solid #000;
+        }
+        
+        /* Additional styling for column headers in the main grades table */
+        .column-header {
+            background-color: #f8f8f8;
+            font-weight: bold;
+            text-align: center;
+            padding: 3px;
+            border: 1px solid #000;
         }
         .header {
             display: table;
@@ -173,8 +403,9 @@
             width: 15%;
             text-align: right;
             font-weight: bold;
-            background-color: #f2f2f2;
+            background-color: #e0e0e0;
             padding-right: 10px;
+            border: 1px solid #000;
         }
         .info-value {
             width: 35%;
@@ -238,51 +469,237 @@
             display: flex;
             justify-content: space-between;
             margin-top: 30px;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
         }
         .signature-item {
             text-align: center;
-            margin: 0 20px;
+            margin: 0 10px;
+            flex: 1;
         }
         .signature-line {
             border-top: 1px solid black;
-            width: 200px;
-            margin: 50px auto 0;
+            width: 150px;
+            margin: 30px auto 0;
         }
-        .male-section, .female-section {
-            margin-top: 5px;
+        /* Add table responsive wrapper class */
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
         }
+        /* Float action buttons for mobile - hidden by default */
+        .float-action-button {
+            display: none !important;
+        }
+        /* Helper classes for responsive design */
+        .d-none {
+            display: none;
+        }
+        .d-block {
+            display: block;
+        }
+        
+        /* Gender label styling for male and female rows */
         .gender-label {
             font-weight: bold;
             text-align: left;
-            padding: 5px;
-            background-color: #e6e6e6;
+            padding: 5px 8px;
+            background-color: #d9d9d9;
+            color: #000;
+            font-size: 11pt;
+            border: 1px solid #000;
         }
-        .centered {
-            text-align: center;
-        }
-        .text-left {
-            text-align: left;
-        }
-        .column-header {
-            font-size: 9pt;
-            vertical-align: middle;
-        }
+        
+        /* Close button styling */
         .btn-print {
-            background-color: #5f6163;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-right: 5px;
+            padding: 12px 20px !important;
+            font-size: 16px !important;
+            min-height: 44px;
+            min-width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 15px auto;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
         }
-        .btn-print:hover {
-            background-color: #5f6163;
+        
+        @media screen and (min-width: 769px) {
+            .d-md-none {
+                display: none;
+            }
+            .d-md-inline {
+                display: inline;
+            }
+            .action-buttons {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 1000;
+                display: flex;
+                gap: 10px;
+            }
+            /* Hide floating button on desktop */
+            .float-action-button {
+                display: none !important;
+            }
         }
-        .no-print {
-            margin-bottom: 20px;
-            text-align: left;
+        
+        @media screen and (max-width: 768px) {
+            .d-md-none {
+                display: block;
+            }
+            .d-md-inline {
+                display: none;
+            }
+            .action-buttons {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 1000;
+                display: flex;
+                gap: 5px;
+            }
+            .action-buttons button {
+                padding: 8px !important;
+                min-width: 44px;
+                min-height: 44px;
+            }
+            /* Improve header spacing in mobile view */
+            .header {
+                margin-top: 40px;
+                padding: 0 5px;
+            }
+            .header-row {
+                gap: 15px;
+            }
+            .title-center h1 {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            .title-center p {
+                font-size: 11px;
+            }
+            .logo-left img, .logo-right img {
+                max-width: 60px;
+            }
+            /* Ensure float button is visible */
+            .float-action-button {
+                display: none !important;
+            }
+            body {
+                padding: 10px;
+                font-size: 11px;
+            }
+            .container {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+            }
+            .header {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .header-row {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+            .logo-left, .logo-right {
+                display: inline-block;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .title-center {
+                display: block;
+                width: 100%;
+                margin: 10px 0;
+            }
+            .title-center h1 {
+                font-size: 18px;
+            }
+            .title-center p {
+                font-size: 12px;
+            }
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                max-width: 100%;
+                display: block;
+            }
+            .info-table {
+                table-layout: auto;
+            }
+            .info-label {
+                width: 30%;
+                font-size: 10px;
+            }
+            .info-value {
+                width: 70%;
+                font-size:.9em;
+            }
+            th, td {
+                padding: 3px;
+                font-size: 9pt;
+                white-space: nowrap;
+            }
+            .signature-section {
+                flex-direction: column;
+            }
+            .signature-item {
+                margin: 10px 0;
+            }
+            .signature-line {
+                width: 150px;
+            }
+            .scroll-indicator {
+                display: block;
+                text-align: center;
+                color: #666;
+                margin: 5px 0;
+                font-style: italic;
+            }
+            /* Make sure buttons are big enough to tap on mobile */
+            button, .btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 10px 15px;
+            }
+            /* Modal styling for mobile */
+            .modal-content {
+                width: 95% !important;
+                max-width: 95% !important;
+                margin: 10px auto !important;
+                max-height: 90vh !important;
+                overflow-y: auto !important;
+            }
+            /* Action buttons styling */
+            .action-buttons {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 999;
+                display: flex;
+                flex-direction: column;
+            }
+            .action-buttons button {
+                margin-bottom: 10px;
+                border-radius: 50%;
+                width: 56px;
+                height: 56px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            }
+            /* Disable fixed positioning for print view */
+            @media print {
+                .action-buttons {
+                    position: static;
+                    display: none !important;
+                }
+            }
         }
         
         /* Add editable score styles */
@@ -794,17 +1211,78 @@
                 });
             });
         }
+        
+        /* Student name styling */
+        .text-left {
+            text-align: left !important;
+            padding-left: 10px !important;
+        }
+
+        @media print {
+            /* Ensure table headers maintain background color when printing */
+            th {
+                background-color: #f2f2f2 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .table-header {
+                background-color: #e0e0e0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            .info-label {
+                background-color: #e0e0e0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                font-weight: bold !important;
+            }
+            
+            .column-header {
+                background-color: #f8f8f8 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Gender label coloring */
+            .gender-label {
+                background-color: #d9d9d9 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Make signature section more compact in print */
+            .signature-section {
+                max-width: 80%;
+                margin-top: 15px;
+            }
+            .signature-item {
+                margin: 0 5px;
+            }
+            .signature-line {
+                width: 120px;
+                margin: 15px auto 0;
+            }
+            .signature-item p {
+                margin: 3px 0;
+                font-size: 9pt !important;
+            }
+            .signature-item p[style*="margin-bottom"] {
+                margin-bottom: 15px !important;
+            }
+        }
     </style>
 </head>
 <body>
 
     <!-- Action buttons with refresh button added -->
-    <div class="action-buttons" style="position: fixed; top: 10px; right: 10px; z-index: 1000; display: flex; gap: 10px;">
+    <div class="action-buttons no-print">
         <button onclick="printPage(); return false;" class="print-button" style="padding: 8px 15px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            <span style="margin-right: 5px;">🖨️</span> Print Now
+            <span style="margin-right: 5px;">🖨️</span> <span class="d-none d-md-inline">Print Now</span>
         </button>
         <button id="helpButton" class="help-button" style="padding: 8px 15px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            <span style="margin-right: 5px;">ℹ️</span> Help
+            <span style="margin-right: 5px;">ℹ️</span> <span class="d-none d-md-inline">Help</span>
         </button>
     </div>
 
@@ -855,8 +1333,8 @@
     @endphp
     
     <!-- Just keep the Close button -->
-    <div>
-        <button class="btn-print" onclick="window.close();">Close</button>
+    <div style="margin: 10px 0; text-align: left;" class="close-button-container">
+        <button class="btn-print" onclick="window.close();" style="padding: 12px 20px; background-color: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease; min-height: 44px; min-width: 120px; display: inline-block; text-align: center;">Close</button>
     </div>
     
     <div class="container">
@@ -892,7 +1370,7 @@
                 </div>
                 <div class="title-center">
                     <h1>Class Record</h1>
-                    <p>(Pursuant to DepEd Order 8 series of 2015)</p>
+                    <p>(Pursuant to DepED Order 8 series of 2015)</p>
                 </div>
                 <div class="logo-right">
                     <img src="{{ asset('images/logo.jpg') }}" alt="DepEd Logo">
@@ -900,566 +1378,573 @@
             </div>
         </div>
         
-        <table class="info-table">
-            <tr>
-                <td class="info-label">REGION</td>
-                <td class="info-value">{{ $region }}</td>
-                <td class="info-label">QUARTER</td>
-                <td class="info-value">{{ $quarter }}</td>
-            </tr>
-            <tr>
-                <td class="info-label">DIVISION</td>
-                <td class="info-value">{{ $division }}</td>
-                <td class="info-label">SCHOOL YEAR</td>
-                <td class="info-value">{{ $schoolYear }}</td>
-            </tr>
-            <tr>
-                <td class="info-label">SCHOOL NAME</td>
-                <td class="info-value">{{ $schoolName }}</td>
-                <td class="info-label">SUBJECT</td>
-                <td class="info-value">
-                    @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
-                        MAPEH - {{ $mapehInfo['component_name'] }}
+        <div class="table-responsive">
+            {{-- <p class="scroll-indicator d-md-none">Swipe horizontally to view all information</p> --}}
+            <table class="info-table">
+                <tr>
+                    <td class="info-label">REGION</td>
+                    <td class="info-value">{{ $region }}</td>
+                    <td class="info-label">QUARTER</td>
+                    <td class="info-value">{{ $quarter }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">DIVISION</td>
+                    <td class="info-value">{{ $division }}</td>
+                    <td class="info-label">SCHOOL YEAR</td>
+                    <td class="info-value">{{ $schoolYear }}</td>
+                </tr>
+                <tr>
+                    <td class="info-label">SCHOOL NAME</td>
+                    <td class="info-value">{{ $schoolName }}</td>
+                    <td class="info-label">SUBJECT</td>
+                    <td class="info-value">
+                        @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
+                            MAPEH - {{ $mapehInfo['component_name'] }}
+                        @else
+                            {{ $subject->name ?? 'Subject Name' }}
+                        @endif
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="table-responsive">
+            <table style="table-layout: fixed;">
+                <tr>
+                    <td style="width: 20%;" class="table-header">
+                        {{ $quarterText ?? $quarter }} QUARTER
+                    </td>
+                    <td style="width: 30%;" class="table-header">
+                        GRADE & SECTION: {{ isset($section->grade_level) ? $section->grade_level : 'Grade' }} {{ $section->name ?? 'Section' }}
+                    </td>
+                    <td style="width: 25%;" class="table-header">
+                        TEACHER: {{ auth()->user()->name ?? 'Teacher Name' }}
+                    </td>
+                    <td style="width: 25%;" class="table-header">
+                        SUBJECT: 
+                        @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
+                            MAPEH - {{ $mapehInfo['component_name'] }}
+                        @else
+                            {{ $subject->name ?? 'Subject Name' }}
+                        @endif
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="table-responsive">
+            {{-- <p class="scroll-indicator d-md-none">Swipe horizontally to view all grades</p> --}}
+            <table>
+                <tr>
+                    <th rowspan="2" style="width: 20%;">LEARNERS' NAMES</th>
+                    <th colspan="10" style="width: 25%;">WRITTEN WORKS ({{ $gradeConfig->written_work_percentage }}%)</th>
+                    <th colspan="11" style="width: 35%;">PERFORMANCE TASKS ({{ $gradeConfig->performance_task_percentage }}%)</th>
+                    <th colspan="3" style="width: 10%;">QUARTERLY ASSESSMENT ({{ $gradeConfig->quarterly_assessment_percentage }}%)</th>
+                    <th rowspan="2" style="width: 5%;">Initial Grade</th>
+                    <th rowspan="2" style="width: 5%;">Quarterly Grade</th>
+                </tr>
+                <tr>
+                    <!-- Written Works Columns -->
+                    @for($i = 1; $i <= 7; $i++)
+                    <th class="column-header">{{ $i }}</th>
+                    @endfor
+                    
+                    <th class="column-header">Total</th>
+                    <th class="column-header">PS</th>
+                    <th class="column-header">WS</th>
+                    
+                    <!-- Performance Tasks Columns -->
+                    @for($i = 1; $i <= 8; $i++)
+                    <th class="column-header">{{ $i }}</th>
+                    @endfor
+                    
+                    <th class="column-header">Total</th>
+                    <th class="column-header">PS</th>
+                    <th class="column-header">WS</th>
+                    
+                    <!-- Quarterly Assessment Columns -->
+                    <th class="column-header">1</th>
+                    <th class="column-header">PS</th>
+                    <th class="column-header">WS</th>
+                </tr>
+                <tr>
+                    <td class="centered">HIGHEST POSSIBLE SCORE</td>
+                    
+                    <!-- Written Works Max Scores -->
+                    @php
+                        $writtenWorksTotal = 0;
+                        $performanceTasksTotal = 0;
+                        $quarterlyAssessmentTotal = 0;
+                    @endphp
+                    
+                    <!-- Display Written Works -->
+                    @foreach($writtenWorks->take(7) as $work)
+                        <td>{{ number_format($work->max_score, 0) }}</td>
+                        @php $writtenWorksTotal += $work->max_score; @endphp
+                    @endforeach
+                    
+                    @for($i = $writtenWorks->count(); $i < 7; $i++)
+                        <td></td>
+                    @endfor
+                    
+                    <td>{{ number_format($writtenWorksTotal, 0) }}</td>
+                    <td>100.00</td>
+                    <td>{{ number_format($gradeConfig->written_work_percentage, 1) }}%</td>
+                    
+                    <!-- Performance Tasks Max Scores -->
+                    @foreach($performanceTasks->take(8) as $task)
+                        <td>{{ number_format($task->max_score, 0) }}</td>
+                        @php $performanceTasksTotal += $task->max_score; @endphp
+                    @endforeach
+                    
+                    @for($i = $performanceTasks->count(); $i < 8; $i++)
+                        <td></td>
+                    @endfor
+                    
+                    <td>{{ number_format($performanceTasksTotal, 0) }}</td>
+                    <td>100.00</td>
+                    <td>{{ number_format($gradeConfig->performance_task_percentage, 1) }}%</td>
+                    
+                    <!-- Quarterly Assessment -->
+                    @if($quarterlyAssessments->isNotEmpty())
+                        <td>{{ number_format($quarterlyAssessments->first()->max_score, 0) }}</td>
+                        @php $quarterlyAssessmentTotal = $quarterlyAssessments->first()->max_score; @endphp
                     @else
-                        {{ $subject->name ?? 'Subject Name' }}
+                        <td></td>
+                        @php $quarterlyAssessmentTotal = 0; @endphp
                     @endif
-                </td>
-            </tr>
-        </table>
-        
-        
-        <table style="table-layout: fixed;">
-            <tr>
-                <td style="width: 20%;" class="table-header">
-                    {{ $quarterText ?? $quarter }} QUARTER
-                </td>
-                <td style="width: 30%;" class="table-header">
-                    GRADE & SECTION: {{ isset($section->grade_level) ? $section->grade_level : 'Grade' }} {{ $section->name ?? 'Section' }}
-                </td>
-                <td style="width: 25%;" class="table-header">
-                    TEACHER: {{ auth()->user()->name ?? 'Teacher Name' }}
-                </td>
-                <td style="width: 25%;" class="table-header">
-                    SUBJECT: 
-                    @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
-                        MAPEH - {{ $mapehInfo['component_name'] }}
-                    @else
-                        {{ $subject->name ?? 'Subject Name' }}
-                    @endif
-                </td>
-            </tr>
-        </table>
-        
-        <table>
-            <tr>
-                <th rowspan="2" style="width: 20%;">LEARNERS' NAMES</th>
-                <th colspan="10" style="width: 25%;">WRITTEN WORKS ({{ $gradeConfig->written_work_percentage }}%)</th>
-                <th colspan="11" style="width: 35%;">PERFORMANCE TASKS ({{ $gradeConfig->performance_task_percentage }}%)</th>
-                <th colspan="3" style="width: 10%;">QUARTERLY ASSESSMENT ({{ $gradeConfig->quarterly_assessment_percentage }}%)</th>
-                <th rowspan="2" style="width: 5%;">Initial Grade</th>
-                <th rowspan="2" style="width: 5%;">Quarterly Grade</th>
-            </tr>
-            <tr>
-                <!-- Written Works Columns -->
-                @for($i = 1; $i <= 7; $i++)
-                <th class="column-header">{{ $i }}</th>
-                @endfor
+                    <td>100.00</td>
+                    <td>{{ number_format($gradeConfig->quarterly_assessment_percentage, 1) }}%</td>
+                    
+                    <td>100.0%</td>
+                    <td>{{ transmutationTable1(100) }}</td>
+                </tr>
                 
-                <th class="column-header">Total</th>
-                <th class="column-header">PS</th>
-                <th class="column-header">WS</th>
-                
-                <!-- Performance Tasks Columns -->
-                @for($i = 1; $i <= 8; $i++)
-                <th class="column-header">{{ $i }}</th>
-                @endfor
-                
-                <th class="column-header">Total</th>
-                <th class="column-header">PS</th>
-                <th class="column-header">WS</th>
-                
-                <!-- Quarterly Assessment Columns -->
-                <th class="column-header">1</th>
-                <th class="column-header">PS</th>
-                <th class="column-header">WS</th>
-            </tr>
-            <tr>
-                <td class="centered">HIGHEST POSSIBLE SCORE</td>
-                
-                <!-- Written Works Max Scores -->
-                @php
-                    $writtenWorksTotal = 0;
-                    $performanceTasksTotal = 0;
-                    $quarterlyAssessmentTotal = 0;
+                <!-- Male Students -->
+                <tr>
+                    <td class="gender-label" colspan="27" style="text-align: left; background-color: #d9d9d9; color: #000; font-size: 11pt; padding: 5px 8px; font-weight: normal; border: 1px solid #000;">MALE</td>
+                </tr>
+                @php 
+                    $maleStudents = $students->where('gender', 'Male')->sortBy('last_name'); 
+                    error_log('Male students found: ' . $maleStudents->count());
+                    foreach ($maleStudents as $m) {
+                        error_log('Male student: ' . $m->first_name . ' ' . $m->last_name . ' (ID: ' . $m->id . ')');
+                    }
                 @endphp
-                
-                <!-- Display Written Works -->
-                @foreach($writtenWorks->take(7) as $work)
-                    <td>{{ number_format($work->max_score, 0) }}</td>
-                    @php $writtenWorksTotal += $work->max_score; @endphp
-                @endforeach
-                
-                @for($i = $writtenWorks->count(); $i < 7; $i++)
-                    <td></td>
-                @endfor
-                
-                <td>{{ number_format($writtenWorksTotal, 0) }}</td>
-                <td>100.00</td>
-                <td>{{ number_format($gradeConfig->written_work_percentage, 1) }}%</td>
-                
-                <!-- Performance Tasks Max Scores -->
-                @foreach($performanceTasks->take(8) as $task)
-                    <td>{{ number_format($task->max_score, 0) }}</td>
-                    @php $performanceTasksTotal += $task->max_score; @endphp
-                @endforeach
-                
-                @for($i = $performanceTasks->count(); $i < 8; $i++)
-                    <td></td>
-                @endfor
-                
-                <td>{{ number_format($performanceTasksTotal, 0) }}</td>
-                <td>100.00</td>
-                <td>{{ number_format($gradeConfig->performance_task_percentage, 1) }}%</td>
-                
-                <!-- Quarterly Assessment -->
-                @if($quarterlyAssessments->isNotEmpty())
-                    <td>{{ number_format($quarterlyAssessments->first()->max_score, 0) }}</td>
-                    @php $quarterlyAssessmentTotal = $quarterlyAssessments->first()->max_score; @endphp
-                @else
-                    <td></td>
-                    @php $quarterlyAssessmentTotal = 0; @endphp
-                @endif
-                <td>100.00</td>
-                <td>{{ number_format($gradeConfig->quarterly_assessment_percentage, 1) }}%</td>
-                
-                <td>100.0%</td>
-                <td>{{ transmutationTable1(100) }}</td>
-            </tr>
-            
-            <!-- Male Students -->
-            <tr>
-                <td class="gender-label" colspan="27">MALE</td>
-            </tr>
-            @php 
-                $maleStudents = $students->where('gender', 'Male')->sortBy('last_name'); 
-                error_log('Male students found: ' . $maleStudents->count());
-                foreach ($maleStudents as $m) {
-                    error_log('Male student: ' . $m->first_name . ' ' . $m->last_name . ' (ID: ' . $m->id . ')');
-                }
-            @endphp
-            @forelse($maleStudents as $index => $student)
-                <tr>
-                    <td class="text-left">{{ $student->last_name }}, {{ $student->first_name }}</td>
-                    
-                    <!-- Written Works -->
-                    @php
-                        $studentGradeData = $studentGrades->get($student->id, collect([]));
-                        $studentWrittenWorks = $studentGradeData->where('grade_type', 'written_work');
-                        $studentPerfTasks = $studentGradeData->where('grade_type', 'performance_task');
-                        $studentQuarterly = $studentGradeData->where('grade_type', 'quarterly')->first();
-                    @endphp
-                    
-                    <!-- Display Written Works Scores -->
-                    @php $studentWWTotal = 0; @endphp
-                    @foreach($writtenWorks->take(7) as $index => $work)
+                @forelse($maleStudents as $maleIndex => $student)
+                    <tr>
+                        <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $maleIndex + 1 }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
+                        
+                        <!-- Written Works -->
                         @php
-                            $grade = $studentWrittenWorks->first(function($item) use ($work) {
-                                return $item->assessment_name == $work->assessment_name;
-                            });
-                            
-                            if ($grade) {
-                                $studentWWTotal += $grade->score;
-                            }
+                            $studentGradeData = $studentGrades->get($student->id, collect([]));
+                            $studentWrittenWorks = $studentGradeData->where('grade_type', 'written_work');
+                            $studentPerfTasks = $studentGradeData->where('grade_type', 'performance_task');
+                            $studentQuarterly = $studentGradeData->where('grade_type', 'quarterly')->first();
                         @endphp
-                        <td class="ww-score editable-cell" 
-                            data-student-id="{{ $student->id }}" 
-                            data-subject-id="{{ $subject->id }}" 
-                            data-quarter="{{ $quarter }}" 
-                            data-grade-type="written_work" 
-                            data-assessment-name="{{ $work->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}"
-                            data-max-score="{{ $work->max_score }}">
-                            {{ $grade ? number_format($grade->score, 0) : '' }}
-                        </td>
-                    @endforeach
-                    
-                    @for($i = $writtenWorks->count(); $i < 7; $i++)
-                        <td></td>
-                    @endfor
-                    
-                    <!-- Written Works Total, PS, WS -->
-                    @php
-                        $wwPS = '';
-                        $wwWS = '';
                         
-                        // Debug calculations
-                        $debugWW = [];
-                        
-                        // Calculate average percentage the same way as Grade Summary page
-                        $assessmentCount = 0;
-                        $totalPercentage = 0;
-                        
-                        foreach($writtenWorks->take(7) as $work) {
-                            $grade = $studentWrittenWorks->first(function($item) use ($work) {
-                                return $item->assessment_name == $work->assessment_name;
-                            });
-                            
-                            if ($grade) {
-                                $assessmentCount++;
-                                $assessmentPercentage = ($grade->score / $work->max_score) * 100;
-                                $totalPercentage += $assessmentPercentage;
+                        <!-- Display Written Works Scores -->
+                        @php $studentWWTotal = 0; @endphp
+                        @foreach($writtenWorks->take(7) as $index => $work)
+                            @php
+                                $grade = $studentWrittenWorks->first(function($item) use ($work) {
+                                    return $item->assessment_name == $work->assessment_name;
+                                });
                                 
-                                // Debug info
-                                $debugWW[] = [
-                                    'name' => $work->assessment_name,
-                                    'score' => $grade->score,
-                                    'max' => $work->max_score,
-                                    'percentage' => $assessmentPercentage
-                                ];
-                            }
-                        }
+                                if ($grade) {
+                                    $studentWWTotal += $grade->score;
+                                }
+                            @endphp
+                            <td class="ww-score editable-cell" 
+                                data-student-id="{{ $student->id }}" 
+                                data-subject-id="{{ $subject->id }}" 
+                                data-quarter="{{ $quarter }}" 
+                                data-grade-type="written_work" 
+                                data-assessment-name="{{ $work->assessment_name }}"
+                                data-assessment-index="{{ $index + 1 }}"
+                                data-max-score="{{ $work->max_score }}">
+                                {{ $grade ? number_format($grade->score, 0) : '' }}
+                            </td>
+                        @endforeach
                         
-                        if ($assessmentCount > 0) {
-                            // Calculate PS (Percentage Score) - average of all percentages
-                            $wwPS = $totalPercentage / $assessmentCount;
-                            
-                            // Calculate WS (Weighted Score) - apply the weight percentage
-                            $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
-                        }
-                    @endphp
-                    <td>{{ $studentWWTotal > 0 ? number_format($studentWWTotal, 0) : '' }}</td>
-                    <td>{{ $wwPS !== '' ? number_format($wwPS, 2) : '' }}</td>
-                    <td>{{ $wwWS !== '' ? number_format($wwWS, 1) : '' }}%</td>
-                    
-                    <!-- Performance Tasks -->
-                    @php $studentPTTotal = 0; @endphp
-                    @foreach($performanceTasks->take(8) as $index => $task)
+                        @for($i = $writtenWorks->count(); $i < 7; $i++)
+                            <td></td>
+                        @endfor
+                        
+                        <!-- Written Works Total, PS, WS -->
                         @php
-                            $grade = $studentPerfTasks->first(function($item) use ($task) {
-                                return $item->assessment_name == $task->assessment_name;
-                            });
+                            $wwPS = '';
+                            $wwWS = '';
                             
-                            if ($grade) {
-                                $studentPTTotal += $grade->score;
-                            }
-                        @endphp
-                        <td class="pt-score editable-cell" 
-                            data-student-id="{{ $student->id }}" 
-                            data-subject-id="{{ $subject->id }}" 
-                            data-quarter="{{ $quarter }}" 
-                            data-grade-type="performance_task" 
-                            data-assessment-name="{{ $task->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}"
-                            data-max-score="{{ $task->max_score }}">
-                            {{ $grade ? number_format($grade->score, 0) : '' }}
-                        </td>
-                    @endforeach
-                    
-                    @for($i = $performanceTasks->count(); $i < 8; $i++)
-                        <td></td>
-                    @endfor
-                    
-                    <!-- Performance Tasks Total, PS, WS -->
-                    @php
-                        $ptPS = '';
-                        $ptWS = '';
-                        
-                        // Calculate average percentage instead of total/max
-                        $ptAssessmentCount = 0;
-                        $ptTotalPercentage = 0;
-                        
-                        foreach($performanceTasks->take(8) as $task) {
-                            $grade = $studentPerfTasks->first(function($item) use ($task) {
-                                return $item->assessment_name == $task->assessment_name;
-                            });
+                            // Debug calculations
+                            $debugWW = [];
                             
-                            if ($grade) {
-                                $ptAssessmentCount++;
-                                $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
-                            }
-                        }
-                        
-                        if ($ptAssessmentCount > 0) {
-                            // Average of percentages
-                            $ptPS = $ptTotalPercentage / $ptAssessmentCount;
-                            // Weighted Score
-                            $ptWS = ($ptPS / 100) * $gradeConfig->performance_task_percentage;
-                        }
-                    @endphp
-                    <td>{{ $studentPTTotal > 0 ? number_format($studentPTTotal, 0) : '' }}</td>
-                    <td>{{ $ptPS !== '' ? number_format($ptPS, 2) : '' }}</td>
-                    <td>{{ $ptWS !== '' ? number_format($ptWS, 1) : '' }}%</td>
-                    
-                    <!-- Quarterly Assessment for male students -->
-                    @php
-                        $qaScore = '';
-                        $qaPS = '';
-                        $qaWS = '';
-                        if ($studentQuarterly) {
-                            $qaScore = $studentQuarterly->score;
-                            $qaMaxScore = $studentQuarterly->max_score;
-                            // Calculate PS as a percentage
-                            $qaPS = ($qaScore / $qaMaxScore) * 100;
-                            // Calculate WS as actual contribution to final grade
-                            $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
-                        }
-                    @endphp
-                    
-                    <td class="qa-score editable-cell" 
-                        data-student-id="{{ $student->id }}" 
-                        data-subject-id="{{ $subject->id }}" 
-                        data-quarter="{{ $quarter }}" 
-                        data-grade-type="quarterly" 
-                        data-assessment-name="Quarterly Assessment"
-                        data-assessment-index="1"
-                        data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
-                        {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
-                    </td>
-                    <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
-                    <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
-                    
-                    <!-- Initial and Quarterly Grades for male students -->
-                    @php
-                        $initialGrade = '';
-                        $quarterlyGrade = '';
-                        
-                        // Only calculate grades if the student has actual grades
-                        $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
-                        
-                        if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
-                            // Initial grade is the sum of all weighted scores
-                            $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
-                            // Calculate quarterly grade using the transmutation table
-                            $quarterlyGrade = $initialGrade !== '' ? transmutationTable1($initialGrade) : '';
-                        }
-                    @endphp
-                    <td>{{ $initialGrade !== '' ? number_format($initialGrade, 1) : '' }}%</td>
-                    <td>{{ $quarterlyGrade !== '' ? $quarterlyGrade : '' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="27" class="text-center">No male students in this section</td>
-                </tr>
-            @endforelse
-            
-            <!-- Female Students -->
-            <tr>
-                <td class="gender-label" colspan="27">FEMALE</td>
-            </tr>
-            @php $femaleStudents = $students->where('gender', 'Female')->sortBy('last_name'); @endphp
-            @forelse($femaleStudents as $index => $student)
-                <tr>
-                    <td class="text-left">{{ $student->last_name }}, {{ $student->first_name }}</td>
-                    
-                    <!-- Written Works -->
-                    @php
-                        $studentGradeData = $studentGrades->get($student->id, collect([]));
-                        $studentWrittenWorks = $studentGradeData->where('grade_type', 'written_work');
-                        $studentPerfTasks = $studentGradeData->where('grade_type', 'performance_task');
-                        $studentQuarterly = $studentGradeData->where('grade_type', 'quarterly')->first();
-                    @endphp
-                    
-                    <!-- Display Written Works Scores -->
-                    @php $studentWWTotal = 0; @endphp
-                    @foreach($writtenWorks->take(7) as $index => $work)
-                        @php
-                            $grade = $studentWrittenWorks->first(function($item) use ($work) {
-                                return $item->assessment_name == $work->assessment_name;
-                            });
+                            // Calculate average percentage the same way as Grade Summary page
+                            $assessmentCount = 0;
+                            $totalPercentage = 0;
                             
-                            if ($grade) {
-                                $studentWWTotal += $grade->score;
-                            }
-                        @endphp
-                        <td class="ww-score editable-cell" 
-                            data-student-id="{{ $student->id }}" 
-                            data-subject-id="{{ $subject->id }}" 
-                            data-quarter="{{ $quarter }}" 
-                            data-grade-type="written_work" 
-                            data-assessment-name="{{ $work->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}"
-                            data-max-score="{{ $work->max_score }}">
-                            {{ $grade ? number_format($grade->score, 0) : '' }}
-                        </td>
-                    @endforeach
-                    
-                    @for($i = $writtenWorks->count(); $i < 7; $i++)
-                        <td></td>
-                    @endfor
-                    
-                    <!-- Written Works Total, PS, WS -->
-                    @php
-                        $wwPS = '';
-                        $wwWS = '';
-                        
-                        // Debug calculations
-                        $debugWW = [];
-                        
-                        // Calculate average percentage the same way as Grade Summary page
-                        $assessmentCount = 0;
-                        $totalPercentage = 0;
-                        
-                        foreach($writtenWorks->take(7) as $work) {
-                            $grade = $studentWrittenWorks->first(function($item) use ($work) {
-                                return $item->assessment_name == $work->assessment_name;
-                            });
-                            
-                            if ($grade) {
-                                $assessmentCount++;
-                                $assessmentPercentage = ($grade->score / $work->max_score) * 100;
-                                $totalPercentage += $assessmentPercentage;
+                            foreach($writtenWorks->take(7) as $work) {
+                                $grade = $studentWrittenWorks->first(function($item) use ($work) {
+                                    return $item->assessment_name == $work->assessment_name;
+                                });
                                 
-                                // Debug info
-                                $debugWW[] = [
-                                    'name' => $work->assessment_name,
-                                    'score' => $grade->score,
-                                    'max' => $work->max_score,
-                                    'percentage' => $assessmentPercentage
-                                ];
+                                if ($grade) {
+                                    $assessmentCount++;
+                                    $assessmentPercentage = ($grade->score / $work->max_score) * 100;
+                                    $totalPercentage += $assessmentPercentage;
+                                    
+                                    // Debug info
+                                    $debugWW[] = [
+                                        'name' => $work->assessment_name,
+                                        'score' => $grade->score,
+                                        'max' => $work->max_score,
+                                        'percentage' => $assessmentPercentage
+                                    ];
+                                }
                             }
-                        }
-                        
-                        if ($assessmentCount > 0) {
-                            // Calculate PS (Percentage Score) - average of all percentages
-                            $wwPS = $totalPercentage / $assessmentCount;
                             
-                            // Calculate WS (Weighted Score) - apply the weight percentage
-                            $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
-                        }
-                    @endphp
-                    <td>{{ $studentWWTotal > 0 ? number_format($studentWWTotal, 0) : '' }}</td>
-                    <td>{{ $wwPS !== '' ? number_format($wwPS, 2) : '' }}</td>
-                    <td>{{ $wwWS !== '' ? number_format($wwWS, 1) : '' }}%</td>
-                    
-                    <!-- Performance Tasks -->
-                    @php $studentPTTotal = 0; @endphp
-                    @foreach($performanceTasks->take(8) as $index => $task)
-                        @php
-                            $grade = $studentPerfTasks->first(function($item) use ($task) {
-                                return $item->assessment_name == $task->assessment_name;
-                            });
-                            
-                            if ($grade) {
-                                $studentPTTotal += $grade->score;
+                            if ($assessmentCount > 0) {
+                                // Calculate PS (Percentage Score) - average of all percentages
+                                $wwPS = $totalPercentage / $assessmentCount;
+                                
+                                // Calculate WS (Weighted Score) - apply the weight percentage
+                                $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
                             }
                         @endphp
-                        <td class="pt-score editable-cell" 
+                        <td>{{ $studentWWTotal > 0 ? number_format($studentWWTotal, 0) : '' }}</td>
+                        <td>{{ $wwPS !== '' ? number_format($wwPS, 2) : '' }}</td>
+                        <td>{{ $wwWS !== '' ? number_format($wwWS, 1) : '' }}%</td>
+                        
+                        <!-- Performance Tasks -->
+                        @php $studentPTTotal = 0; @endphp
+                        @foreach($performanceTasks->take(8) as $index => $task)
+                            @php
+                                $grade = $studentPerfTasks->first(function($item) use ($task) {
+                                    return $item->assessment_name == $task->assessment_name;
+                                });
+                                
+                                if ($grade) {
+                                    $studentPTTotal += $grade->score;
+                                }
+                            @endphp
+                            <td class="pt-score editable-cell" 
+                                data-student-id="{{ $student->id }}" 
+                                data-subject-id="{{ $subject->id }}" 
+                                data-quarter="{{ $quarter }}" 
+                                data-grade-type="performance_task" 
+                                data-assessment-name="{{ $task->assessment_name }}"
+                                data-assessment-index="{{ $index + 1 }}"
+                                data-max-score="{{ $task->max_score }}">
+                                {{ $grade ? number_format($grade->score, 0) : '' }}
+                            </td>
+                        @endforeach
+                        
+                        @for($i = $performanceTasks->count(); $i < 8; $i++)
+                            <td></td>
+                        @endfor
+                        
+                        <!-- Performance Tasks Total, PS, WS -->
+                        @php
+                            $ptPS = '';
+                            $ptWS = '';
+                            
+                            // Calculate average percentage instead of total/max
+                            $ptAssessmentCount = 0;
+                            $ptTotalPercentage = 0;
+                            
+                            foreach($performanceTasks->take(8) as $task) {
+                                $grade = $studentPerfTasks->first(function($item) use ($task) {
+                                    return $item->assessment_name == $task->assessment_name;
+                                });
+                                
+                                if ($grade) {
+                                    $ptAssessmentCount++;
+                                    $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
+                                }
+                            }
+                            
+                            if ($ptAssessmentCount > 0) {
+                                // Average of percentages
+                                $ptPS = $ptTotalPercentage / $ptAssessmentCount;
+                                // Weighted Score
+                                $ptWS = ($ptPS / 100) * $gradeConfig->performance_task_percentage;
+                            }
+                        @endphp
+                        <td>{{ $studentPTTotal > 0 ? number_format($studentPTTotal, 0) : '' }}</td>
+                        <td>{{ $ptPS !== '' ? number_format($ptPS, 2) : '' }}</td>
+                        <td>{{ $ptWS !== '' ? number_format($ptWS, 1) : '' }}%</td>
+                        
+                        <!-- Quarterly Assessment for male students -->
+                        @php
+                            $qaScore = '';
+                            $qaPS = '';
+                            $qaWS = '';
+                            if ($studentQuarterly) {
+                                $qaScore = $studentQuarterly->score;
+                                $qaMaxScore = $studentQuarterly->max_score;
+                                // Calculate PS as a percentage
+                                $qaPS = ($qaScore / $qaMaxScore) * 100;
+                                // Calculate WS as actual contribution to final grade
+                                $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
+                            }
+                        @endphp
+                        
+                        <td class="qa-score editable-cell" 
                             data-student-id="{{ $student->id }}" 
                             data-subject-id="{{ $subject->id }}" 
                             data-quarter="{{ $quarter }}" 
-                            data-grade-type="performance_task" 
-                            data-assessment-name="{{ $task->assessment_name }}"
-                            data-assessment-index="{{ $index + 1 }}"
-                            data-max-score="{{ $task->max_score }}">
-                            {{ $grade ? number_format($grade->score, 0) : '' }}
+                            data-grade-type="quarterly" 
+                            data-assessment-name="Quarterly Assessment"
+                            data-assessment-index="1"
+                            data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
+                            {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
                         </td>
-                    @endforeach
-                    
-                    @for($i = $performanceTasks->count(); $i < 8; $i++)
-                        <td></td>
-                    @endfor
-                    
-                    <!-- Performance Tasks Total, PS, WS -->
-                    @php
-                        $ptPS = '';
-                        $ptWS = '';
+                        <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
+                        <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
                         
-                        // Calculate average percentage instead of total/max
-                        $ptAssessmentCount = 0;
-                        $ptTotalPercentage = 0;
-                        
-                        foreach($performanceTasks->take(8) as $task) {
-                            $grade = $studentPerfTasks->first(function($item) use ($task) {
-                                return $item->assessment_name == $task->assessment_name;
-                            });
+                        <!-- Initial and Quarterly Grades for male students -->
+                        @php
+                            $initialGrade = '';
+                            $quarterlyGrade = '';
                             
-                            if ($grade) {
-                                $ptAssessmentCount++;
-                                $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
+                            // Only calculate grades if the student has actual grades
+                            $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
+                            
+                            if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
+                                // Initial grade is the sum of all weighted scores
+                                $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
+                                // Calculate quarterly grade using the transmutation table
+                                $quarterlyGrade = $initialGrade !== '' ? transmutationTable1($initialGrade) : '';
                             }
-                        }
-                        
-                        if ($ptAssessmentCount > 0) {
-                            // Average of percentages
-                            $ptPS = $ptTotalPercentage / $ptAssessmentCount;
-                            // Weighted Score
-                            $ptWS = ($ptPS / 100) * $gradeConfig->performance_task_percentage;
-                        }
-                    @endphp
-                    <td>{{ $studentPTTotal > 0 ? number_format($studentPTTotal, 0) : '' }}</td>
-                    <td>{{ $ptPS !== '' ? number_format($ptPS, 2) : '' }}</td>
-                    <td>{{ $ptWS !== '' ? number_format($ptWS, 1) : '' }}%</td>
-                    
-                    <!-- Quarterly Assessment for female students -->
-                    @php
-                        $qaScore = '';
-                        $qaPS = '';
-                        $qaWS = '';
-                        if ($studentQuarterly) {
-                            $qaScore = $studentQuarterly->score;
-                            $qaMaxScore = $studentQuarterly->max_score;
-                            // Calculate PS as a percentage
-                            $qaPS = ($qaScore / $qaMaxScore) * 100;
-                            // Calculate WS as actual contribution to final grade
-                            $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
-                        }
-                    @endphp
-                    
-                    <td class="qa-score editable-cell" 
-                        data-student-id="{{ $student->id }}" 
-                        data-subject-id="{{ $subject->id }}" 
-                        data-quarter="{{ $quarter }}" 
-                        data-grade-type="quarterly" 
-                        data-assessment-name="Quarterly Assessment"
-                        data-assessment-index="1"
-                        data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
-                        {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
-                    </td>
-                    <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
-                    <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
-                    
-                    <!-- Initial and Quarterly Grades for female students -->
-                    @php
-                        $initialGrade = '';
-                        $quarterlyGrade = '';
-                        
-                        // Only calculate grades if the student has actual grades
-                        $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
-                        
-                        if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
-                            // Initial grade is the sum of all weighted scores
-                            $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
-                            // Calculate quarterly grade using the transmutation table
-                            $quarterlyGrade = $initialGrade !== '' ? transmutationTable1($initialGrade) : '';
-                        }
-                    @endphp
-                    <td>{{ $initialGrade !== '' ? number_format($initialGrade, 1) : '' }}%</td>
-                    <td>{{ $quarterlyGrade !== '' ? $quarterlyGrade : '' }}</td>
-                </tr>
-            @empty
+                        @endphp
+                        <td>{{ $initialGrade !== '' ? number_format($initialGrade, 1) : '' }}%</td>
+                        <td>{{ $quarterlyGrade !== '' ? $quarterlyGrade : '' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="27" class="text-center">No male students in this section</td>
+                    </tr>
+                @endforelse
+                
+                <!-- Female Students -->
                 <tr>
-                    <td colspan="27" class="text-center">No female students in this section</td>
+                    <td class="gender-label" colspan="27" style="text-align: left; background-color: #d9d9d9; color: #000; font-size: 11pt; padding: 5px 8px; font-weight: normal; border: 1px solid #000;">FEMALE</td>
                 </tr>
-            @endforelse
-        </table>
+                @php $femaleStudents = $students->where('gender', 'Female')->sortBy('last_name'); @endphp
+                @forelse($femaleStudents as $femaleIndex => $student)
+                    <tr>
+                        <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $femaleIndex + 1 }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
+                        
+                        <!-- Written Works -->
+                        @php
+                            $studentGradeData = $studentGrades->get($student->id, collect([]));
+                            $studentWrittenWorks = $studentGradeData->where('grade_type', 'written_work');
+                            $studentPerfTasks = $studentGradeData->where('grade_type', 'performance_task');
+                            $studentQuarterly = $studentGradeData->where('grade_type', 'quarterly')->first();
+                        @endphp
+                        
+                        <!-- Display Written Works Scores -->
+                        @php $studentWWTotal = 0; @endphp
+                        @foreach($writtenWorks->take(7) as $index => $work)
+                            @php
+                                $grade = $studentWrittenWorks->first(function($item) use ($work) {
+                                    return $item->assessment_name == $work->assessment_name;
+                                });
+                                
+                                if ($grade) {
+                                    $studentWWTotal += $grade->score;
+                                }
+                            @endphp
+                            <td class="ww-score editable-cell" 
+                                data-student-id="{{ $student->id }}" 
+                                data-subject-id="{{ $subject->id }}" 
+                                data-quarter="{{ $quarter }}" 
+                                data-grade-type="written_work" 
+                                data-assessment-name="{{ $work->assessment_name }}"
+                                data-assessment-index="{{ $index + 1 }}"
+                                data-max-score="{{ $work->max_score }}">
+                                {{ $grade ? number_format($grade->score, 0) : '' }}
+                            </td>
+                        @endforeach
+                        
+                        @for($i = $writtenWorks->count(); $i < 7; $i++)
+                            <td></td>
+                        @endfor
+                        
+                        <!-- Written Works Total, PS, WS -->
+                        @php
+                            $wwPS = '';
+                            $wwWS = '';
+                            
+                            // Debug calculations
+                            $debugWW = [];
+                            
+                            // Calculate average percentage the same way as Grade Summary page
+                            $assessmentCount = 0;
+                            $totalPercentage = 0;
+                            
+                            foreach($writtenWorks->take(7) as $work) {
+                                $grade = $studentWrittenWorks->first(function($item) use ($work) {
+                                    return $item->assessment_name == $work->assessment_name;
+                                });
+                                
+                                if ($grade) {
+                                    $assessmentCount++;
+                                    $assessmentPercentage = ($grade->score / $work->max_score) * 100;
+                                    $totalPercentage += $assessmentPercentage;
+                                    
+                                    // Debug info
+                                    $debugWW[] = [
+                                        'name' => $work->assessment_name,
+                                        'score' => $grade->score,
+                                        'max' => $work->max_score,
+                                        'percentage' => $assessmentPercentage
+                                    ];
+                                }
+                            }
+                            
+                            if ($assessmentCount > 0) {
+                                // Calculate PS (Percentage Score) - average of all percentages
+                                $wwPS = $totalPercentage / $assessmentCount;
+                                
+                                // Calculate WS (Weighted Score) - apply the weight percentage
+                                $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
+                            }
+                        @endphp
+                        <td>{{ $studentWWTotal > 0 ? number_format($studentWWTotal, 0) : '' }}</td>
+                        <td>{{ $wwPS !== '' ? number_format($wwPS, 2) : '' }}</td>
+                        <td>{{ $wwWS !== '' ? number_format($wwWS, 1) : '' }}%</td>
+                        
+                        <!-- Performance Tasks -->
+                        @php $studentPTTotal = 0; @endphp
+                        @foreach($performanceTasks->take(8) as $index => $task)
+                            @php
+                                $grade = $studentPerfTasks->first(function($item) use ($task) {
+                                    return $item->assessment_name == $task->assessment_name;
+                                });
+                                
+                                if ($grade) {
+                                    $studentPTTotal += $grade->score;
+                                }
+                            @endphp
+                            <td class="pt-score editable-cell" 
+                                data-student-id="{{ $student->id }}" 
+                                data-subject-id="{{ $subject->id }}" 
+                                data-quarter="{{ $quarter }}" 
+                                data-grade-type="performance_task" 
+                                data-assessment-name="{{ $task->assessment_name }}"
+                                data-assessment-index="{{ $index + 1 }}"
+                                data-max-score="{{ $task->max_score }}">
+                                {{ $grade ? number_format($grade->score, 0) : '' }}
+                            </td>
+                        @endforeach
+                        
+                        @for($i = $performanceTasks->count(); $i < 8; $i++)
+                            <td></td>
+                        @endfor
+                        
+                        <!-- Performance Tasks Total, PS, WS -->
+                        @php
+                            $ptPS = '';
+                            $ptWS = '';
+                            
+                            // Calculate average percentage instead of total/max
+                            $ptAssessmentCount = 0;
+                            $ptTotalPercentage = 0;
+                            
+                            foreach($performanceTasks->take(8) as $task) {
+                                $grade = $studentPerfTasks->first(function($item) use ($task) {
+                                    return $item->assessment_name == $task->assessment_name;
+                                });
+                                
+                                if ($grade) {
+                                    $ptAssessmentCount++;
+                                    $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
+                                }
+                            }
+                            
+                            if ($ptAssessmentCount > 0) {
+                                // Average of percentages
+                                $ptPS = $ptTotalPercentage / $ptAssessmentCount;
+                                // Weighted Score
+                                $ptWS = ($ptPS / 100) * $gradeConfig->performance_task_percentage;
+                            }
+                        @endphp
+                        <td>{{ $studentPTTotal > 0 ? number_format($studentPTTotal, 0) : '' }}</td>
+                        <td>{{ $ptPS !== '' ? number_format($ptPS, 2) : '' }}</td>
+                        <td>{{ $ptWS !== '' ? number_format($ptWS, 1) : '' }}%</td>
+                        
+                        <!-- Quarterly Assessment for female students -->
+                        @php
+                            $qaScore = '';
+                            $qaPS = '';
+                            $qaWS = '';
+                            if ($studentQuarterly) {
+                                $qaScore = $studentQuarterly->score;
+                                $qaMaxScore = $studentQuarterly->max_score;
+                                // Calculate PS as a percentage
+                                $qaPS = ($qaScore / $qaMaxScore) * 100;
+                                // Calculate WS as actual contribution to final grade
+                                $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
+                            }
+                        @endphp
+                        
+                        <td class="qa-score editable-cell" 
+                            data-student-id="{{ $student->id }}" 
+                            data-subject-id="{{ $subject->id }}" 
+                            data-quarter="{{ $quarter }}" 
+                            data-grade-type="quarterly" 
+                            data-assessment-name="Quarterly Assessment"
+                            data-assessment-index="1"
+                            data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
+                            {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
+                        </td>
+                        <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
+                        <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
+                        
+                        <!-- Initial and Quarterly Grades for female students -->
+                        @php
+                            $initialGrade = '';
+                            $quarterlyGrade = '';
+                            
+                            // Only calculate grades if the student has actual grades
+                            $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
+                            
+                            if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
+                                // Initial grade is the sum of all weighted scores
+                                $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
+                                // Calculate quarterly grade using the transmutation table
+                                $quarterlyGrade = $initialGrade !== '' ? transmutationTable1($initialGrade) : '';
+                            }
+                        @endphp
+                        <td>{{ $initialGrade !== '' ? number_format($initialGrade, 1) : '' }}%</td>
+                        <td>{{ $quarterlyGrade !== '' ? $quarterlyGrade : '' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="27" class="text-center">No female students in this section</td>
+                    </tr>
+                @endforelse
+            </table>
+        </div>
         
         <div class="signature-section">
             <div class="signature-item">
-                <p style="margin-bottom: 50px;">Prepared by:</p>
+                <p style="margin-bottom: 30px;">Prepared by:</p>
                 <div class="signature-line"></div>
                 <p><strong>{{ auth()->user()->name ?? 'Teacher Name' }}</strong></p>
                 <p>Section Adviser</p>
             </div>
             
             <div class="signature-item">
-                <p style="margin-bottom: 50px;">Checked by:</p>
+                <p style="margin-bottom: 30px;">Checked by:</p>
                 <div class="signature-line"></div>
                 <p><strong>{{ $section->coordinator_name ?? 'Coordinator Name' }}</strong></p>
                 <p>Subject Coordinator</p>
             </div>
             
             <div class="signature-item">
-                <p style="margin-bottom: 50px;">Approved by:</p>
+                <p style="margin-bottom: 30px;">Approved by:</p>
                 <div class="signature-line"></div>
                 <p><strong>{{ $principal }}</strong></p>
                 <p>School Principal</p>
@@ -1467,11 +1952,26 @@
         </div>
     </div>
     
+    <!-- Mobile Floating Action Buttons -->
+    <!-- Removed print button as requested -->
+    
     <script>
         // Auto-print when page loads
         window.onload = function() {
-            // Uncomment to automatically print when page loads
-            // window.print();
+            // Add swipe indicators for mobile
+            if (window.innerWidth <= 768) {
+                const tables = document.querySelectorAll('.table-responsive');
+                tables.forEach(table => {
+                    if (table.scrollWidth > table.clientWidth) {
+                        const indicator = table.querySelector('.scroll-indicator');
+                        if (indicator) {
+                            indicator.style.display = 'block';
+                        }
+                    }
+                });
+                
+                // Print button code removed per request
+            }
         };
         
         // Print function that doesn't hide buttons afterward
