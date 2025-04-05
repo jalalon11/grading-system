@@ -208,4 +208,192 @@ class ReportController extends Controller
             'mapehInfo' => $mapehInfo,
         ]);
     }
+    
+    /**
+     * Get lists of students by grade ranges
+     */
+    public function getStudentsByGradeRanges(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'section_id' => 'required|exists:sections,id',
+            'subject_id' => 'required|exists:subjects,id',
+            'quarter' => 'required|in:Q1,Q2,Q3,Q4',
+        ]);
+
+        // Get the section and subject
+        $section = Section::findOrFail($validated['section_id']);
+        $subject = Subject::findOrFail($validated['subject_id']);
+        
+        // Get all students
+        $students = Student::where('section_id', $section->id)
+            ->orderBy('gender')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+            
+        // Get the grade configuration for this subject
+        $gradeConfig = GradeConfiguration::where('subject_id', $subject->id)->first();
+        if (!$gradeConfig) {
+            // Use default percentages if no configuration exists
+            $gradeConfig = new GradeConfiguration([
+                'written_work_percentage' => 25,
+                'performance_task_percentage' => 50,
+                'quarterly_assessment_percentage' => 25,
+            ]);
+        }
+        
+        // Get all grades for these students in this subject and quarter
+        $grades = Grade::where('subject_id', $subject->id)
+            ->where('term', $validated['quarter'])
+            ->whereIn('student_id', $students->pluck('id'))
+            ->orderBy('created_at')
+            ->get();
+            
+        // Group grades by student_id
+        $studentGrades = $grades->groupBy('student_id');
+        
+        // Calculate average grades for each student
+        $studentAverages = [];
+        foreach ($students as $student) {
+            $studentId = $student->id;
+            
+            if (!isset($studentGrades[$studentId])) {
+                continue; // Skip students with no grades
+            }
+            
+            // Get grades for this student
+            $gradesData = $studentGrades[$studentId];
+            
+            // Calculate weighted scores
+            $writtenWorkTotal = 0;
+            $writtenWorkPS = 0;
+            $writtenWorkWS = 0;
+            
+            $performanceTaskTotal = 0;
+            $performanceTaskPS = 0;
+            $performanceTaskWS = 0;
+            
+            $quarterlyTotal = 0;
+            $quarterlyPS = 0;
+            $quarterlyWS = 0;
+            
+            // Calculate written work scores
+            $writtenWorks = $gradesData->where('grade_type', 'written_work');
+            if ($writtenWorks->count() > 0) {
+                $writtenWorkTotal = $writtenWorks->sum('score');
+                $writtenWorkPS = $writtenWorkTotal / $writtenWorks->sum('max_score') * 100;
+                $writtenWorkWS = $writtenWorkPS * ($gradeConfig->written_work_percentage / 100);
+            }
+            
+            // Calculate performance task scores
+            $performanceTasks = $gradesData->where('grade_type', 'performance_task');
+            if ($performanceTasks->count() > 0) {
+                $performanceTaskTotal = $performanceTasks->sum('score');
+                $performanceTaskPS = $performanceTaskTotal / $performanceTasks->sum('max_score') * 100;
+                $performanceTaskWS = $performanceTaskPS * ($gradeConfig->performance_task_percentage / 100);
+            }
+            
+            // Calculate quarterly assessment scores
+            $quarterlyAssessments = $gradesData->where('grade_type', 'quarterly');
+            if ($quarterlyAssessments->count() > 0) {
+                $quarterlyTotal = $quarterlyAssessments->sum('score');
+                $quarterlyPS = $quarterlyTotal / $quarterlyAssessments->sum('max_score') * 100;
+                $quarterlyWS = $quarterlyPS * ($gradeConfig->quarterly_assessment_percentage / 100);
+            }
+            
+            // Calculate initial grade
+            $initialGrade = $writtenWorkWS + $performanceTaskWS + $quarterlyWS;
+            
+            // Calculate quarterly grade using the transmutation table
+            $quarterlyGrade = $this->transmutationTable1($initialGrade);
+            
+            // Store the student's average
+            $studentAverages[$studentId] = [
+                'student' => $student,
+                'initialGrade' => $initialGrade,
+                'quarterlyGrade' => $quarterlyGrade
+            ];
+        }
+        
+        // Create grade ranges from 65-69 up to 95-100 in increments of 5
+        $ranges = [];
+        for ($i = 65; $i <= 95; $i += 5) {
+            $rangeEnd = ($i == 95) ? 100 : $i + 4;
+            $rangeName = $i . '-' . $rangeEnd;
+            $ranges[$rangeName] = [];
+        }
+        
+        // Group students by grade ranges
+        foreach ($studentAverages as $studentId => $data) {
+            $grade = $data['quarterlyGrade'];
+            
+            for ($i = 65; $i <= 95; $i += 5) {
+                $rangeEnd = ($i == 95) ? 100 : $i + 4;
+                if ($grade >= $i && $grade <= $rangeEnd) {
+                    $rangeName = $i . '-' . $rangeEnd;
+                    $ranges[$rangeName][] = [
+                        'student' => $data['student'],
+                        'grade' => $grade
+                    ];
+                    break;
+                }
+            }
+        }
+        
+        return response()->json([
+            'section' => $section,
+            'subject' => $subject,
+            'quarter' => $validated['quarter'],
+            'ranges' => $ranges
+        ]);
+    }
+    
+    /**
+     * Transmutation Table 1 function
+     */
+    private function transmutationTable1($initialGrade) {
+        if ($initialGrade >= 100) return 100;
+        if ($initialGrade >= 98.40) return 99;
+        if ($initialGrade >= 96.80) return 98;
+        if ($initialGrade >= 95.20) return 97;
+        if ($initialGrade >= 93.60) return 96;
+        if ($initialGrade >= 92.00) return 95;
+        if ($initialGrade >= 90.40) return 94;
+        if ($initialGrade >= 88.80) return 93;
+        if ($initialGrade >= 87.20) return 92;
+        if ($initialGrade >= 85.60) return 91;
+        if ($initialGrade >= 84.00) return 90;
+        if ($initialGrade >= 82.40) return 89;
+        if ($initialGrade >= 80.80) return 88;
+        if ($initialGrade >= 79.20) return 87;
+        if ($initialGrade >= 77.60) return 86;
+        if ($initialGrade >= 76.00) return 85;
+        if ($initialGrade >= 74.40) return 84;
+        if ($initialGrade >= 72.80) return 83;
+        if ($initialGrade >= 71.20) return 82;
+        if ($initialGrade >= 69.60) return 81;
+        if ($initialGrade >= 68.00) return 80;
+        if ($initialGrade >= 66.40) return 79;
+        if ($initialGrade >= 64.80) return 78;
+        if ($initialGrade >= 63.20) return 77;
+        if ($initialGrade >= 61.60) return 76;
+        if ($initialGrade >= 60.00) return 75;
+        if ($initialGrade >= 56.00) return 74;
+        if ($initialGrade >= 52.00) return 73;
+        if ($initialGrade >= 48.00) return 72;
+        if ($initialGrade >= 44.00) return 71;
+        if ($initialGrade >= 40.00) return 70;
+        if ($initialGrade >= 36.00) return 69;
+        if ($initialGrade >= 32.00) return 68;
+        if ($initialGrade >= 28.00) return 67;
+        if ($initialGrade >= 24.00) return 66;
+        if ($initialGrade >= 20.00) return 65;
+        if ($initialGrade >= 16.00) return 64;
+        if ($initialGrade >= 12.00) return 63;
+        if ($initialGrade >= 8.00) return 62;
+        if ($initialGrade >= 4.00) return 61;
+        if ($initialGrade >= 0.00) return 60;
+        return 0;
+    }
 } 

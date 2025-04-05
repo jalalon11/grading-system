@@ -310,30 +310,7 @@
     .invalid-feedback i {
         color: #e53e3e;
     }
-
-    /* Loading animation for button */
-    .btn-login.loading {
-        position: relative;
-        pointer-events: none;
-    }
-
-    .btn-login.loading::after {
-        content: '';
-        position: absolute;
-        width: 1.5rem;
-        height: 1.5rem;
-        top: 50%;
-        left: 50%;
-        margin: -0.75rem 0 0 -0.75rem;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-top-color: #ffffff;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
+    
 </style>
 @endpush
 
@@ -352,6 +329,15 @@
                             <h1 class="login-title">Welcome Back!</h1>
                             <p class="login-subtitle">Sign in to continue to your account</p>
                         </div>
+
+                        @if(session('error'))
+                            <div class="alert alert-danger mb-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <span>{{ session('error') }}</span>
+                                </div>
+                            </div>
+                        @endif
 
                         <form method="POST" action="{{ route('login') }}" class="login-form" id="loginForm">
                             @csrf
