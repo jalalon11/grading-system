@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Section;
 use App\Models\Student;
+use App\Http\Middleware\CheckSchoolStatus;
 
 Route::get('/', function () {
     return view('welcome');
@@ -25,7 +26,7 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
     Route::get('/home', function () {
         $user = Auth::user();
         if ($user->role === 'admin') {
@@ -98,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('reports/class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'classRecord'])->name('reports.class-record');
         Route::post('reports/generate-class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record');
         Route::get('reports/section-subjects', [\App\Http\Controllers\Teacher\ReportController::class, 'getSectionSubjects'])->name('reports.section-subjects');
+        Route::post('reports/students-by-grade-ranges', [\App\Http\Controllers\Teacher\ReportController::class, 'getStudentsByGradeRanges'])->name('reports.students-by-grade-ranges');
         
         Route::resource('attendances', AttendanceController::class);
         

@@ -1284,6 +1284,9 @@
         <button id="helpButton" class="help-button" style="padding: 8px 15px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer;">
             <span style="margin-right: 5px;">ℹ️</span> <span class="d-none d-md-inline">Help</span>
         </button>
+        <button id="gradeRangesButton" class="grade-ranges-button" style="padding: 8px 15px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <span style="margin-right: 5px;">📊</span> <span class="d-none d-md-inline">Students by Grade Range</span>
+        </button>
     </div>
 
 
@@ -2152,6 +2155,14 @@
                     helpModal.style.display = 'none';
                 }
             });
+            
+            // Add grade ranges button event listener
+            const gradeRangesButton = document.getElementById('gradeRangesButton');
+            if (gradeRangesButton) {
+                gradeRangesButton.addEventListener('click', function() {
+                    fetchStudentsByGradeRanges();
+                });
+            }
         });
         
         // Create and show toast notification
@@ -2749,6 +2760,536 @@
                 activeCell = null;
             }
         }
+        
+        function fetchStudentsByGradeRanges() {
+            // Show loading message
+            showToast('Loading', 'Generating student lists by grade ranges...', 'info');
+            
+            // Get the section, subject, and quarter from the page
+            const sectionId = '{{ $section->id }}';
+            const subjectId = '{{ $subject->id }}';
+            const quarter = '{{ $quarter }}';
+            
+            // Make AJAX request to get students by grade ranges
+            $.ajax({
+                url: '{{ route("teacher.reports.students-by-grade-ranges") }}',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                data: {
+                    section_id: sectionId,
+                    subject_id: subjectId,
+                    quarter: quarter
+                },
+                success: function(response) {
+                    // Close any existing toast
+                    if (typeof hideToasts === 'function') {
+                        hideToasts();
+                    }
+                    
+                    // Create modal for displaying results
+                    createGradeRangesModal(response);
+                },
+                error: function(xhr) {
+                    console.error('Error fetching students by grade ranges:', xhr);
+                    let errorMessage = 'Error generating student lists';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    // Show error toast
+                    showToast('Error', errorMessage, 'error');
+                }
+            });
+        }
+        
+        function createGradeRangesModal(data) {
+            // Create modal container if it doesn't exist
+            let modal = document.getElementById('gradeRangesModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'gradeRangesModal';
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+            }
+            
+            // Create modal content
+            let modalContent = `
+                <div class="modal-content" style="max-width: 90%; max-height: 90%; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 4px;">
+                    <div class="modal-header" style="background-color: #f5f5f5; padding: 15px 20px; border-bottom: 1px solid #e0e0e0;">
+                        <h2 style="margin: 0; color: #333; font-size: 1.5rem;">Students by Grade Range - ${data.subject.name} (${data.quarter})</h2>
+                        <span class="modal-close" style="font-size: 24px; color: #666;">&times;</span>
+                    </div>
+                    <div class="modal-body" style="padding: 20px;">
+                        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; margin-bottom: 15px; background-color: #f9f9f9; padding: 15px; border-radius: 4px; border-left: 3px solid #5f6163;">
+                            <p style="margin: 0 30px 0 0;"><strong>Section:</strong> ${data.section.name}</p>
+                            <p style="margin: 0 30px 0 0;"><strong>Subject:</strong> ${data.subject.name}</p>
+                            <p style="margin: 0;"><strong>Quarter:</strong> ${data.quarter}</p>
+                        </div>
+            `;
+            
+            // Add summary statistics at the top
+            let totalStudents = 0;
+            let countByRanges = {};
+            
+            for (const [range, students] of Object.entries(data.ranges)) {
+                totalStudents += students.length;
+                countByRanges[range] = students.length;
+            }
+            
+            modalContent += `
+                <div class="range-summary" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+            `;
+            
+            for (const [range, count] of Object.entries(countByRanges)) {
+                const percentage = totalStudents > 0 ? (count / totalStudents * 100).toFixed(1) : 0;
+                
+                modalContent += `
+                    <div style="flex: 1; min-width: 120px; background-color: #f5f5f5; padding: 10px; border-radius: 4px; text-align: center; border: 1px solid #e0e0e0;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">${range}</div>
+                        <div style="font-size: 1.2rem;">${count} students</div>
+                        <div style="font-size: 0.9rem; color: #555;">${percentage}%</div>
+                    </div>
+                `;
+            }
+            
+            modalContent += `
+                </div>
+            `;
+            
+            // Add each range with improved but simplified styling
+            for (const [range, students] of Object.entries(data.ranges)) {
+                // Skip empty ranges in print mode by adding a print-hide class
+                const printHideClass = students.length === 0 ? 'print-hide-empty' : '';
+                
+                modalContent += `
+                    <div class="grade-range ${printHideClass}" style="margin-bottom: 25px;">
+                        <h3 style="margin-top: 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0;">
+                            <span>Grade Range: ${range}</span>
+                            <span style="font-size: 0.9rem;">${students.length} students</span>
+                        </h3>
+                `;
+                
+                if (students.length === 0) {
+                    modalContent += `<p style="padding: 10px; text-align: center; color: #666; font-style: italic;">No students in this range.</p>`;
+                } else {
+                    modalContent += `
+                        <table class="range-table" style="width: 100%; margin-bottom: 20px; border-collapse: collapse; border: 1px solid #e0e0e0;">
+                            <thead>
+                                <tr style="background-color: #f5f5f5;">
+                                    <th style="padding: 12px; border: 1px solid #e0e0e0; text-align: left; width: 50%;">Name</th>
+                                    <th style="padding: 12px; border: 1px solid #e0e0e0; text-align: left; width: 20%;">Gender</th>
+                                    <th style="padding: 12px; border: 1px solid #e0e0e0; text-align: center; width: 30%;">Quarterly Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    students.forEach((item, index) => {
+                        const student = item.student;
+                        const rowBg = index % 2 === 0 ? '#ffffff' : '#f9f9f9';
+                        
+                        modalContent += `
+                            <tr style="background-color: ${rowBg};">
+                                <td style="padding: 10px; border: 1px solid #e0e0e0; font-weight: 500;">${student.last_name}, ${student.first_name} ${student.middle_name ? student.middle_name.charAt(0) + '.' : ''}</td>
+                                <td style="padding: 10px; border: 1px solid #e0e0e0;">${student.gender}</td>
+                                <td style="padding: 10px; border: 1px solid #e0e0e0; text-align: center; font-weight: bold;">${item.grade}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    modalContent += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                modalContent += `</div>`;
+            }
+            
+            modalContent += `
+                    </div>
+                    <div class="modal-footer" style="padding: 15px 20px; background-color: #f5f5f5; border-top: 1px solid #e0e0e0; text-align: right;">
+                        <button id="printRangesBtn" class="modal-btn" style="background-color: #5f6163; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: 500;">Print Report</button>
+                        <button id="closeRangesBtn" class="modal-btn" style="background-color: #f1f1f1; color: #333; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            // Set modal content
+            modal.innerHTML = modalContent;
+            
+            // Add modal styling if not already present
+            if (!document.getElementById('modalStyles')) {
+                const modalStyles = document.createElement('style');
+                modalStyles.id = 'modalStyles';
+                modalStyles.textContent = `
+                    .modal {
+                        display: block;
+                        position: fixed;
+                        z-index: 1000;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        height: 100%;
+                        overflow: auto;
+                        background-color: rgba(0,0,0,0.4);
+                    }
+                    .modal-content {
+                        background-color: #fff;
+                        margin: 5% auto;
+                        width: 90%;
+                        max-width: 1200px;
+                    }
+                    .modal-close:hover {
+                        color: #000;
+                        cursor: pointer;
+                    }
+                    .modal-btn:hover {
+                        opacity: 0.9;
+                    }
+                    @media print {
+                        body * {
+                            visibility: hidden;
+                        }
+                        .modal, .modal * {
+                            visibility: visible;
+                        }
+                        .print-hide-empty {
+                            display: none !important;
+                        }
+                        .modal {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            height: auto;
+                            margin: 0;
+                            padding: 0;
+                            overflow: visible;
+                            background-color: white;
+                        }
+                        .modal-content {
+                            margin: 0;
+                            padding: 0;
+                            border: none;
+                            width: 100%;
+                            max-width: 100%;
+                        }
+                        .modal-header, .modal-footer, .modal-close {
+                            display: none;
+                        }
+                        .range-table {
+                            page-break-inside: avoid;
+                            border-collapse: collapse;
+                            width: 100%;
+                            font-size: 11px;
+                        }
+                        .range-table th {
+                            background-color: #f5f5f5 !important;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                            padding: 5px !important;
+                        }
+                        .range-table td {
+                            padding: 4px !important;
+                        }
+                        .range-summary {
+                            display: none !important;
+                        }
+                        .grade-range {
+                            page-break-inside: avoid;
+                            margin-bottom: 10px;
+                        }
+                        .grade-range h3 {
+                            page-break-after: avoid;
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                            font-size: 14px;
+                            padding: 5px !important;
+                            margin: 0 0 5px 0 !important;
+                        }
+                        .modal-body {
+                            padding: 5px !important;
+                        }
+                        /* Removed fixed landscape orientation to allow user choice */
+                        @page {
+                           size: auto;
+                        }
+                        table tr {
+                            page-break-inside: avoid;
+                        }
+                        
+                        /* For large data sets, optimize table layout */
+                        .multi-column-layout .range-table {
+                            column-count: 2;
+                            column-gap: 20px;
+                        }
+                        
+                        /* Orientation-specific styles */
+                        .landscape-optimized {
+                            /* Additional styles for landscape mode */
+                        }
+                        
+                        .portrait-optimized {
+                            /* Styles for portrait mode */
+                            font-size: 10px !important;
+                        }
+                        
+                        /* Apply portrait optimizations when user selects portrait */
+                        @media (orientation: portrait) {
+                            .range-table {
+                                font-size: 10px;
+                            }
+                            .range-table th,
+                            .range-table td {
+                                padding: 3px !important;
+                            }
+                        }
+                    }
+                `;
+                document.head.appendChild(modalStyles);
+            }
+            
+            // Show modal
+            modal.style.display = 'block';
+            
+            // Add event listeners for close buttons
+            const closeBtn = modal.querySelector('.modal-close');
+            const closeRangesBtn = document.getElementById('closeRangesBtn');
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            closeRangesBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            // Add event listener for print button
+            const printRangesBtn = document.getElementById('printRangesBtn');
+            printRangesBtn.addEventListener('click', function() {
+                // Prepare special print styling
+                const printStyle = document.createElement('style');
+                printStyle.id = 'print-style-temp';
+                printStyle.innerHTML = `
+                    @media print {
+                        @page {
+                            /* Removed fixed orientation to allow user choice */
+                            size: auto;
+                        }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            font-size: 11px;
+                        }
+                        .grade-range h3 {
+                            background-color: #f5f5f5 !important;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                            font-size: 14px;
+                            padding: 5px !important;
+                        }
+                        .range-table {
+                            margin-bottom: 10px !important;
+                        }
+                        .range-table th {
+                            background-color: #f5f5f5 !important;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                            padding: 5px !important;
+                            font-size: 11px;
+                        }
+                        .range-table td {
+                            padding: 3px 5px !important;
+                            font-size: 10px;
+                        }
+                        .range-table tr:nth-child(even) {
+                            background-color: #f9f9f9 !important;
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        
+                        /* Layout optimizations for many students */
+                        .grade-range:has(table tr:nth-child(n+8)) table {
+                            font-size: 9px !important;
+                        }
+                        
+                        /* Compact cells when we have many students */
+                        .grade-range:has(table tr:nth-child(n+12)) table td,
+                        .grade-range:has(table tr:nth-child(n+12)) table th {
+                            padding: 2px 4px !important;
+                        }
+                        
+                        /* Two-column layout for ranges with many students - only in landscape */
+                        @media (orientation: landscape) {
+                            .grade-range:has(table tr:nth-child(n+20)) {
+                                column-count: 2;
+                                column-gap: 10px;
+                            }
+                            
+                            /* For very large data sets */
+                            .grade-range:has(table tr:nth-child(n+30)) {
+                                column-count: 3;
+                                column-gap: 10px;
+                            }
+                        }
+                        
+                        /* Portrait mode optimizations */
+                        @media (orientation: portrait) {
+                            .grade-range table {
+                                font-size: 9px !important;
+                            }
+                            .grade-range h3 {
+                                font-size: 12px !important;
+                            }
+                            /* Single column layout for portrait */
+                            .grade-range {
+                                column-count: 1 !important;
+                            }
+                        }
+                    }
+                `;
+                document.head.appendChild(printStyle);
+                
+                // Add orientation choice UI
+                const orientationUI = document.createElement('div');
+                orientationUI.id = 'orientation-choice';
+                orientationUI.innerHTML = `
+                    <div style="position: fixed; top: 20px; right: 20px; z-index: 2000; background: white; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <p style="margin: 0 0 10px 0; font-weight: bold;">Print Settings</p>
+                        <p style="margin: 0 0 5px 0; font-size: 12px;">Choose page orientation in your browser's print dialog:</p>
+                        <p style="margin: 0; font-size: 12px; color: #666;">• Landscape: Better for wide tables with many columns</p>
+                        <p style="margin: 0; font-size: 12px; color: #666;">• Portrait: Better for long lists with few columns</p>
+                        <button id="continue-print" style="margin-top: 10px; padding: 5px 10px; background: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Continue to Print</button>
+                    </div>
+                `;
+                document.body.appendChild(orientationUI);
+                
+                // Add event listener to continue to print
+                document.getElementById('continue-print').addEventListener('click', function() {
+                    // Remove the orientation UI
+                    document.body.removeChild(orientationUI);
+                    
+                    // Add a title for the print
+                    const printTitle = document.createElement('div');
+                    printTitle.id = 'print-title-temp';
+                    printTitle.innerHTML = `
+                        <div style="text-align: center; padding: 5px; display: none;">
+                            <h1 style="margin: 0; font-size: 18px;">Student Grade Range Report</h1>
+                            <p style="margin: 3px 0; font-size: 12px;">Section: ${data.section.name} | Subject: ${data.subject.name} | Quarter: ${data.quarter}</p>
+                        </div>
+                    `;
+                    const modalBody = document.querySelector('.modal-body');
+                    if (modalBody) {
+                        modalBody.prepend(printTitle);
+                    }
+                    
+                    // Make print title visible only during printing
+                    printTitle.style.display = 'block';
+                    
+                    // Count total students with data to determine optimal layout
+                    let totalStudentsWithData = 0;
+                    for (const [range, students] of Object.entries(data.ranges)) {
+                        totalStudentsWithData += students.length;
+                    }
+                    
+                    // Add multi-column layout class if we have many students
+                    if (totalStudentsWithData > 20) {
+                        modalBody.classList.add('multi-column-layout');
+                    }
+                    
+                    // Print the page
+                    window.print();
+                    
+                    // Remove the temporary print styles and title after printing
+                    setTimeout(() => {
+                        if (printStyle.parentNode) {
+                            printStyle.parentNode.removeChild(printStyle);
+                        }
+                        if (printTitle.parentNode) {
+                            printTitle.parentNode.removeChild(printTitle);
+                        }
+                        modalBody.classList.remove('multi-column-layout');
+                    }, 1000);
+                });
+            });
+            
+            // Close modal when clicking outside of it
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';   
+                }
+            });
+        }
+        
+        // Toast notification functions
+        function showToast(title, message, type = 'info') {
+            // Hide any existing toasts
+            hideToasts();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.id = 'toast';
+            
+            let bgColor = '#4CAF50'; // Success green
+            if (type === 'error') {
+                bgColor = '#f44336'; // Error red
+            } else if (type === 'info') {
+                bgColor = '#2196F3'; // Info blue
+            } else if (type === 'warning') {
+                bgColor = '#ff9800'; // Warning orange
+            }
+            
+            toast.style = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                min-width: 250px;
+                max-width: 350px;
+                background-color: ${bgColor};
+                color: white;
+                padding: 15px;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 1001;
+                opacity: 0;
+                transition: opacity 0.5s;
+            `;
+            
+            toast.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong>${title}</strong>
+                    <span onclick="hideToasts()" style="cursor: pointer; font-weight: bold;">&times;</span>
+                </div>
+                <div>${message}</div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // Fade in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+            }, 10);
+            
+            // Auto hide after 5 seconds for success/info
+            if (type !== 'error') {
+                setTimeout(hideToasts, 5000);
+            }
+        }
+        
+        function hideToasts() {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 500);
+            }
+        }
     </script>
 
     <!-- Add direct print function -->
@@ -2822,5 +3363,262 @@
             showToast('Reload Canceled', 'Page reload stopped. You can now print the report.', 'info');
         }
     </script>
-</body>
+
+    <!-- Grade Ranges Modal -->
+    <div id="gradeRangesModal" class="modal" style="display: none;">
+        <!-- Modal content -->
+        <div class="modal-content" style="max-width: 80%; max-height: 80%; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>Students by Grade Range - {{ $subject->name }} ({{ $quarter }})</h2>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p><strong>Section:</strong> {{ $section->name }}</p>
+        `;
+        
+        // Add each range
+        for (const [range, students] of Object.entries(data.ranges)) {
+            modalContent += `
+                <div class="grade-range">
+                    <h3>Grade Range: ${range}</h3>
+            `;
+            
+            if (students.length === 0) {
+                modalContent += `<p>No students in this range.</p>`;
+            } else {
+                modalContent += `
+                    <table class="range-table" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Name</th>
+                                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Gender</th>
+                                <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                students.forEach(item => {
+                    const student = item.student;
+                    modalContent += `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${student.last_name}, ${student.first_name} ${student.middle_name ? student.middle_name.charAt(0) + '.' : ''}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${student.gender}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.grade}</td>
+                        </tr>
+                    `;
+                });
+                
+                modalContent += `
+                        </tbody>
+                    </table>
+                `;
+            }
+            
+            modalContent += `</div>`;
+        }
+        
+        modalContent += `
+                </div>
+                <div class="modal-footer">
+                    <button id="printRangesBtn" class="modal-btn" style="background-color: #4CAF50; color: white;">Print</button>
+                    <button id="closeRangesBtn" class="modal-btn">Close</button>
+                </div>
+            </div>
+        `;
+        
+        // Set modal content
+        modal.innerHTML = modalContent;
+        
+        // Add modal styling if not already present
+        if (!document.getElementById('modalStyles')) {
+            const modalStyles = document.createElement('style');
+            modalStyles.id = 'modalStyles';
+            modalStyles.textContent = `
+                .modal {
+                    display: block;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                    background-color: rgba(0,0,0,0.4);
+                }
+                .modal-content {
+                    background-color: #fefefe;
+                    margin: 10% auto;
+                    padding: 20px;
+                    border: 1px solid #888;
+                    width: 80%;
+                    max-width: 800px;
+                    border-radius: 5px;
+                }
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 10px;
+                    margin-bottom: 20px;
+                }
+                .modal-header h2 {
+                    margin: 0;
+                    font-size: 20px;
+                }
+                .modal-close {
+                    color: #aaa;
+                    font-size: 28px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+                .modal-close:hover {
+                    color: black;
+                }
+                .modal-footer {
+                    margin-top: 20px;
+                    text-align: right;
+                    border-top: 1px solid #eee;
+                    padding-top: 15px;
+                }
+                .modal-btn {
+                    padding: 8px 16px;
+                    background-color: #f1f1f1;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin-left: 10px;
+                }
+                .modal-btn:hover {
+                    background-color: #ddd;
+                }
+                @media print {
+                    .modal {
+                        position: absolute;
+                        background-color: white;
+                    }
+                    .modal-content {
+                        margin: 0;
+                        padding: 0;
+                        border: none;
+                        width: 100%;
+                        max-width: 100%;
+                    }
+                    .modal-header, .modal-footer, .modal-close {
+                        display: none;
+                    }
+                    body * {
+                        visibility: hidden;
+                    }
+                    .modal, .modal * {
+                        visibility: visible;
+                    }
+                    .modal {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                    }
+                }
+            `;
+            document.head.appendChild(modalStyles);
+        }
+        
+        // Show modal
+        modal.style.display = 'block';
+        
+        // Add event listeners for close buttons
+        const closeBtn = modal.querySelector('.modal-close');
+        const closeRangesBtn = document.getElementById('closeRangesBtn');
+        
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        closeRangesBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        // Add event listener for print button
+        const printRangesBtn = document.getElementById('printRangesBtn');
+        printRangesBtn.addEventListener('click', function() {
+            window.print();
+        });
+        
+        // Close modal when clicking outside of it
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+    
+    // Toast notification functions
+    function showToast(title, message, type = 'info') {
+        // Hide any existing toasts
+        hideToasts();
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.id = 'toast';
+        
+        let bgColor = '#4CAF50'; // Success green
+        if (type === 'error') {
+            bgColor = '#f44336'; // Error red
+        } else if (type === 'info') {
+            bgColor = '#2196F3'; // Info blue
+        } else if (type === 'warning') {
+            bgColor = '#ff9800'; // Warning orange
+        }
+        
+        toast.style = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            min-width: 250px;
+            max-width: 350px;
+            background-color: ${bgColor};
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            opacity: 0;
+            transition: opacity 0.5s;
+        `;
+        
+        toast.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong>${title}</strong>
+                <span onclick="hideToasts()" style="cursor: pointer; font-weight: bold;">&times;</span>
+            </div>
+            <div>${message}</div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Fade in
+        setTimeout(() => {
+            toast.style.opacity = '1';
+        }, 10);
+        
+        // Auto hide after 5 seconds for success/info
+        if (type !== 'error') {
+            setTimeout(hideToasts, 5000);
+        }
+    }
+    
+    function hideToasts() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 500);
+        }
+    }
+</script>
 </html> 
