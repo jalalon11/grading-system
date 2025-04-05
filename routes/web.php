@@ -98,6 +98,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::get('reports', [\App\Http\Controllers\Teacher\ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'classRecord'])->name('reports.class-record');
         Route::post('reports/generate-class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record');
+        Route::get('reports/generate-class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record-get');
         Route::get('reports/section-subjects', [\App\Http\Controllers\Teacher\ReportController::class, 'getSectionSubjects'])->name('reports.section-subjects');
         Route::post('reports/students-by-grade-ranges', [\App\Http\Controllers\Teacher\ReportController::class, 'getStudentsByGradeRanges'])->name('reports.students-by-grade-ranges');
         
@@ -162,6 +163,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::post('/grades/bulk-update', [GradeController::class, 'bulkUpdate'])->name('grades.bulk-update');
         // Add edit assessment route
         Route::post('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment');
+        Route::get('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment-get');
     });
 
     // Teacher Admin Routes

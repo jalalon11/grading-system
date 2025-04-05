@@ -62,6 +62,9 @@
                                             <button type="button" class="btn btn-sm btn-warning me-1 text-dark" id="markAllLate">
                                                 <i class="fas fa-clock me-1"></i> Mark All Late
                                             </button>
+                                            <button type="button" class="btn btn-sm btn-info me-1 text-dark" id="markAllHalfDay">
+                                                <i class="fas fa-adjust me-1"></i> Mark All Half Day
+                                            </button>
                                             <button type="button" class="btn btn-sm btn-danger me-1" id="markAllAbsent">
                                                 <i class="fas fa-times-circle me-1"></i> Mark All Absent
                                             </button>
@@ -150,6 +153,17 @@
                                                                         <span class="status-badge status-excused"></span> Excused
                                                                     </label>
                                                                 </div>
+                                                                <div class="form-check form-check-inline">
+                                                                    <input class="form-check-input status-radio" 
+                                                                           type="radio" 
+                                                                           name="attendance[{{ $student->id }}]" 
+                                                                           id="half_day_{{ $student->id }}" 
+                                                                           value="half_day" 
+                                                                           {{ $attendanceData[$student->id] == 'half_day' ? 'checked' : '' }}>
+                                                                    <label class="form-check-label" for="half_day_{{ $student->id }}">
+                                                                        <span class="status-badge status-half_day"></span> Half Day
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -166,11 +180,14 @@
                                         <div class="me-3">
                                             <span class="status-badge status-late"></span> Late
                                         </div>
-                                        <div>
+                                        <div class="me-3">
                                             <span class="status-badge status-absent"></span> Absent
                                         </div>
-                                        <div>
+                                        <div class="me-3">
                                             <span class="status-badge status-excused"></span> Excused
+                                        </div>
+                                        <div>
+                                            <span class="status-badge status-half_day"></span> Half Day
                                         </div>
                                     </div>
                                 </div>
@@ -218,30 +235,36 @@
     .status-late { background-color: #ffc107; }
     .status-absent { background-color: #dc3545; }
     .status-excused { background-color: #6c757d; }
+    .status-half_day { background-color: #17a2b8; }
     
     .attendance-table th, 
     .attendance-table td {
         vertical-align: middle;
     }
     
-    .form-check-input:checked[value="present"] {
+    .form-check-input[type="radio"]:checked[value="present"] {
         background-color: #28a745;
         border-color: #28a745;
     }
     
-    .form-check-input:checked[value="late"] {
+    .form-check-input[type="radio"]:checked[value="late"] {
         background-color: #ffc107;
         border-color: #ffc107;
     }
     
-    .form-check-input:checked[value="absent"] {
+    .form-check-input[type="radio"]:checked[value="absent"] {
         background-color: #dc3545;
         border-color: #dc3545;
     }
     
-    .form-check-input:checked[value="excused"] {
+    .form-check-input[type="radio"]:checked[value="excused"] {
         background-color: #6c757d;
         border-color: #6c757d;
+    }
+    
+    .form-check-input[type="radio"]:checked[value="half_day"] {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
     }
 </style>
 @endpush
@@ -249,7 +272,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Mark all attendance buttons
+        // Mark all present
         document.getElementById('markAllPresent').addEventListener('click', function() {
             document.querySelectorAll('input[value="present"]').forEach(radio => {
                 radio.checked = true;
@@ -257,6 +280,7 @@
             updateAttendanceSummary();
         });
         
+        // Mark all late
         document.getElementById('markAllLate').addEventListener('click', function() {
             document.querySelectorAll('input[value="late"]').forEach(radio => {
                 radio.checked = true;
@@ -264,6 +288,15 @@
             updateAttendanceSummary();
         });
         
+        // Mark all half day
+        document.getElementById('markAllHalfDay').addEventListener('click', function() {
+            document.querySelectorAll('input[value="half_day"]').forEach(radio => {
+                radio.checked = true;
+            });
+            updateAttendanceSummary();
+        });
+        
+        // Mark all absent
         document.getElementById('markAllAbsent').addEventListener('click', function() {
             document.querySelectorAll('input[value="absent"]').forEach(radio => {
                 radio.checked = true;
@@ -271,6 +304,7 @@
             updateAttendanceSummary();
         });
         
+        // Mark all excused
         document.getElementById('markAllExcused').addEventListener('click', function() {
             document.querySelectorAll('input[value="excused"]').forEach(radio => {
                 radio.checked = true;
@@ -293,10 +327,12 @@
             let present = document.querySelectorAll('input[value="present"]:checked').length;
             let late = document.querySelectorAll('input[value="late"]:checked').length;
             let absent = document.querySelectorAll('input[value="absent"]:checked').length;
-            let total = document.querySelectorAll('.status-radio[name^="attendance"]').length / 3;
+            let excused = document.querySelectorAll('input[value="excused"]:checked').length;
+            let halfDay = document.querySelectorAll('input[value="half_day"]:checked').length;
+            let total = document.querySelectorAll('.status-radio[name^="attendance"]').length / 5; // Updated for 5 options
             
             // You can add code here to display a summary if you want
-            console.log(`Present: ${present}, Late: ${late}, Absent: ${absent}, Total: ${total}`);
+            console.log(`Present: ${present}, Late: ${late}, Absent: ${absent}, Excused: ${excused}, Half Day: ${halfDay}, Total: ${total}`);
         }
     });
 </script>

@@ -707,6 +707,7 @@
             cursor: pointer;
             position: relative;
             transition: all 0.2s ease;
+            min-width: 40px; /* Base minimum width to display 2 digits */
         }
         
         .editable-score:hover {
@@ -718,10 +719,12 @@
             padding: 0;
             background-color: #e8f4ff;
             box-shadow: inset 0 0 0 2px #4dabf7;
+            min-width: 50px !important; /* Ensure room for 2 digits */
         }
         
         .editable-score.editing input {
             width: 100%;
+            min-width: 45px; /* Minimum width for 2 digits */
             height: 100%;
             box-sizing: border-box;
             text-align: center;
@@ -759,6 +762,107 @@
             width: 220px;
             transition: all 0.3s ease;
             border: 1px solid #e9ecef;
+        }
+        
+        /* Mobile-friendly edit controls */
+        @media screen and (max-width: 768px) {
+            .edit-controls {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 8px 8px 0 0;
+                padding: 10px;
+                background-color: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(5px);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                z-index: 1010;
+                /* Fix for Android sticky positioning */
+                transform: translateZ(0);
+                -webkit-transform: translateZ(0);
+            }
+            
+            .edit-controls h6 {
+                font-size: 12px;
+                margin-bottom: 5px;
+                padding-bottom: 5px;
+            }
+            
+            .edit-controls .status {
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+            
+            .edit-controls .actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .edit-controls button {
+                padding: 6px 5px;
+                font-size: 12px;
+            }
+            
+            /* Ensure table doesn't get hidden behind edit controls */
+            .table-responsive {
+                padding-bottom: 60px;
+            }
+            
+            /* Make input larger for easier touch on mobile */
+            .editable-score.editing input {
+                font-size: 16px;
+                min-height: 36px;
+                min-width: 50px; /* Ensure at least 2 digits are visible */
+                width: auto; /* Allow input to grow based on content */
+            }
+            
+            /* Enhanced mobile cell editing */
+            .editable-score.mobile-editing {
+                position: relative;
+                z-index: 1001;
+                background-color: #E3F2FD !important;
+                box-shadow: 0 0 0 3px #2196F3 !important;
+                min-width: 50px; /* Ensure the cell is wide enough */
+            }
+            
+            /* Make the cell being edited more visible */
+            tr.highlight-row {
+                background-color: rgba(200, 230, 255, 0.2) !important;
+            }
+            
+            /* Focus visible indicator for accessibility */
+            .editable-score.editing input:focus {
+                box-shadow: inset 0 0 0 2px #2196F3;
+                outline: none;
+            }
+            
+            /* More space for input in edited cell */
+            .editable-score.editing {
+                padding: 0 !important;
+                min-width: 50px !important; /* Ensure width for 2+ digits */
+            }
+            
+            /* Better validation display for Android */
+            .toast-container {
+                bottom: 80px; /* Place above the edit controls */
+                top: auto;
+                z-index: 1020; /* Higher than edit controls */
+            }
+            
+            .toast {
+                opacity: 1 !important; /* Ensure visibility */
+                min-width: 80%; /* Make toast wider */
+                max-width: 90%;
+                margin: 0 auto;
+                transform: none !important; /* Prevent transform issues */
+                right: 0;
+                left: 0;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.2); /* Stronger shadow */
+            }
         }
         
         .edit-controls h6 {
@@ -1271,6 +1375,50 @@
             .signature-item p[style*="margin-bottom"] {
                 margin-bottom: 15px !important;
             }
+        }
+        
+        /* Print layout exclusions - ensure mobile changes don't affect printing */
+        @media print {
+            .edit-controls {
+                display: none !important;
+            }
+            
+            .editable-score, 
+            .editable-score.mobile-editing, 
+            .editable-score.editing {
+                min-width: initial !important;
+                width: auto !important;
+                padding: initial !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+            }
+            
+            tr.highlight-row {
+                background-color: transparent !important;
+            }
+            
+            .table-responsive {
+                padding-bottom: 0 !important;
+            }
+            
+            .toast-container {
+                display: none !important;
+            }
+            
+            /* Ensure table cells have consistent sizing */
+            td, th {
+                padding: 2px !important;
+                font-size: 9pt !important;
+            }
+        }
+        
+        .edit-controls h6 {
+            margin: 0 0 10px 0;
+            padding-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #e9ecef;
+            color: #343a40;
         }
     </style>
 </head>
@@ -2081,12 +2229,39 @@
     <!-- Add JavaScript to handle editing -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // iOS detection function
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+        
+        // Determine request method and URL based on device
+        const requestMethod = isIOS() ? 'GET' : 'POST';
+        const requestUrl = isIOS() ? 
+            '{{ route("teacher.reports.edit-assessment-get") }}' : 
+            '{{ route("teacher.reports.edit-assessment") }}';
+            
+        // Log device information for debugging
+        console.log('Device detection:', {
+            isIOS: isIOS(),
+            userAgent: navigator.userAgent,
+            requestMethod: requestMethod,
+            requestUrl: requestUrl
+        });
+    </script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Enable edit mode for all editable cells
             setupAssessmentEditing();
             
             // Setup row highlighting
             setupRowHighlighting();
+            
+            // Check if mobile and adjust UI accordingly
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // Add class to body for mobile-specific styling
+                document.body.classList.add('mobile-view');
+            }
             
             // Hide buttons when page is being printed
             window.addEventListener('beforeprint', function() {
@@ -2184,35 +2359,27 @@
                     <div class="toast-title">${title}</div>
                     <div class="toast-message">${message}</div>
                 </div>
-                <div class="toast-close">×</div>
+                <div class="toast-close" onclick="this.parentNode.remove()">&times;</div>
             `;
             
             // Add to container
             toastContainer.appendChild(toast);
             
-            // Show animation
+            // Fade in
             setTimeout(() => {
                 toast.classList.add('show');
             }, 10);
             
-            // Close button functionality
-            const closeBtn = toast.querySelector('.toast-close');
-            closeBtn.addEventListener('click', () => {
+            // Remove after delay (longer for errors)
+            const removeDelay = type === 'error' ? 8000 : 5000;
+            setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
-                    toast.remove();
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
                 }, 300);
-            });
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.classList.remove('show');
-                    setTimeout(() => {
-                        if (toast.parentNode) toast.remove();
-                    }, 300);
-                }
-            }, 5000);
+            }, removeDelay);
         }
         
         function setupRowHighlighting() {
@@ -2400,6 +2567,7 @@
                 // Clear previous content and add input
                 cell.classList.add('editing');
                 cell.innerHTML = `<input type="number" min="0" max="${maxScore}" step="1" value="${originalValue}" 
+                                    style="min-width: 50px; width: auto;"
                                     data-student-id="${studentId}"
                                     data-subject-id="${subjectId}"
                                     data-quarter="${quarter}"
@@ -2415,6 +2583,20 @@
                 
                 // Assign a tabindex for keyboard navigation
                 input.tabIndex = 1;
+                
+                // Check if on mobile and scroll to cell if needed
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    // Ensure cell is visible by scrolling to it
+                    cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Add mobile edit class to highlight
+                    cell.classList.add('mobile-editing');
+                    
+                    // Create a compact student + assessment identifier
+                    const studentName = row.querySelector('td:first-child')?.textContent.trim() || 'Student';
+                    editingInfo.textContent = `${studentName}: ${typeLabel} (Max: ${maxScore})`;
+                }
                 
                 // Show edit controls
                 editControls.style.display = 'block';
@@ -2434,14 +2616,22 @@
                 
                 // Add validation for input changes
                 input.addEventListener('input', function(e) {
-                    const maxScore = parseFloat(this.dataset.maxScore);
-                    const enteredValue = parseFloat(this.value);
-                    
-                    if (enteredValue > maxScore) {
-                        this.classList.add('error');
-                        showToast('Warning', `Score cannot exceed maximum of ${maxScore}`, 'error');
+                    const value = parseFloat(this.value) || 0;
+                    if (value > maxScore) {
+                        this.setCustomValidity(`Score cannot exceed maximum of ${maxScore}`);
+                        this.style.borderColor = '#f44336';
+                        this.style.backgroundColor = 'rgba(244, 67, 54, 0.05)';
                     } else {
-                        this.classList.remove('error');
+                        this.setCustomValidity('');
+                        this.style.borderColor = '';
+                        this.style.backgroundColor = '';
+                    }
+                    
+                    // Ensure the input is sized appropriately to show at least 2 digits
+                    if (this.value.length < 2) {
+                        this.style.width = '50px';
+                    } else {
+                        this.style.width = (this.value.length * 25) + 'px';
                     }
                 });
             }
@@ -2507,8 +2697,8 @@
                 });
                 
                 $.ajax({
-                    url: '{{ route("teacher.reports.edit-assessment") }}',
-                    method: 'POST',
+                    url: requestUrl,
+                    method: requestMethod,
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
@@ -2526,6 +2716,7 @@
                         // Update cell with new value
                         activeCell.textContent = newValue;
                         activeCell.classList.remove('editing');
+                        activeCell.classList.remove('mobile-editing');
                         
                         if (moveToNext) {
                             // Find next cell and edit it
@@ -2660,8 +2851,8 @@
                         
                         // Make AJAX request
                         $.ajax({
-                            url: '{{ route("teacher.reports.edit-assessment") }}',
-                            method: 'POST',
+                            url: requestUrl,
+                            method: requestMethod,
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
@@ -2743,11 +2934,12 @@
             function cancelEdit(cell) {
                 if (!cell) return;
                 
-                // Restore original text
-                cell.textContent = originalValue;
+                // Restore original value
+                cell.innerHTML = originalValue;
                 cell.classList.remove('editing');
+                cell.classList.remove('mobile-editing');
                 
-                // Remove row highlight
+                // Remove row highlighting
                 const row = cell.closest('tr');
                 if (row) {
                     row.classList.remove('highlight-row');
@@ -3242,21 +3434,41 @@
                 bgColor = '#ff9800'; // Warning orange
             }
             
-            toast.style = `
+            // Check if this is mobile
+            const isMobile = window.innerWidth <= 768;
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            
+            // Base styling
+            let toastStyle = `
                 position: fixed;
-                bottom: 20px;
+                ${isMobile ? 'bottom: 80px;' : 'top: 20px;'}
                 right: 20px;
-                min-width: 250px;
-                max-width: 350px;
+                min-width: ${isMobile ? '80%' : '250px'};
+                max-width: ${isMobile ? '90%' : '350px'};
                 background-color: ${bgColor};
                 color: white;
                 padding: 15px;
                 border-radius: 5px;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-                z-index: 1001;
+                z-index: ${isMobile ? '1020' : '1001'};
                 opacity: 0;
                 transition: opacity 0.5s;
             `;
+            
+            // Add specific Android fixes
+            if (isAndroid) {
+                toastStyle += `
+                    left: 0;
+                    right: 0;
+                    margin: 0 auto;
+                    max-width: 90%;
+                    transform: none !important;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                    opacity: 1;
+                `;
+            }
+            
+            toast.style = toastStyle;
             
             toast.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3268,14 +3480,19 @@
             
             document.body.appendChild(toast);
             
-            // Fade in
-            setTimeout(() => {
-                toast.style.opacity = '1';
-            }, 10);
+            // Fade in (except for Android)
+            if (!isAndroid) {
+                setTimeout(() => {
+                    toast.style.opacity = '1';
+                }, 10);
+            }
             
-            // Auto hide after 5 seconds for success/info
+            // Auto hide after 5 seconds for success/info, longer for errors
             if (type !== 'error') {
                 setTimeout(hideToasts, 5000);
+            } else {
+                // Errors stay longer
+                setTimeout(hideToasts, 8000);
             }
         }
         
@@ -3572,21 +3789,41 @@
             bgColor = '#ff9800'; // Warning orange
         }
         
-        toast.style = `
+        // Check if this is mobile
+        const isMobile = window.innerWidth <= 768;
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        // Base styling
+        let toastStyle = `
             position: fixed;
-            bottom: 20px;
+            ${isMobile ? 'bottom: 80px;' : 'top: 20px;'}
             right: 20px;
-            min-width: 250px;
-            max-width: 350px;
+            min-width: ${isMobile ? '80%' : '250px'};
+            max-width: ${isMobile ? '90%' : '350px'};
             background-color: ${bgColor};
             color: white;
             padding: 15px;
             border-radius: 5px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 1001;
+            z-index: ${isMobile ? '1020' : '1001'};
             opacity: 0;
             transition: opacity 0.5s;
         `;
+        
+        // Add specific Android fixes
+        if (isAndroid) {
+            toastStyle += `
+                left: 0;
+                right: 0;
+                margin: 0 auto;
+                max-width: 90%;
+                transform: none !important;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                opacity: 1;
+            `;
+        }
+        
+        toast.style = toastStyle;
         
         toast.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3598,14 +3835,19 @@
         
         document.body.appendChild(toast);
         
-        // Fade in
-        setTimeout(() => {
-            toast.style.opacity = '1';
-        }, 10);
+        // Fade in (except for Android)
+        if (!isAndroid) {
+            setTimeout(() => {
+                toast.style.opacity = '1';
+            }, 10);
+        }
         
-        // Auto hide after 5 seconds for success/info
+        // Auto hide after 5 seconds for success/info, longer for errors
         if (type !== 'error') {
             setTimeout(hideToasts, 5000);
+        } else {
+            // Errors stay longer
+            setTimeout(hideToasts, 8000);
         }
     }
     

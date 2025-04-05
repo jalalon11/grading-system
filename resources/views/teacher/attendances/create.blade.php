@@ -101,6 +101,7 @@
     .status-late { background-color: #ffc107; }
     .status-absent { background-color: #dc3545; }
     .status-excused { background-color: #6c757d; }
+    .status-half_day { background-color: #17a2b8; }
     
     .attendance-table th, 
     .attendance-table td {
@@ -125,6 +126,11 @@
     .form-check-input:checked[value="excused"] {
         background-color: #6c757d;
         border-color: #6c757d;
+    }
+    
+    .form-check-input:checked[value="half_day"] {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
     }
     
     .student-table-container {
@@ -298,6 +304,15 @@
                                                 <span class="status-badge status-excused"></span>Excused
                                             </label>
                                         </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" 
+                                                name="attendance[${student.id}]" 
+                                                id="half_day_${student.id}" 
+                                                value="half_day">
+                                            <label class="form-check-label" for="half_day_${student.id}">
+                                                <span class="status-badge status-half_day"></span>Half Day
+                                            </label>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -317,11 +332,14 @@
                                     <div class="me-3">
                                         <span class="status-badge status-late"></span> Late
                                     </div>
-                                    <div>
+                                    <div class="me-3">
                                         <span class="status-badge status-absent"></span> Absent
                                     </div>
-                                    <div>
+                                    <div class="me-3">
                                         <span class="status-badge status-excused"></span> Excused
+                                    </div>
+                                    <div>
+                                        <span class="status-badge status-half_day"></span> Half Day
                                     </div>
                                 </div>
                             </div>

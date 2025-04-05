@@ -5,12 +5,12 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-primary text-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-calendar-check text-primary me-2"></i> Attendance Records
+                            <i class="fas fa-calendar-check text-white me-2"></i> Attendance Records
                         </h5>
-                        <a href="{{ route('teacher.attendances.create') }}" class="btn btn-primary">
+                        <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light">
                             <i class="fas fa-plus-circle me-1"></i> Record New Attendance
                         </a>
                     </div>
@@ -38,7 +38,7 @@
                                 <i class="fas fa-filter text-secondary me-1"></i> Filter Records
                             </h6>
                             <form method="GET" action="{{ route('teacher.attendances.index') }}" class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label for="section_id" class="form-label fw-medium">Section</label>
                                     <select class="form-select" id="section_id" name="section_id">
                                         <option value="">All Sections</option>
@@ -49,11 +49,22 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="date" class="form-label fw-medium">Date</label>
+                                <div class="col-md-3">
+                                    <label for="month" class="form-label fw-medium">Month</label>
+                                    <select class="form-select" id="month" name="month">
+                                        <option value="">All Months</option>
+                                        @foreach($availableMonths as $month)
+                                            <option value="{{ $month->month_value }}" {{ request('month') == $month->month_value ? 'selected' : '' }}>
+                                                {{ $month->month_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="date" class="form-label fw-medium">Specific Date</label>
                                     <input type="date" class="form-control" id="date" name="date" value="{{ request('date') }}">
                                 </div>
-                                <div class="col-md-4 d-flex align-items-end">
+                                <div class="col-md-3 d-flex align-items-end">
                                     <button type="submit" class="btn btn-secondary me-2">
                                         <i class="fas fa-search me-1"></i> Apply Filters
                                     </button>
@@ -65,6 +76,130 @@
                         </div>
                     </div>
 
+                    <!-- Monthly Summary Card (only shows when month filter is applied) -->
+                    @if(request('month'))
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i> 
+                                Monthly Attendance Summary: {{ \Carbon\Carbon::createFromFormat('Y-m', request('month'))->format('F Y') }}
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                @php
+                                    $totalPresent = 0;
+                                    $totalLate = 0;
+                                    $totalAbsent = 0;
+                                    $totalExcused = 0;
+                                    $totalHalfDay = 0;
+                                    $totalStudents = 0;
+                                    
+                                    foreach ($attendances as $dateGroup) {
+                                        foreach ($dateGroup as $attendance) {
+                                            $totalPresent += $attendance['present_count'];
+                                            $totalLate += $attendance['late_count'];
+                                            $totalAbsent += $attendance['absent_count'];
+                                            $totalExcused += $attendance['excused_count'];
+                                            $totalHalfDay += $attendance['half_day_count'];
+                                        }
+                                    }
+                                    
+                                    $totalStudents = $totalPresent + $totalLate + $totalAbsent + $totalExcused + $totalHalfDay;
+                                    $attendanceRate = $totalStudents > 0 ? 
+                                        round((($totalPresent + $totalLate + ($totalHalfDay * 0.5)) / $totalStudents) * 100, 1) : 0;
+                                @endphp
+                                
+                                <!-- Overall Attendance Rate -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-4 text-center">
+                                            <h6 class="text-muted mb-3">Overall Attendance Rate</h6>
+                                            <div class="d-flex justify-content-center">
+                                                <div class="position-relative" style="width: 150px; height: 150px;">
+                                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                                        <h2 class="mb-0 fw-bold">{{ $attendanceRate }}%</h2>
+                                                    </div>
+                                                    <svg width="150" height="150" viewBox="0 0 36 36">
+                                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f2f2f2" stroke-width="2.5"></circle>
+                                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#0d6efd" stroke-width="2.5" 
+                                                                stroke-dasharray="{{ $attendanceRate * 0.01 * 100 }} 100" 
+                                                                stroke-dashoffset="25" class="progress-circle"></circle>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <div class="text-muted mt-2">
+                                                Total Records: {{ $totalStudents }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Status Breakdown -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-4">
+                                            <h6 class="text-muted mb-3 text-center">Attendance Breakdown</h6>
+                                            <div class="d-flex flex-column gap-3 mt-4">
+                                                <div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span><i class="fas fa-circle text-success me-2"></i> Present</span>
+                                                        <span class="fw-medium">{{ $totalPresent }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" 
+                                                            style="width: {{ $totalStudents > 0 ? ($totalPresent / $totalStudents) * 100 : 0 }}%"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span><i class="fas fa-circle text-warning me-2"></i> Late</span>
+                                                        <span class="fw-medium">{{ $totalLate }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                                            style="width: {{ $totalStudents > 0 ? ($totalLate / $totalStudents) * 100 : 0 }}%"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span><i class="fas fa-circle text-info me-2"></i> Half Day</span>
+                                                        <span class="fw-medium">{{ $totalHalfDay }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-info" role="progressbar" 
+                                                            style="width: {{ $totalStudents > 0 ? ($totalHalfDay / $totalStudents) * 100 : 0 }}%"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span><i class="fas fa-circle text-danger me-2"></i> Absent</span>
+                                                        <span class="fw-medium">{{ $totalAbsent }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-danger" role="progressbar" 
+                                                            style="width: {{ $totalStudents > 0 ? ($totalAbsent / $totalStudents) * 100 : 0 }}%"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="d-flex justify-content-between mb-1">
+                                                        <span><i class="fas fa-circle text-secondary me-2"></i> Excused</span>
+                                                        <span class="fw-medium">{{ $totalExcused }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-secondary" role="progressbar" 
+                                                            style="width: {{ $totalStudents > 0 ? ($totalExcused / $totalStudents) * 100 : 0 }}%"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Attendance Records Table -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -74,6 +209,7 @@
                                     <th>Section</th>
                                     <th class="text-center">Present</th>
                                     <th class="text-center">Late</th>
+                                    <th class="text-center">Half Day</th>
                                     <th class="text-center">Absent</th>
                                     <th class="text-center">Excused</th>
                                     <th class="text-center">Attendance Rate</th>
@@ -84,9 +220,9 @@
                                 @forelse ($attendances as $date => $dateGroup)
                                     @foreach ($dateGroup as $sectionId => $attendance)
                                         @php
-                                            $totalStudents = $attendance['present_count'] + $attendance['late_count'] + $attendance['absent_count'] + $attendance['excused_count'];
+                                            $totalStudents = $attendance['present_count'] + $attendance['late_count'] + $attendance['absent_count'] + $attendance['excused_count'] + $attendance['half_day_count'];
                                             $attendanceRate = $totalStudents > 0 ? 
-                                                round((($attendance['present_count'] + $attendance['late_count']) / $totalStudents) * 100, 1) : 0;
+                                                round((($attendance['present_count'] + $attendance['late_count'] + ($attendance['half_day_count'] * 0.5)) / $totalStudents) * 100, 1) : 0;
                                         @endphp
                                         <tr>
                                             <td class="fw-medium">{{ \Carbon\Carbon::parse($date)->format('M d, Y') }}</td>
@@ -96,6 +232,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-warning text-dark rounded-pill">{{ $attendance['late_count'] ?? 0 }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info text-dark rounded-pill">{{ $attendance['half_day_count'] ?? 0 }}</span>
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge bg-danger rounded-pill">{{ $attendance['absent_count'] }}</span>
@@ -162,5 +301,15 @@
         });
     });
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .progress-circle {
+        transform: rotate(-90deg);
+        transform-origin: 50% 50%;
+        transition: stroke-dasharray 0.5s ease;
+    }
+</style>
 @endpush
 @endsection 

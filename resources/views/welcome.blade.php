@@ -461,7 +461,7 @@
                         <a href="#benefits" class="text-gray-700 hover:text-gray-900">Benefits</a>
                         <a href="#developer" class="text-gray-700 hover:text-gray-900">Developer</a>
                         @auth
-                            <a href="{{ url('/dashboard') }}" class="btn-primary text-white ml-4">
+                            <a href="{{ url('login') }}" class="btn-primary text-white ml-4">
                                 Log in
                             </a>
                         @else

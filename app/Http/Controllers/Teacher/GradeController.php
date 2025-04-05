@@ -1847,6 +1847,13 @@ class GradeController extends Controller
      */
     public function editAssessment(Request $request)
     {
+        // Log the request method for debugging
+        \Illuminate\Support\Facades\Log::info('Edit Assessment Request', [
+            'method' => $request->method(),
+            'user_agent' => $request->header('User-Agent'),
+            'params' => $request->all()
+        ]);
+        
         $request->validate([
             'student_id' => 'required|integer|exists:students,id',
             'subject_id' => 'required|integer|exists:subjects,id',
