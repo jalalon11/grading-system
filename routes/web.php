@@ -6,10 +6,11 @@ use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\TeacherAdminController;
 use App\Http\Controllers\Teacher\AttendanceController;
+use App\Http\Controllers\Teacher\CertificateController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\GradeController;
+use App\Http\Controllers\Teacher\ReportController;
 use App\Http\Controllers\Teacher\StudentController;
-use App\Http\Controllers\Teacher\SubjectController;
 use App\Http\Controllers\Teacher\GradeConfigurationController;
 use App\Http\Controllers\TeacherAdmin\DashboardController as TeacherAdminDashboardController;
 use App\Http\Controllers\TeacherAdmin\SectionController;
@@ -53,7 +54,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::resource('teachers', TeacherController::class);
         Route::post('teachers/{teacher}/reset-password', [TeacherController::class, 'resetPassword'])->name('teachers.reset-password');
         Route::resource('teacher-admins', TeacherAdminController::class);
-        
+
         // API Routes
         Route::get('/api/schools/{school}/teachers', [TeacherAdminController::class, 'getTeachers']);
     });
@@ -68,21 +69,21 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         })->name('profile');
         Route::put('/profile/update', [TeacherDashboardController::class, 'updateProfile'])->name('profile.update');
         Route::put('/profile/password', [TeacherDashboardController::class, 'updatePassword'])->name('password.update');
-        
+
         // Gender distribution endpoint for AJAX
         Route::get('/students/gender-distribution', [StudentController::class, 'genderDistribution'])->name('students.gender-distribution');
-        
+
         // Regular teacher functionality - all teachers including teacher admins
         Route::resource('students', StudentController::class);
         Route::get('grades/assessment-setup', [GradeController::class, 'assessmentSetup'])->name('grades.assessment-setup');
         Route::post('grades/store-assessment-setup', [GradeController::class, 'storeAssessmentSetup'])->name('grades.store-assessment-setup');
         Route::get('grades/batch-create', [GradeController::class, 'batchCreate'])->name('grades.batch-create');
         Route::post('grades/batch-store', [GradeController::class, 'batchStore'])->name('grades.batch-store');
-        
+
         // New Configure Grades routes
         Route::get('grades/configure', [GradeController::class, 'showConfigureForm'])->name('grades.configure');
         Route::post('grades/configure', [GradeController::class, 'configureGrades'])->name('grades.store-configure');
-        
+
         // Grades routes
         Route::get('grades', [GradeController::class, 'index'])->name('grades.index');
         Route::get('grades/create', [GradeController::class, 'create'])->name('grades.create');
@@ -93,67 +94,84 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::get('grades/{grade}', [GradeController::class, 'show'])->name('grades.show');
         Route::post('grades/lock-transmutation-table', [GradeController::class, 'lockTransmutationTable'])->name('grades.lock-transmutation');
         Route::post('grades/update-transmutation-preference', [GradeController::class, 'updateTransmutationPreference'])->name('grades.update-transmutation-preference');
-        
+
         // Reports Routes
-        Route::get('reports', [\App\Http\Controllers\Teacher\ReportController::class, 'index'])->name('reports.index');
-        Route::get('reports/class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'classRecord'])->name('reports.class-record');
-        Route::post('reports/generate-class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record');
-        Route::get('reports/generate-class-record', [\App\Http\Controllers\Teacher\ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record-get');
-        Route::get('reports/section-subjects', [\App\Http\Controllers\Teacher\ReportController::class, 'getSectionSubjects'])->name('reports.section-subjects');
-        Route::post('reports/students-by-grade-ranges', [\App\Http\Controllers\Teacher\ReportController::class, 'getStudentsByGradeRanges'])->name('reports.students-by-grade-ranges');
-        
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/class-record', [ReportController::class, 'classRecord'])->name('reports.class-record');
+        Route::post('reports/generate-class-record', [ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record');
+        Route::get('reports/generate-class-record', [ReportController::class, 'generateClassRecord'])->name('reports.generate-class-record-get');
+        Route::get('reports/section-subjects', [ReportController::class, 'getSectionSubjects'])->name('reports.section-subjects');
+        Route::post('reports/students-by-grade-ranges', [ReportController::class, 'getStudentsByGradeRanges'])->name('reports.students-by-grade-ranges');
+
+        // Certificates Routes (now under reports)
+        Route::get('reports/certificates', [CertificateController::class, 'index'])->name('reports.certificates.index');
+        Route::get('reports/certificates/generate', [CertificateController::class, 'generate'])->name('reports.certificates.generate');
+        Route::get('reports/certificates/preview', [CertificateController::class, 'preview'])->name('reports.certificates.preview');
+        Route::get('reports/certificates/bulk-preview', [CertificateController::class, 'generateBulk'])->name('reports.certificates.bulk-preview');
+
+        // Legacy routes for backward compatibility
+        Route::get('certificates', function() {
+            return redirect()->route('teacher.reports.certificates.index');
+        })->name('certificates.index');
+        Route::get('certificates/generate', function() {
+            return redirect()->route('teacher.reports.certificates.generate');
+        })->name('certificates.generate');
+        Route::get('certificates/preview', function() {
+            return redirect()->route('teacher.reports.certificates.preview');
+        })->name('certificates.preview');
+
         Route::resource('attendances', AttendanceController::class);
-        
+
         // API endpoint to get students by section ID
         Route::get('/sections/{section}/students', function($section) {
             $section = Section::where('id', $section)
                 ->where('adviser_id', Auth::id())
                 ->firstOrFail();
-                
+
             $students = Student::where('section_id', $section->id)
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
-                
+
             return response()->json(['students' => $students]);
         });
-        
+
         // Grade Configuration routes
         Route::get('grade-configurations/{subject}', [GradeConfigurationController::class, 'edit'])->name('grade-configurations.edit');
         Route::put('grade-configurations/{subject}', [GradeConfigurationController::class, 'update'])->name('grade-configurations.update');
-        
+
         // Redirect section/subject routes to teacher-admin routes for teacher admins
         Route::middleware(['teacher.admin'])->group(function () {
             // Redirect sections routes to new-sections
             Route::get('sections', function() {
                 return redirect()->route('teacher-admin.sections.index');
             })->name('sections.index');
-            
+
             Route::get('sections/create', function() {
                 return redirect()->route('teacher-admin.sections.create');
             })->name('sections.create');
-            
+
             Route::get('sections/{section}', function($section) {
                 return redirect()->route('teacher-admin.sections.show', $section);
             })->name('sections.show');
-            
+
             Route::get('sections/{section}/edit', function($section) {
                 return redirect()->route('teacher-admin.sections.edit', $section);
             })->name('sections.edit');
-            
+
             // Redirect subjects routes to teacher-admin versions
             Route::get('subjects', function() {
                 return redirect()->route('teacher-admin.subjects.index');
             })->name('subjects.index');
-            
+
             Route::get('subjects/create', function() {
                 return redirect()->route('teacher-admin.subjects.create');
             })->name('subjects.create');
-            
+
             Route::get('subjects/{subject}', function($subject) {
                 return redirect()->route('teacher-admin.subjects.show', $subject);
             })->name('subjects.show');
-            
+
             Route::get('subjects/{subject}/edit', function($subject) {
                 return redirect()->route('teacher-admin.subjects.edit', $subject);
             })->name('subjects.edit');
@@ -178,7 +196,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             })->name('profile');
             Route::put('/profile/update', [\App\Http\Controllers\TeacherAdmin\DashboardController::class, 'updateProfile'])->name('profile.update');
             Route::put('/profile/password', [\App\Http\Controllers\TeacherAdmin\DashboardController::class, 'updatePassword'])->name('password.update');
-            
+
             // Subjects Management
             Route::resource('subjects', TeacherAdminSubjectController::class);
             Route::post('subjects/{subject}/assign-teachers', [TeacherAdminSubjectController::class, 'assignTeachers'])
