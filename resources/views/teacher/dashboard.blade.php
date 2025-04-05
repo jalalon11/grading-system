@@ -885,6 +885,17 @@
                             borderWidth: 1
                         },
                         {
+                            label: 'Half Day',
+                            data: [
+                                @foreach($attendanceTrends as $trend)
+                                    {{ $trend['half_day'] ?? 0 }},
+                                @endforeach
+                            ],
+                            backgroundColor: '#17a2b8',
+                            borderColor: '#17a2b8',
+                            borderWidth: 1
+                        },
+                        {
                             label: 'Absent',
                             data: [
                                 @foreach($attendanceTrends as $trend)
@@ -1048,11 +1059,12 @@
                         attendanceChart.data.labels = data.labels;
                         attendanceChart.data.datasets[0].data = data.present;
                         attendanceChart.data.datasets[1].data = data.late;
-                        attendanceChart.data.datasets[2].data = data.absent;
-                        attendanceChart.data.datasets[3].data = data.excused;
+                        attendanceChart.data.datasets[2].data = data.half_day;
+                        attendanceChart.data.datasets[3].data = data.absent;
+                        attendanceChart.data.datasets[4].data = data.excused;
                         
                         // Determine the max value for y-axis
-                        const allValues = [...data.present, ...data.late, ...data.absent, ...data.excused];
+                        const allValues = [...data.present, ...data.late, ...data.half_day, ...data.absent, ...data.excused];
                         const maxValue = Math.max(...allValues, 1); // Minimum of 1
                         
                         // Update y-axis max value and step size
@@ -1106,11 +1118,12 @@
                         attendanceChart.data.labels = data.labels;
                         attendanceChart.data.datasets[0].data = data.present;
                         attendanceChart.data.datasets[1].data = data.late;
-                        attendanceChart.data.datasets[2].data = data.absent;
-                        attendanceChart.data.datasets[3].data = data.excused;
+                        attendanceChart.data.datasets[2].data = data.half_day;
+                        attendanceChart.data.datasets[3].data = data.absent;
+                        attendanceChart.data.datasets[4].data = data.excused;
                         
                         // Determine the max value for y-axis
-                        const allValues = [...data.present, ...data.late, ...data.absent, ...data.excused];
+                        const allValues = [...data.present, ...data.late, ...data.half_day, ...data.absent, ...data.excused];
                         const maxValue = Math.max(...allValues, 1); // Minimum of 1
                         
                         // Update y-axis max value and step size

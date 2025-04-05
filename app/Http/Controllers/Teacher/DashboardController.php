@@ -94,6 +94,7 @@ class DashboardController extends Controller
                     $lateCount = 0;
                     $absentCount = 0;
                     $excusedCount = 0;
+                    $halfDayCount = 0;
                     $totalStudents = 0;
                     
                     foreach ($attendanceRecords as $record) {
@@ -112,6 +113,8 @@ class DashboardController extends Controller
                                         $absentCount++;
                                     } elseif ($data['status'] === 'excused') {
                                         $excusedCount++;
+                                    } elseif ($data['status'] === 'half_day') {
+                                        $halfDayCount++;
                                     }
                                 }
                             }
@@ -127,6 +130,8 @@ class DashboardController extends Controller
                                 $absentCount++;
                             } elseif ($record->status === 'excused') {
                                 $excusedCount++;
+                            } elseif ($record->status === 'half_day') {
+                                $halfDayCount++;
                             }
                         }
                     }
@@ -138,6 +143,7 @@ class DashboardController extends Controller
                         'late' => $lateCount,
                         'absent' => $absentCount,
                         'excused' => $excusedCount,
+                        'half_day' => $halfDayCount,
                         'total' => $totalStudents
                     ]);
                 } else {
@@ -147,6 +153,7 @@ class DashboardController extends Controller
                         'late' => 0,
                         'absent' => 0,
                         'excused' => 0,
+                        'half_day' => 0,
                         'total' => 0
                     ]);
                 }
@@ -329,6 +336,7 @@ class DashboardController extends Controller
             'labels' => [],
             'present' => [],
             'late' => [],
+            'half_day' => [],
             'absent' => [],
             'excused' => [],
             'total' => []
@@ -435,6 +443,7 @@ class DashboardController extends Controller
         $lateCount = 0;
         $absentCount = 0;
         $excusedCount = 0;
+        $halfDayCount = 0;
         $totalStudents = 0;
         
         foreach ($records as $record) {
@@ -454,6 +463,8 @@ class DashboardController extends Controller
                             $absentCount++;
                         } elseif ($attendance['status'] === 'excused') {
                             $excusedCount++;
+                        } elseif ($attendance['status'] === 'half_day') {
+                            $halfDayCount++;
                         }
                     }
                 }
@@ -469,6 +480,8 @@ class DashboardController extends Controller
                     $absentCount++;
                 } elseif ($record->status === 'excused') {
                     $excusedCount++;
+                } elseif ($record->status === 'half_day') {
+                    $halfDayCount++;
                 }
             }
         }
@@ -478,6 +491,7 @@ class DashboardController extends Controller
         $data['late'][] = $lateCount;
         $data['absent'][] = $absentCount;
         $data['excused'][] = $excusedCount;
+        $data['half_day'][] = $halfDayCount;
         $data['total'][] = $totalStudents;
     }
 

@@ -188,6 +188,7 @@ $attendanceSummary = [
     'late' => 0,
     'absent' => 0,
     'excused' => 0,
+    'half_day' => 0,
     'total' => 0
 ];
 
@@ -201,12 +202,14 @@ foreach($student->attendances as $attendance) {
         $attendanceSummary['absent']++;
     } elseif ($attendance->status == 'excused') {
         $attendanceSummary['excused']++;
+    } elseif ($attendance->status == 'half_day') {
+        $attendanceSummary['half_day']++;
     }
 }
 
 // Calculate attendance percentage
 $attendancePercentage = $attendanceSummary['total'] > 0 
-    ? round(($attendanceSummary['present'] + $attendanceSummary['late']) / $attendanceSummary['total'] * 100, 1) 
+    ? round(($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) / $attendanceSummary['total'] * 100, 1) 
     : 0;
 
 // Calculate student's age
@@ -1295,7 +1298,7 @@ $age = $birthDate->diff($today)->y;
                         <div class="fw-bold">{{ isset($attendancePercentage) ? $attendancePercentage : 0 }}%</div>
                     </div>
                     <div class="text-muted small">
-                        <span class="text-success">{{ isset($attendanceSummary) ? ($attendanceSummary['present'] + $attendanceSummary['late']) : 0 }}</span> present out of {{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }} school days
+                        <span class="text-success">{{ isset($attendanceSummary) ? ($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) : 0 }}</span> present out of {{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }} school days
                     </div>
                 </div>
                 
@@ -1323,6 +1326,19 @@ $age = $birthDate->diff($today)->y;
                                 <div>
                                     <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['late'] : 0 }}</h4>
                                     <div class="text-muted small">Late</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card half-day">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-adjust fa-2x text-info"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['half_day'] : 0 }}</h4>
+                                    <div class="text-muted small">Half Day</div>
                                 </div>
                             </div>
                         </div>

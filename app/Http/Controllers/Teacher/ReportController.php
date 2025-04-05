@@ -64,12 +64,15 @@ class ReportController extends Controller
     
     public function generateClassRecord(Request $request)
     {
-        // Validate the request
+        // Validate the request - allow both POST and GET methods
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
             'quarter' => 'required|in:Q1,Q2,Q3,Q4',
         ]);
+
+        // Log the request method for debugging
+        error_log('Request method: ' . $request->method() . ' - From User Agent: ' . $request->header('User-Agent'));
 
         // Get the section and subject
         $section = Section::findOrFail($validated['section_id']);

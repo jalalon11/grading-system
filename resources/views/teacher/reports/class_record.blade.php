@@ -28,7 +28,7 @@
                         </div>
                     </div>
                     
-                    <form action="{{ route('teacher.reports.generate-class-record') }}" method="POST" target="_blank" class="needs-validation" novalidate>
+                    <form id="classRecordForm" action="{{ route('teacher.reports.generate-class-record') }}" method="POST" target="_blank" class="needs-validation" novalidate>
                         @csrf
                         <div class="row g-3">
                             <div class="col-md-12 mb-3">
@@ -146,6 +146,22 @@
         const subjectSelect = document.getElementById('subject_id');
         const mapehComponentContainer = document.getElementById('mapeh_component_container');
         const mapehComponentSelect = document.getElementById('mapeh_component_id');
+        const classRecordForm = document.getElementById('classRecordForm');
+        
+        // Detect iOS device and modify form method
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+        
+        if (isIOS()) {
+            classRecordForm.method = "GET";
+            classRecordForm.action = "{{ route('teacher.reports.generate-class-record-get') }}";
+            // Remove CSRF token for GET requests
+            const csrfToken = classRecordForm.querySelector('input[name="_token"]');
+            if (csrfToken) {
+                csrfToken.parentNode.removeChild(csrfToken);
+            }
+        }
         
         // Keep track of MAPEH components for each subject
         let mapehComponents = {};

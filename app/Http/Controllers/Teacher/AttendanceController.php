@@ -32,6 +32,17 @@ class AttendanceController extends Controller
             $query->where('attendances.date', $request->date);
         }
         
+        // Filter by month if month parameter is provided (format: YYYY-MM)
+        if ($request->filled('month')) {
+            $monthYear = explode('-', $request->month);
+            if (count($monthYear) === 2) {
+                $year = $monthYear[0];
+                $month = $monthYear[1];
+                $query->whereYear('attendances.date', $year)
+                      ->whereMonth('attendances.date', $month);
+            }
+        }
+        
         $attendanceRecords = $query->select('attendances.*', DB::raw("CONCAT(students.first_name, ' ', students.last_name) as name"), 'students.section_id')
             ->orderBy('attendances.date', 'desc')
             ->get();
@@ -53,7 +64,8 @@ class AttendanceController extends Controller
                     'present_count' => 0,
                     'late_count' => 0,
                     'absent_count' => 0,
-                    'excused_count' => 0
+                    'excused_count' => 0,
+                    'half_day_count' => 0
                 ];
             }
             
@@ -63,12 +75,21 @@ class AttendanceController extends Controller
                 $attendances[$date][$sectionId]['late_count']++;
             } elseif ($record->status === 'excused') {
                 $attendances[$date][$sectionId]['excused_count']++;
+            } elseif ($record->status === 'half_day') {
+                $attendances[$date][$sectionId]['half_day_count']++;
             } else {
                 $attendances[$date][$sectionId]['absent_count']++;
             }
         }
         
-        return view('teacher.attendances.index', compact('attendances', 'sections'));
+        // Get unique months from records for the month filter dropdown
+        $availableMonths = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id())
+            ->select(DB::raw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month_value, DATE_FORMAT(date, "%M %Y") as month_name'))
+            ->orderBy('month_value', 'desc')
+            ->get();
+            
+        return view('teacher.attendances.index', compact('attendances', 'sections', 'availableMonths'));
     }
 
     /**
@@ -89,7 +110,7 @@ class AttendanceController extends Controller
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
             'attendance' => 'required|array',
-            'attendance.*' => 'required|in:present,absent,late,excused',
+            'attendance.*' => 'required|in:present,absent,late,excused,half_day',
         ]);
         
         // Check if the section belongs to this teacher
@@ -179,6 +200,7 @@ class AttendanceController extends Controller
         $presentCount = 0;
         $lateCount = 0;
         $excusedCount = 0;
+        $halfDayCount = 0;
         foreach ($attendanceRecords as $record) {
             $attendanceData[$record->student_id] = $record->status;
             if ($record->status === 'present') {
@@ -187,12 +209,14 @@ class AttendanceController extends Controller
                 $lateCount++;
             } elseif ($record->status === 'excused') {
                 $excusedCount++;
+            } elseif ($record->status === 'half_day') {
+                $halfDayCount++;
             }
         }
         
-        $absentCount = count($students) - ($presentCount + $lateCount + $excusedCount);
+        $absentCount = count($students) - ($presentCount + $lateCount + $excusedCount + $halfDayCount);
         
-        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount'));
+        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount', 'halfDayCount'));
     }
 
     /**
@@ -240,7 +264,7 @@ class AttendanceController extends Controller
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
             'attendance' => 'required|array',
-            'attendance.*' => 'required|in:present,absent,late,excused',
+            'attendance.*' => 'required|in:present,absent,late,excused,half_day',
         ]);
         
         // Check if the section belongs to this teacher

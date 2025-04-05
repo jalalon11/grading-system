@@ -70,6 +70,16 @@
                                                     </div>
                                                 </div>
                                                 
+                                                <div class="attendance-stat-item mb-3 p-3 rounded bg-light">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <span class="text-muted">Half Day</span>
+                                                        <span class="badge bg-info text-dark rounded-pill">{{ $halfDayCount }}</span>
+                                                    </div>
+                                                    <div class="progress" style="height: 6px;">
+                                                        <div class="progress-bar bg-info" style="width: {{ count($students) > 0 ? ($halfDayCount / count($students) * 100) : 0 }}%"></div>
+                                                    </div>
+                                                </div>
+                                                
                                                 <div class="attendance-stat-item p-3 rounded bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <span class="text-muted">Absent</span>
@@ -125,7 +135,7 @@
                                                 <div class="attendance-rate-display me-3">
                                                     <h2 class="mb-0 text-primary">
                                                         @if(count($students) > 0)
-                                                            {{ round((($presentCount + $lateCount) / count($students)) * 100, 1) }}%
+                                                            {{ round((($presentCount + $lateCount + ($halfDayCount * 0.5)) / count($students)) * 100, 1) }}%
                                                         @else
                                                             N/A
                                                         @endif
@@ -138,6 +148,8 @@
                                                                  style="width: {{ ($presentCount / count($students) * 100) }}%"></div>
                                                             <div class="progress-bar bg-warning" role="progressbar" 
                                                                  style="width: {{ ($lateCount / count($students) * 100) }}%"></div>
+                                                            <div class="progress-bar bg-info" role="progressbar" 
+                                                                 style="width: {{ ($halfDayCount / count($students) * 100) }}%"></div>
                                                         @else
                                                             <div class="progress-bar" role="progressbar" style="width: 0%"></div>
                                                         @endif
@@ -165,6 +177,7 @@
                                 <div class="text-muted small">
                                     <span class="badge-dot bg-success me-1"></span> Present: {{ $presentCount }}
                                     <span class="badge-dot bg-warning mx-1"></span> Late: {{ $lateCount }}
+                                    <span class="badge-dot bg-info mx-1"></span> Half Day: {{ $halfDayCount }}
                                     <span class="badge-dot bg-danger mx-1"></span> Absent: {{ $absentCount }}
                                     <span class="badge-dot bg-secondary mx-1"></span> Excused: {{ $excusedCount }}
                                 </div>
@@ -212,6 +225,10 @@
                                                     @elseif($attendanceData[$student->id] == 'late')
                                                         <span class="badge bg-warning text-dark">
                                                             <i class="fas fa-clock me-1"></i> Late
+                                                        </span>
+                                                    @elseif($attendanceData[$student->id] == 'half_day')
+                                                        <span class="badge bg-info text-dark">
+                                                            <i class="fas fa-adjust me-1"></i> Half Day
                                                         </span>
                                                     @elseif($attendanceData[$student->id] == 'excused')
                                                         <span class="badge bg-secondary">
@@ -274,12 +291,13 @@
         const attendanceChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Present', 'Late', 'Absent', 'Excused'],
+                labels: ['Present', 'Late', 'Half Day', 'Absent', 'Excused'],
                 datasets: [{
-                    data: [{{ $presentCount }}, {{ $lateCount }}, {{ $absentCount }}, {{ $excusedCount }}],
+                    data: [{{ $presentCount }}, {{ $lateCount }}, {{ $halfDayCount }}, {{ $absentCount }}, {{ $excusedCount }}],
                     backgroundColor: [
                         '#28a745',  // Present - green
                         '#ffc107',  // Late - yellow
+                        '#17a2b8',  // Half Day - info/blue
                         '#dc3545',  // Absent - red
                         '#6c757d'   // Excused - gray
                     ],
