@@ -7,7 +7,7 @@
 // Define the transmutation function based on the selected table
 function getTransmutedGrade($initialGrade, $tableType) {
     if ($initialGrade < 0) return 60;
-    
+
     // Table 1: DepEd Transmutation Table (Default)
     if ($tableType == 1) {
         if ($initialGrade == 100) return 100;
@@ -54,10 +54,10 @@ $overallAverage = ['Q1' => 0, 'Q2' => 0, 'Q3' => 0, 'Q4' => 0, 'Final' => 0];
 if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) {
     // Filter grades to only show the assigned subject
     $filteredGrades = $student->grades;
-    
+
     $subjectId = is_object($subject) ? $subject->id : (is_array($subject) ? $subject['id'] : null);
     $subjectName = is_object($subject) ? $subject->name : (is_array($subject) ? $subject['name'] : 'Subject');
-    
+
     if ($filteredGrades->isEmpty()) {
         // No grades found for this subject
         $gradesBySubject = [
@@ -69,18 +69,18 @@ if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) 
     } else {
         foreach($filteredGrades as $grade) {
             $gradeSubjectId = $grade->subject_id;
-            
+
             if (!isset($gradesBySubject[$gradeSubjectId])) {
                 $gradesBySubject[$gradeSubjectId] = [
                     'name' => $subjectName,
                     'grades' => []
                 ];
             }
-            
+
             if (!isset($gradesBySubject[$gradeSubjectId]['grades'][$grade->term])) {
                 $gradesBySubject[$gradeSubjectId]['grades'][$grade->term] = [];
             }
-            
+
             $gradesBySubject[$gradeSubjectId]['grades'][$grade->term][] = $grade;
         }
     }
@@ -89,18 +89,18 @@ if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) 
     foreach($student->grades as $grade) {
         $subjectId = $grade->subject_id;
         $subjectName = $grade->subject->name ?? 'Unknown Subject';
-        
+
         if (!isset($gradesBySubject[$subjectId])) {
             $gradesBySubject[$subjectId] = [
                 'name' => $subjectName,
                 'grades' => []
             ];
         }
-        
+
         if (!isset($gradesBySubject[$subjectId]['grades'][$grade->term])) {
             $gradesBySubject[$subjectId]['grades'][$grade->term] = [];
         }
-        
+
         $gradesBySubject[$subjectId]['grades'][$grade->term][] = $grade;
     }
 }
@@ -111,23 +111,23 @@ $subjectCount = count($gradesBySubject);
 foreach($gradesBySubject as $subjectId => $subject) {
     $averageGrades[$subjectId] = [];
     $termTotals = [];
-    
+
     foreach($terms as $term) {
         if (isset($subject['grades'][$term])) {
-            $totalPercentage = 0;
-            $totalWeight = 0;
-            
+            // Calculate using total score / total max score method
+            $totalScore = 0;
+            $totalMaxScore = 0;
+
             foreach ($subject['grades'][$term] as $grade) {
-                $percentage = $grade->score / $grade->max_score * 100;
-                $totalPercentage += $percentage;
-                $totalWeight++;
+                $totalScore += $grade->score;
+                $totalMaxScore += $grade->max_score;
             }
-            
-            if ($totalWeight > 0) {
-                $averagePercentage = $totalPercentage / $totalWeight;
+
+            if ($totalMaxScore > 0) {
+                $averagePercentage = ($totalScore / $totalMaxScore) * 100;
                 $transmutedGrade = getTransmutedGrade($averagePercentage, $selectedTransmutationTable);
                 $averageGrades[$subjectId][$term] = $transmutedGrade;
-                
+
                 if (!isset($termTotals[$term])) {
                     $termTotals[$term] = 0;
                 }
@@ -135,18 +135,18 @@ foreach($gradesBySubject as $subjectId => $subject) {
             }
         }
     }
-    
+
     // Calculate final average for the subject
     $validTerms = 0;
     $termSum = 0;
-    
+
     foreach($terms as $term) {
         if (isset($averageGrades[$subjectId][$term])) {
             $termSum += $averageGrades[$subjectId][$term];
             $validTerms++;
         }
     }
-    
+
     if ($validTerms > 0) {
         $averageGrades[$subjectId]['Final'] = round($termSum / $validTerms, 2);
     }
@@ -161,7 +161,7 @@ foreach($terms as $term) {
             $validSubjects++;
         }
     }
-    
+
     if ($validSubjects > 0) {
         $overallAverage[$term] = round($overallAverage[$term] / $validSubjects, 2);
     }
@@ -208,8 +208,8 @@ foreach($student->attendances as $attendance) {
 }
 
 // Calculate attendance percentage
-$attendancePercentage = $attendanceSummary['total'] > 0 
-    ? round(($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) / $attendanceSummary['total'] * 100, 1) 
+$attendancePercentage = $attendanceSummary['total'] > 0
+    ? round(($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) / $attendanceSummary['total'] * 100, 1)
     : 0;
 
 // Calculate student's age
@@ -229,7 +229,7 @@ $age = $birthDate->diff($today)->y;
         box-shadow: 0 0.15rem 1.75rem rgba(33, 37, 41, 0.15);
         margin-bottom: 24px;
     }
-    
+
     /* Profile Header */
     .profile-header {
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -239,7 +239,7 @@ $age = $birthDate->diff($today)->y;
         position: relative;
         border-bottom: 4px solid #f0ce0d;
     }
-    
+
     .profile-header::before {
         content: '👨‍🎓 Student Profile';
         position: absolute;
@@ -253,18 +253,18 @@ $age = $birthDate->diff($today)->y;
         color: #000;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
+
     /* Assigned Subject Header Style */
     .assigned-subject-header {
         border-bottom: 4px solid #ffc107;
     }
-    
+
     .assigned-subject-header::before {
         content: '📚 Assigned Subject View';
         background: #ffc107;
         color: #000;
     }
-    
+
     .profile-avatar {
         width: 120px;
         height: 120px;
@@ -280,13 +280,13 @@ $age = $birthDate->diff($today)->y;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         margin-bottom: 1rem;
     }
-    
+
     .dark .profile-avatar {
         background-color: rgba(255, 255, 255, 0.9);
         color: #28a745;
         border-color: rgba(255, 255, 255, 0.5);
     }
-    
+
     /* Info Cards */
     .info-card {
         background-color: #f8f9fa;
@@ -296,26 +296,26 @@ $age = $birthDate->diff($today)->y;
         transition: transform 0.2s;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-    
+
     .card-title {
         font-size: 0.85rem;
         font-weight: 500;
         color: #6c757d;
         margin-bottom: 8px;
     }
-    
+
     .card-value {
         font-size: 1.25rem;
         font-weight: 600;
         color: #212529;
     }
-    
+
     .info-icon {
         font-size: 1.5rem;
         color: rgba(108, 117, 125, 0.3);
         margin-right: 15px;
     }
-    
+
     /* Stat Cards */
     .stat-card {
         border-radius: 10px;
@@ -324,34 +324,34 @@ $age = $birthDate->diff($today)->y;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         border-left: 4px solid;
     }
-    
+
     .stat-card.present {
         border-left-color: #28a745;
         background-color: rgba(40, 167, 69, 0.08);
     }
-    
+
     .stat-card.late {
         border-left-color: #ffc107;
         background-color: rgba(255, 193, 7, 0.08);
     }
-    
+
     .stat-card.absent {
         border-left-color: #dc3545;
         background-color: rgba(220, 53, 69, 0.08);
     }
-    
+
     .stat-card.excused {
         border-left-color: #6c757d;
         background-color: rgba(108, 117, 125, 0.08);
     }
-    
+
     /* Tables */
     .table-grades {
         border-collapse: separate;
         border-spacing: 0;
         width: 100%;
     }
-    
+
     .table-grades th {
         background-color: #f8f9fa;
         color: #495057;
@@ -360,44 +360,44 @@ $age = $birthDate->diff($today)->y;
         border-bottom: 2px solid #e9ecef;
         padding: 12px 15px;
     }
-    
+
     .table-grades td {
         padding: 12px 15px;
         border-bottom: 1px solid #e9ecef;
         vertical-align: middle;
     }
-    
+
     .table-grades tr:last-child td {
         border-bottom: none;
     }
-    
+
     .table-grades tr:hover {
         background-color: rgba(13, 110, 253, 0.05);
     }
-    
+
     /* Grade styling */
     .grade-value {
         font-weight: 500;
     }
-    
+
     .grade-failing {
         color: #dc3545;
     }
-    
+
     .final-column {
         font-weight: 700;
         color: #28a745;
     }
-    
+
     .final-column.grade-failing {
         color: #dc3545;
     }
-    
+
     /* Transmutation Selector */
     .transmutation-selector {
         margin-bottom: 20px;
     }
-    
+
     /* Misc Elements */
     .section-title {
         position: relative;
@@ -407,7 +407,7 @@ $age = $birthDate->diff($today)->y;
         margin-bottom: 20px;
         padding-bottom: 10px;
     }
-    
+
     .section-title:after {
         content: '';
         position: absolute;
@@ -417,17 +417,17 @@ $age = $birthDate->diff($today)->y;
         width: 50px;
         background-color: #0d6efd;
     }
-    
+
     .badge-lg {
         padding: 6px 12px;
         font-size: 0.875rem;
     }
-    
+
     .progress {
         height: 8px;
         border-radius: 4px;
     }
-    
+
     .bg-soft-blue {
         background-color: rgba(13, 110, 253, 0.1);
     }
@@ -437,11 +437,11 @@ $age = $birthDate->diff($today)->y;
         .profile-header {
             text-align: center;
         }
-        
+
         .profile-avatar {
             margin: 0 auto 15px;
         }
-        
+
         .stats-container {
             margin-top: 20px;
         }
@@ -1013,7 +1013,7 @@ $age = $birthDate->diff($today)->y;
             <a href="{{ route('teacher.students.index') }}" class="btn btn-outline-secondary me-2">
                 <i class="fas fa-arrow-left me-1"></i> Back to Students
             </a>
-            
+
             @if(!isset($isFromAssignedSection) || !$isFromAssignedSection)
             <a href="{{ route('teacher.students.edit', $student->id) }}" class="btn btn-outline-primary me-2">
                 <i class="fas fa-edit me-1"></i> Edit Student
@@ -1082,7 +1082,7 @@ $age = $birthDate->diff($today)->y;
                 </div>
             </div>
         </div>
-        
+
         <!-- Key Information Cards -->
         <div class="p-4">
             <div class="row">
@@ -1164,7 +1164,7 @@ $age = $birthDate->diff($today)->y;
                 Academic Performance
             @endif
         </h3>
-        
+
         <!-- Transmutation Table Selector -->
         <div class="transmutation-selector">
             <form action="{{ route('teacher.students.show', array_merge(['student' => $student->id], request()->query())) }}" method="GET" class="d-flex align-items-center">
@@ -1181,7 +1181,7 @@ $age = $birthDate->diff($today)->y;
                 </select>
             </form>
         </div>
-        
+
         <!-- Grades Table -->
         <div class="table-responsive">
             <table class="table-grades">
@@ -1209,7 +1209,7 @@ $age = $birthDate->diff($today)->y;
                         @foreach($gradesBySubject as $subjectId => $subject)
                             <tr>
                                 <td style="text-align: left; font-weight: 500;">{{ $subject['name'] }}</td>
-                                
+
                                 @foreach($terms as $term)
                                     <td class="text-center">
                                         @if(isset($averageGrades[$subjectId][$term]))
@@ -1221,7 +1221,7 @@ $age = $birthDate->diff($today)->y;
                                         @endif
                                     </td>
                                 @endforeach
-                                
+
                                 <td class="text-center">
                                     @if(isset($averageGrades[$subjectId]['Final']))
                                         <span class="grade-value final-column {{ $averageGrades[$subjectId]['Final'] < 75 ? 'grade-failing' : '' }}">
@@ -1234,12 +1234,12 @@ $age = $birthDate->diff($today)->y;
                             </tr>
                         @endforeach
                     @endif
-                    
+
                     <!-- Overall Average Row -->
                     @if(count($gradesBySubject) > 0)
                     <tr style="background-color: #f8f9fa; font-weight: bold;">
                         <td style="text-align: left;">Overall Average</td>
-                        
+
                         @foreach($terms as $term)
                             <td class="text-center">
                                 @if(isset($overallAverage) && isset($overallAverage[$term]) && $overallAverage[$term] > 0)
@@ -1251,7 +1251,7 @@ $age = $birthDate->diff($today)->y;
                                 @endif
                             </td>
                         @endforeach
-                        
+
                         <td class="text-center">
                             @if(isset($overallAverage) && isset($overallAverage['Final']) && $overallAverage['Final'] > 0)
                                 <span class="grade-value final-column {{ $overallAverage['Final'] < 75 ? 'grade-failing' : '' }}" style="font-size: 1.1rem;">
@@ -1266,7 +1266,7 @@ $age = $birthDate->diff($today)->y;
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Grade Legend -->
         <div class="mt-4">
             <div class="d-flex flex-wrap gap-3">
@@ -1285,7 +1285,7 @@ $age = $birthDate->diff($today)->y;
         <div class="col-p-4">
             <div class="profile-container p-4">
                 <h3 class="section-title">Attendance Summary</h3>
-                
+
                 <!-- Attendance Overview -->
                 <div class="mb-4">
                     <h5 class="text-muted mb-3">Overall Attendance Rate</h5>
@@ -1301,7 +1301,7 @@ $age = $birthDate->diff($today)->y;
                         <span class="text-success">{{ isset($attendanceSummary) ? ($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) : 0 }}</span> present out of {{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }} school days
                     </div>
                 </div>
-                
+
                 <!-- Attendance Stats -->
                 <div class="row">
                     <div class="col-md-6">
@@ -1370,7 +1370,7 @@ $age = $birthDate->diff($today)->y;
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Additional Info -->
                 <div class="mt-4">
                     <h3 class="section-title">Contact Details</h3>
@@ -1403,13 +1403,13 @@ $age = $birthDate->diff($today)->y;
         const tableBtn = document.getElementById('showTable');
         const dashboard = document.getElementById('academicDashboard');
         const tableView = document.getElementById('academicTableView');
-        
+
         if (dashboardBtn && tableBtn && dashboard && tableView) {
             // Set initial active state
             dashboardBtn.classList.add('active');
             dashboard.style.display = 'block';
             tableView.style.display = 'none';
-            
+
             dashboardBtn.addEventListener('click', function() {
                 dashboard.style.display = 'block';
                 tableView.style.display = 'none';
@@ -1417,7 +1417,7 @@ $age = $birthDate->diff($today)->y;
                 tableBtn.classList.remove('active');
                 localStorage.setItem('academicViewPreference', 'dashboard');
             });
-            
+
             tableBtn.addEventListener('click', function() {
                 dashboard.style.display = 'none';
                 tableView.style.display = 'block';
@@ -1425,7 +1425,7 @@ $age = $birthDate->diff($today)->y;
                 dashboardBtn.classList.remove('active');
                 localStorage.setItem('academicViewPreference', 'table');
             });
-            
+
             // Load saved preference
             const savedPreference = localStorage.getItem('academicViewPreference');
             if (savedPreference === 'table') {
@@ -1435,15 +1435,15 @@ $age = $birthDate->diff($today)->y;
                 dashboardBtn.classList.remove('active');
             }
         }
-        
+
         // Term filter functionality
         const termFilter = document.getElementById('termFilter');
         const gradeRows = document.querySelectorAll('.grade-row');
-        
+
         if (termFilter && gradeRows.length > 0) {
             termFilter.addEventListener('change', function() {
                 const selectedTerm = this.value;
-                
+
                 gradeRows.forEach(row => {
                     const rowTerm = row.getAttribute('data-term');
                     if (selectedTerm === 'all' || rowTerm === selectedTerm) {
@@ -1452,7 +1452,7 @@ $age = $birthDate->diff($today)->y;
                         row.style.display = 'none';
                     }
                 });
-                
+
                 // Also filter subject cards in dashboard
                 const subjectCards = document.querySelectorAll('.subject-grade-item');
                 if (selectedTerm === 'all') {
@@ -1462,11 +1462,11 @@ $age = $birthDate->diff($today)->y;
                 }
             });
         }
-    
+
         // Add the transmutation function
         function getTransmutedGrade(initialGrade, tableType) {
             if (initialGrade < 0) return 60;
-            
+
             // Table 1: DepEd Transmutation Table (formerly Table 4)
             if (tableType == 1) {
                 if (initialGrade == 100) return 100;
@@ -1634,10 +1634,10 @@ $age = $birthDate->diff($today)->y;
                 return getTransmutedGrade(initialGrade, 1);
             }
         }
-        
+
         // Default to transmutation table 1 (or get from query string)
         let selectedTransmutationTable = {{ $selectedTransmutationTable ?? 1 }};
-        
+
         // Update transmuted grades display when table changes
         function updateGradesDisplay() {
             // Update all grade displays in the table
@@ -1645,14 +1645,14 @@ $age = $birthDate->diff($today)->y;
                 const initialGrade = parseFloat($(this).data('initial-grade'));
                 const gradeType = $(this).data('grade-type');
                 const transmutedGrade = getTransmutedGrade(initialGrade, selectedTransmutationTable);
-                
+
                 // Update the transmuted grade display
                 $(this).find('.transmuted-grade').text(transmutedGrade);
-                
+
                 // Update badge classes based on the transmuted grade
                 const badgeElement = $(this).find('.transmuted-grade-badge');
                 badgeElement.removeClass('bg-danger bg-warning bg-info bg-success');
-                
+
                 if (transmutedGrade < 75) {
                     badgeElement.addClass('bg-danger');
                 } else if (transmutedGrade < 80) {
@@ -1664,24 +1664,24 @@ $age = $birthDate->diff($today)->y;
                 }
             });
         }
-        
+
         // Function to update grades when transmutation table changes
         function updateTransmutedGrades(tableType) {
             // Save the selected table type
             selectedTransmutationTable = tableType;
-            
+
             // Update the grades display without reloading
             updateGradesDisplay();
-            
+
             // Store the selection in localStorage
             localStorage.setItem('selectedTransmutationTable', tableType);
-            
+
             // Update the URL to reflect the selected table
             const url = new URL(window.location);
             url.searchParams.set('transmutation_table', tableType);
             window.history.pushState({}, '', url);
         }
-        
+
         // Initialize grades display
         updateGradesDisplay();
     });

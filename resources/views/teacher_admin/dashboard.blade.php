@@ -42,25 +42,25 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm bg-primary bg-gradient text-white">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                        <div class="d-flex flex-column flex-md-row align-items-center mb-3 mb-md-0">
                             @if($school->logo_path)
-                            <div class="me-3">
+                            <div class="me-md-3 mb-3 mb-md-0 text-center">
                                 <img src="{{ asset($school->logo_path) }}" alt="{{ $school->name }} Logo" class="rounded" style="max-height: 60px;">
                             </div>
                             @else
-                            <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-3">
+                            <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-md-3 mb-3 mb-md-0 mx-auto">
                                 <i class="fas fa-user-shield fa-2x"></i>
                             </div>
                             @endif
-                            <div>
-                                <h2 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}</h2>
+                            <div class="text-center text-md-start">
+                                <h3 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}</h3>
                                 <p class="mb-0 opacity-75">Teacher Admin Dashboard - {{ $school->name }}</p>
                                 <p class="mb-0 opacity-75">{{ now()->format('l, F d, Y') }}</p>
                             </div>
                         </div>
-                        <div>
-                            <a href="{{ route('teacher-admin.sections.create') }}" class="btn btn-light btn-lg">
+                        <div class="text-center mt-2 mt-md-0">
+                            <a href="{{ route('teacher-admin.sections.create') }}" class="btn btn-light">
                                 <i class="fas fa-plus-circle me-2"></i> Create New Section
                             </a>
                         </div>

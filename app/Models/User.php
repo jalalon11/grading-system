@@ -29,7 +29,6 @@ class User extends Authenticatable
         'address',
         'school_id',
         'is_teacher_admin',
-        'dark_mode_preference',
     ];
 
     /**
@@ -53,7 +52,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_teacher_admin' => 'boolean',
-            'dark_mode_preference' => 'boolean',
         ];
     }
 
@@ -102,7 +100,7 @@ class User extends Authenticatable
 
     /**
      * Direct access to all subject IDs for this teacher via section_subject
-     * 
+     *
      * @return array
      */
     public function getSubjectIds()

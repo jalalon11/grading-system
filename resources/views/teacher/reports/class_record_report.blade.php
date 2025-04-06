@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     @php
         // Set title to include MAPEH component if needed
         $pageTitle = is_object($subject) ? $subject->name : 'Subject';
         $displaySubjectName = $pageTitle;
-        
+
         // Check if this is a MAPEH component
         if (isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component']) {
             $pageTitle = $mapehInfo['component_name'] . ' (MAPEH Component)';
             $displaySubjectName = "MAPEH " . $mapehInfo['component_name'];
         }
     @endphp
-    
+
     <title>Class Record - {{ $displaySubjectName }} ({{ is_string($quarter) ? $quarter : 'Q' . $quarter }})</title>
-    
+
     @php
         // Transmutation Table 1 function
         function transmutationTable1($initialGrade) {
@@ -87,7 +87,7 @@
             .no-print-during-actual-printing {
                 display: none !important;
             }
-            #helpButton, 
+            #helpButton,
             button[onclick*="window.print"],
             .btn-print,
             .action-buttons,
@@ -95,7 +95,7 @@
             [id*="help"] {
                 display: none !important;
             }
-            
+
             /* Optimize tables for print */
             table {
                 font-size: 8pt !important;
@@ -109,7 +109,7 @@
                 padding: 1px !important;
                 font-size: 8pt !important;
             }
-            
+
             /* Reduce column widths */
             th[rowspan="2"][style*="width: 20%"] {
                 width: 15% !important;
@@ -126,7 +126,7 @@
             th[rowspan="2"][style*="width: 5%"] {
                 width: 5% !important;
             }
-            
+
             /* Optimize header, reduce its size */
             .header {
                 margin-bottom: 5px !important;
@@ -141,7 +141,7 @@
             .logo-left img, .logo-right img {
                 max-height: 60px !important;
             }
-            
+
             /* Remove extra margins and padding */
             .info-table {
                 margin-bottom: 5px !important;
@@ -157,7 +157,7 @@
                 padding-left: 5px !important;
                 font-size: 8pt !important;
             }
-            
+
             /* Compress table-responsive margin */
             .table-responsive {
                 margin-bottom: 5px !important;
@@ -307,7 +307,7 @@
                 }
             }
         }
-        
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -337,7 +337,7 @@
             font-weight: bold;
             border: 1px solid #000;
         }
-        
+
         /* Enhanced table header styling */
         .table-header {
             font-weight: bold;
@@ -345,7 +345,7 @@
             background-color: #e0e0e0;
             border: 1px solid #000;
         }
-        
+
         /* Additional styling for column headers in the main grades table */
         .column-header {
             background-color: #f8f8f8;
@@ -499,7 +499,7 @@
         .d-block {
             display: block;
         }
-        
+
         /* Gender label styling for male and female rows */
         .gender-label {
             font-weight: bold;
@@ -510,7 +510,7 @@
             font-size: 11pt;
             border: 1px solid #000;
         }
-        
+
         /* Close button styling */
         .btn-print {
             padding: 12px 20px !important;
@@ -523,7 +523,7 @@
             margin: 15px auto;
             box-shadow: 0 3px 6px rgba(0,0,0,0.16);
         }
-        
+
         @media screen and (min-width: 769px) {
             .d-md-none {
                 display: none;
@@ -544,7 +544,7 @@
                 display: none !important;
             }
         }
-        
+
         @media screen and (max-width: 768px) {
             .d-md-none {
                 display: block;
@@ -701,7 +701,7 @@
                 }
             }
         }
-        
+
         /* Add editable score styles */
         .editable-score {
             cursor: pointer;
@@ -709,19 +709,19 @@
             transition: all 0.2s ease;
             min-width: 40px; /* Base minimum width to display 2 digits */
         }
-        
+
         .editable-score:hover {
             background-color: #f5f9ff;
             box-shadow: inset 0 0 0 1px #4dabf7;
         }
-        
+
         .editable-score.editing {
             padding: 0;
             background-color: #e8f4ff;
             box-shadow: inset 0 0 0 2px #4dabf7;
             min-width: 50px !important; /* Ensure room for 2 digits */
         }
-        
+
         .editable-score.editing input {
             width: 100%;
             min-width: 45px; /* Minimum width for 2 digits */
@@ -734,7 +734,7 @@
             background-color: transparent;
             padding: 5px;
         }
-        
+
         .editable-score:before {
             content: "✏️";
             position: absolute;
@@ -745,11 +745,11 @@
             opacity: 0;
             transition: opacity 0.2s ease;
         }
-        
+
         .editable-score:hover:before {
             opacity: 1;
         }
-        
+
         .edit-controls {
             position: fixed;
             bottom: 20px;
@@ -763,7 +763,7 @@
             transition: all 0.3s ease;
             border: 1px solid #e9ecef;
         }
-        
+
         /* Mobile-friendly edit controls */
         @media screen and (max-width: 768px) {
             .edit-controls {
@@ -785,33 +785,33 @@
                 transform: translateZ(0);
                 -webkit-transform: translateZ(0);
             }
-            
+
             .edit-controls h6 {
                 font-size: 12px;
                 margin-bottom: 5px;
                 padding-bottom: 5px;
             }
-            
+
             .edit-controls .status {
                 font-size: 11px;
                 margin-bottom: 8px;
             }
-            
+
             .edit-controls .actions {
                 width: 100%;
                 justify-content: space-between;
             }
-            
+
             .edit-controls button {
                 padding: 6px 5px;
                 font-size: 12px;
             }
-            
+
             /* Ensure table doesn't get hidden behind edit controls */
             .table-responsive {
                 padding-bottom: 60px;
             }
-            
+
             /* Make input larger for easier touch on mobile */
             .editable-score.editing input {
                 font-size: 16px;
@@ -819,7 +819,7 @@
                 min-width: 50px; /* Ensure at least 2 digits are visible */
                 width: auto; /* Allow input to grow based on content */
             }
-            
+
             /* Enhanced mobile cell editing */
             .editable-score.mobile-editing {
                 position: relative;
@@ -828,31 +828,31 @@
                 box-shadow: 0 0 0 3px #2196F3 !important;
                 min-width: 50px; /* Ensure the cell is wide enough */
             }
-            
+
             /* Make the cell being edited more visible */
             tr.highlight-row {
                 background-color: rgba(200, 230, 255, 0.2) !important;
             }
-            
+
             /* Focus visible indicator for accessibility */
             .editable-score.editing input:focus {
                 box-shadow: inset 0 0 0 2px #2196F3;
                 outline: none;
             }
-            
+
             /* More space for input in edited cell */
             .editable-score.editing {
                 padding: 0 !important;
                 min-width: 50px !important; /* Ensure width for 2+ digits */
             }
-            
+
             /* Better validation display for Android */
             .toast-container {
                 bottom: 80px; /* Place above the edit controls */
                 top: auto;
                 z-index: 1020; /* Higher than edit controls */
             }
-            
+
             .toast {
                 opacity: 1 !important; /* Ensure visibility */
                 min-width: 80%; /* Make toast wider */
@@ -864,7 +864,7 @@
                 box-shadow: 0 -2px 10px rgba(0,0,0,0.2); /* Stronger shadow */
             }
         }
-        
+
         .edit-controls h6 {
             margin: 0 0 10px 0;
             padding-bottom: 8px;
@@ -873,18 +873,18 @@
             border-bottom: 1px solid #e9ecef;
             color: #343a40;
         }
-        
+
         .edit-controls .status {
             font-size: 12px;
             margin-bottom: 15px;
             color: #6c757d;
         }
-        
+
         .edit-controls .actions {
             display: flex;
             gap: 8px;
         }
-        
+
         .edit-controls button {
             flex: 1;
             padding: 8px 5px;
@@ -895,25 +895,25 @@
             transition: all 0.2s ease;
             border: none;
         }
-        
+
         .edit-controls button.save {
             background-color: #2b7ded;
             color: white;
         }
-        
+
         .edit-controls button.cancel {
             background-color: #e9ecef;
             color: #495057;
         }
-        
+
         .edit-controls button.save:hover {
             background-color: #1a66ca;
         }
-        
+
         .edit-controls button.cancel:hover {
             background-color: #dee2e6;
         }
-        
+
         @media print {
             .editable-score:before,
             .edit-controls,
@@ -925,7 +925,7 @@
                 box-shadow: none;
             }
         }
-        
+
         /* Toast notification - modernized, professional design */
         .toast-container {
             position: fixed;
@@ -933,7 +933,7 @@
             right: 20px;
             z-index: 9999;
         }
-        
+
         .toast {
             padding: 12px 15px;
             margin-bottom: 12px;
@@ -948,24 +948,24 @@
             border-left: 4px solid transparent;
             background-color: #fff;
         }
-        
+
         .toast.show {
             transform: translateX(0);
             opacity: 1;
         }
-        
+
         .toast.success {
             border-left-color: #4caf50;
         }
-        
+
         .toast.error {
             border-left-color: #f44336;
         }
-        
+
         .toast.info {
             border-left-color: #2196F3;
         }
-        
+
         .toast-icon {
             display: flex;
             align-items: center;
@@ -977,36 +977,36 @@
             background-color: rgba(0,0,0,0.05);
             color: #666;
         }
-        
+
         .toast.success .toast-icon {
             color: #4caf50;
         }
-        
+
         .toast.error .toast-icon {
             color: #f44336;
         }
-        
+
         .toast.info .toast-icon {
             color: #2196F3;
         }
-        
+
         .toast-content {
             flex-grow: 1;
         }
-        
+
         .toast-title {
             font-weight: 600;
             margin-bottom: 3px;
             font-size: 14px;
             color: #333;
         }
-        
+
         .toast-message {
             font-size: 13px;
             color: #666;
             line-height: 1.4;
         }
-        
+
         .toast-close {
             cursor: pointer;
             font-size: 18px;
@@ -1015,12 +1015,12 @@
             color: #999;
             transition: all 0.2s ease;
         }
-        
+
         .toast-close:hover {
             opacity: 1;
             color: #666;
         }
-        
+
         /* Cell types styling */
         .ww-score:before {
             content: "W";
@@ -1033,7 +1033,7 @@
             top: 2px;
             left: 2px;
         }
-        
+
         .pt-score:before {
             content: "P";
             font-size: 7px;
@@ -1045,7 +1045,7 @@
             top: 2px;
             left: 2px;
         }
-        
+
         .qa-score:before {
             content: "Q";
             font-size: 7px;
@@ -1071,7 +1071,7 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal-content {
             background-color: white;
             border-radius: 8px;
@@ -1080,12 +1080,12 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
             animation: modalFadeIn 0.3s ease;
         }
-        
+
         @keyframes modalFadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .modal-header {
             padding: 15px 20px;
             border-bottom: 1px solid #e9ecef;
@@ -1093,35 +1093,35 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .modal-header h4 {
             margin: 0;
             font-size: 18px;
             color: #333;
         }
-        
+
         .modal-close {
             font-size: 24px;
             cursor: pointer;
             color: #aaa;
         }
-        
+
         .modal-close:hover {
             color: #333;
         }
-        
+
         .modal-body {
             padding: 20px;
             max-height: 70vh;
             overflow-y: auto;
         }
-        
+
         .modal-footer {
             padding: 15px 20px;
             border-top: 1px solid #e9ecef;
             text-align: right;
         }
-        
+
         .modal-btn {
             padding: 8px 16px;
             background-color: #2196F3;
@@ -1131,15 +1131,15 @@
             cursor: pointer;
             font-size: 14px;
         }
-        
+
         .modal-btn:hover {
             background-color: #0d8bf0;
         }
-        
+
         .help-section {
             margin-bottom: 20px;
         }
-        
+
         .help-section h5 {
             margin-top: 0;
             margin-bottom: 10px;
@@ -1148,28 +1148,28 @@
             display: flex;
             align-items: center;
         }
-        
+
         .help-icon {
             margin-right: 10px;
             font-style: normal;
         }
-        
+
         .help-section p {
             margin-top: 0;
             color: #555;
             line-height: 1.5;
         }
-        
+
         .help-section ul {
             margin: 10px 0;
             padding-left: 20px;
         }
-        
+
         .help-section li {
             margin-bottom: 8px;
             color: #555;
         }
-        
+
         .help-badge {
             display: inline-block;
             width: 20px;
@@ -1181,17 +1181,17 @@
             font-weight: bold;
             margin-right: 8px;
         }
-        
+
         .help-badge.written {
             background-color: #e9ecef;
             color: #495057;
         }
-        
+
         .help-badge.performance {
             background-color: #e3fafc;
             color: #0b7285;
         }
-        
+
         .help-badge.quarterly {
             background-color: #fff9db;
             color: #e67700;
@@ -1202,14 +1202,14 @@
                 display: none !important;
             }
         }
-        
+
         /* Bulk editing styles */
         .bulk-selected {
             background-color: #e8f5e9 !important;
             box-shadow: inset 0 0 0 2px #4caf50 !important;
             position: relative;
         }
-        
+
         .bulk-selected:after {
             content: "✓";
             position: absolute;
@@ -1218,7 +1218,7 @@
             font-size: 10px;
             color: #4caf50;
         }
-        
+
         .bulk-edit-container {
             position: fixed;
             bottom: 60px;
@@ -1229,7 +1229,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             z-index: 999;
         }
-        
+
         #bulkEditInput {
             width: 220px;
             padding: 8px;
@@ -1237,26 +1237,26 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
-        
+
         /* Add CSS for error state */
         .editing input.error {
             background-color: #fff0f0;
             border: 1px solid #dc3545;
             color: #dc3545;
         }
-        
+
         /* Row highlighting on hover */
         .highlight-row {
             background-color: rgba(246, 249, 252, 0.7) !important;
             transition: background-color 0.2s ease;
         }
-        
+
         /* Increase visibility of the current cell being hovered */
         tr:hover td.editable-score {
             position: relative;
             z-index: 1;
         }
-        
+
         /* Keep the row highlight when a cell is being edited */
         tr:has(td.editing) {
             background-color: rgba(246, 249, 252, 0.7) !important;
@@ -1288,7 +1288,7 @@
         function setupRowHighlighting() {
             // Get all editable cells
             const editableCells = document.querySelectorAll('.editable-score');
-            
+
             // Add mouse enter/leave events to each cell
             editableCells.forEach(cell => {
                 cell.addEventListener('mouseenter', function() {
@@ -1302,7 +1302,7 @@
                         }, 10);
                     }
                 });
-                
+
                 cell.addEventListener('mouseleave', function() {
                     // Find the parent row
                     const row = this.closest('tr');
@@ -1315,7 +1315,7 @@
                 });
             });
         }
-        
+
         /* Student name styling */
         .text-left {
             text-align: left !important;
@@ -1329,33 +1329,33 @@
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            
+
             .table-header {
                 background-color: #e0e0e0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            
+
             .info-label {
                 background-color: #e0e0e0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 font-weight: bold !important;
             }
-            
+
             .column-header {
                 background-color: #f8f8f8 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            
+
             /* Gender label coloring */
             .gender-label {
                 background-color: #d9d9d9 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            
+
             /* Make signature section more compact in print */
             .signature-section {
                 max-width: 80%;
@@ -1376,15 +1376,15 @@
                 margin-bottom: 15px !important;
             }
         }
-        
+
         /* Print layout exclusions - ensure mobile changes don't affect printing */
         @media print {
             .edit-controls {
                 display: none !important;
             }
-            
-            .editable-score, 
-            .editable-score.mobile-editing, 
+
+            .editable-score,
+            .editable-score.mobile-editing,
             .editable-score.editing {
                 min-width: initial !important;
                 width: auto !important;
@@ -1392,26 +1392,26 @@
                 background-color: transparent !important;
                 box-shadow: none !important;
             }
-            
+
             tr.highlight-row {
                 background-color: transparent !important;
             }
-            
+
             .table-responsive {
                 padding-bottom: 0 !important;
             }
-            
+
             .toast-container {
                 display: none !important;
             }
-            
+
             /* Ensure table cells have consistent sizing */
             td, th {
                 padding: 2px !important;
                 font-size: 9pt !important;
             }
         }
-        
+
         .edit-controls h6 {
             margin: 0 0 10px 0;
             padding-bottom: 8px;
@@ -1482,19 +1482,19 @@
             }
         }
     @endphp
-    
+
     <!-- Just keep the Close button -->
     <div style="margin: 10px 0; text-align: left;" class="close-button-container">
         <button class="btn-print" onclick="window.close();" style="padding: 12px 20px; background-color: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease; min-height: 44px; min-width: 120px; display: inline-block; text-align: center;">Close</button>
     </div>
-    
+
     <div class="container">
         @php
             $schoolName = isset($section) && $section->school ? $section->school->name : 'St. Anthony Parish School';
             $region = isset($section) && $section->school && $section->school->schoolDivision ? $section->school->schoolDivision->region : 'Region XI';
             $division = isset($section) && $section->school && $section->school->schoolDivision ? $section->school->schoolDivision->name : 'Division of Davao del Sur';
             $principal = isset($section) && $section->school && $section->school->principal ? $section->school->principal : 'Principal Name';
-            
+
             $quarterNames = [
                 1 => 'First',
                 2 => 'Second',
@@ -1505,11 +1505,11 @@
                 'Q3' => 'Third',
                 'Q4' => 'Fourth'
             ];
-            
+
             $quarterText = isset($quarter) && isset($quarterNames[$quarter]) ? $quarterNames[$quarter] : 'First';
             $schoolYear = isset($section) && $section->school_year ? (is_object($section->school_year) ? $section->school_year->name : $section->school_year) : '2023-2024';
         @endphp
-        
+
         <div class="header">
             <div class="header-row">
                 <div class="logo-left">
@@ -1528,7 +1528,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="table-responsive">
             {{-- <p class="scroll-indicator d-md-none">Swipe horizontally to view all information</p> --}}
             <table class="info-table">
@@ -1558,7 +1558,7 @@
                 </tr>
             </table>
         </div>
-        
+
         <div class="table-responsive">
             <table style="table-layout: fixed;">
                 <tr>
@@ -1572,7 +1572,7 @@
                         TEACHER: {{ auth()->user()->name ?? 'Teacher Name' }}
                     </td>
                     <td style="width: 25%;" class="table-header">
-                        SUBJECT: 
+                        SUBJECT:
                         @if(isset($mapehInfo) && isset($mapehInfo['is_component']) && $mapehInfo['is_component'])
                             MAPEH - {{ $mapehInfo['component_name'] }}
                         @else
@@ -1582,7 +1582,7 @@
                 </tr>
             </table>
         </div>
-        
+
         <div class="table-responsive">
             {{-- <p class="scroll-indicator d-md-none">Swipe horizontally to view all grades</p> --}}
             <table>
@@ -1599,20 +1599,20 @@
                     @for($i = 1; $i <= 7; $i++)
                     <th class="column-header">{{ $i }}</th>
                     @endfor
-                    
+
                     <th class="column-header">Total</th>
                     <th class="column-header">PS</th>
                     <th class="column-header">WS</th>
-                    
+
                     <!-- Performance Tasks Columns -->
                     @for($i = 1; $i <= 8; $i++)
                     <th class="column-header">{{ $i }}</th>
                     @endfor
-                    
+
                     <th class="column-header">Total</th>
                     <th class="column-header">PS</th>
                     <th class="column-header">WS</th>
-                    
+
                     <!-- Quarterly Assessment Columns -->
                     <th class="column-header">1</th>
                     <th class="column-header">PS</th>
@@ -1620,42 +1620,42 @@
                 </tr>
                 <tr>
                     <td class="centered">HIGHEST POSSIBLE SCORE</td>
-                    
+
                     <!-- Written Works Max Scores -->
                     @php
                         $writtenWorksTotal = 0;
                         $performanceTasksTotal = 0;
                         $quarterlyAssessmentTotal = 0;
                     @endphp
-                    
+
                     <!-- Display Written Works -->
                     @foreach($writtenWorks->take(7) as $work)
                         <td>{{ number_format($work->max_score, 0) }}</td>
                         @php $writtenWorksTotal += $work->max_score; @endphp
                     @endforeach
-                    
+
                     @for($i = $writtenWorks->count(); $i < 7; $i++)
                         <td></td>
                     @endfor
-                    
+
                     <td>{{ number_format($writtenWorksTotal, 0) }}</td>
                     <td>100.00</td>
                     <td>{{ number_format($gradeConfig->written_work_percentage, 1) }}%</td>
-                    
+
                     <!-- Performance Tasks Max Scores -->
                     @foreach($performanceTasks->take(8) as $task)
                         <td>{{ number_format($task->max_score, 0) }}</td>
                         @php $performanceTasksTotal += $task->max_score; @endphp
                     @endforeach
-                    
+
                     @for($i = $performanceTasks->count(); $i < 8; $i++)
                         <td></td>
                     @endfor
-                    
+
                     <td>{{ number_format($performanceTasksTotal, 0) }}</td>
                     <td>100.00</td>
                     <td>{{ number_format($gradeConfig->performance_task_percentage, 1) }}%</td>
-                    
+
                     <!-- Quarterly Assessment -->
                     @if($quarterlyAssessments->isNotEmpty())
                         <td>{{ number_format($quarterlyAssessments->first()->max_score, 0) }}</td>
@@ -1666,17 +1666,17 @@
                     @endif
                     <td>100.00</td>
                     <td>{{ number_format($gradeConfig->quarterly_assessment_percentage, 1) }}%</td>
-                    
+
                     <td>100.0%</td>
                     <td>{{ transmutationTable1(100) }}</td>
                 </tr>
-                
+
                 <!-- Male Students -->
                 <tr>
                     <td class="gender-label" colspan="27" style="text-align: left; background-color: #d9d9d9; color: #000; font-size: 11pt; padding: 5px 8px; font-weight: normal; border: 1px solid #000;">MALE</td>
                 </tr>
-                @php 
-                    $maleStudents = $students->where('gender', 'Male')->sortBy('last_name'); 
+                @php
+                    $maleStudents = $students->where('gender', 'Male')->sortBy('last_name');
                     error_log('Male students found: ' . $maleStudents->count());
                     foreach ($maleStudents as $m) {
                         error_log('Male student: ' . $m->first_name . ' ' . $m->last_name . ' (ID: ' . $m->id . ')');
@@ -1685,7 +1685,7 @@
                 @forelse($maleStudents as $maleIndex => $student)
                     <tr>
                         <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $maleIndex + 1 }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
-                        
+
                         <!-- Written Works -->
                         @php
                             $studentGradeData = $studentGrades->get($student->id, collect([]));
@@ -1693,7 +1693,7 @@
                             $studentPerfTasks = $studentGradeData->where('grade_type', 'performance_task');
                             $studentQuarterly = $studentGradeData->where('grade_type', 'quarterly')->first();
                         @endphp
-                        
+
                         <!-- Display Written Works Scores -->
                         @php $studentWWTotal = 0; @endphp
                         @foreach($writtenWorks->take(7) as $index => $work)
@@ -1701,49 +1701,49 @@
                                 $grade = $studentWrittenWorks->first(function($item) use ($work) {
                                     return $item->assessment_name == $work->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $studentWWTotal += $grade->score;
                                 }
                             @endphp
-                            <td class="ww-score editable-cell" 
-                                data-student-id="{{ $student->id }}" 
-                                data-subject-id="{{ $subject->id }}" 
-                                data-quarter="{{ $quarter }}" 
-                                data-grade-type="written_work" 
+                            <td class="ww-score editable-cell"
+                                data-student-id="{{ $student->id }}"
+                                data-subject-id="{{ $subject->id }}"
+                                data-quarter="{{ $quarter }}"
+                                data-grade-type="written_work"
                                 data-assessment-name="{{ $work->assessment_name }}"
                                 data-assessment-index="{{ $index + 1 }}"
                                 data-max-score="{{ $work->max_score }}">
                                 {{ $grade ? number_format($grade->score, 0) : '' }}
                             </td>
                         @endforeach
-                        
+
                         @for($i = $writtenWorks->count(); $i < 7; $i++)
                             <td></td>
                         @endfor
-                        
+
                         <!-- Written Works Total, PS, WS -->
                         @php
                             $wwPS = '';
                             $wwWS = '';
-                            
+
                             // Debug calculations
                             $debugWW = [];
-                            
+
                             // Calculate average percentage the same way as Grade Summary page
                             $assessmentCount = 0;
                             $totalPercentage = 0;
-                            
+
                             foreach($writtenWorks->take(7) as $work) {
                                 $grade = $studentWrittenWorks->first(function($item) use ($work) {
                                     return $item->assessment_name == $work->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $assessmentCount++;
                                     $assessmentPercentage = ($grade->score / $work->max_score) * 100;
                                     $totalPercentage += $assessmentPercentage;
-                                    
+
                                     // Debug info
                                     $debugWW[] = [
                                         'name' => $work->assessment_name,
@@ -1753,11 +1753,17 @@
                                     ];
                                 }
                             }
-                            
-                            if ($assessmentCount > 0) {
-                                // Calculate PS (Percentage Score) - average of all percentages
-                                $wwPS = $totalPercentage / $assessmentCount;
-                                
+
+                            // Calculate total max score for written works
+                            $writtenWorksMaxTotal = 0;
+                            foreach($writtenWorks->take(7) as $work) {
+                                $writtenWorksMaxTotal += $work->max_score;
+                            }
+
+                            if ($writtenWorksMaxTotal > 0 && $studentWWTotal > 0) {
+                                // Calculate PS (Percentage Score) - total score divided by total max score
+                                $wwPS = ($studentWWTotal / $writtenWorksMaxTotal) * 100;
+
                                 // Calculate WS (Weighted Score) - apply the weight percentage
                                 $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
                             }
@@ -1765,7 +1771,7 @@
                         <td>{{ $studentWWTotal > 0 ? number_format($studentWWTotal, 0) : '' }}</td>
                         <td>{{ $wwPS !== '' ? number_format($wwPS, 2) : '' }}</td>
                         <td>{{ $wwWS !== '' ? number_format($wwWS, 1) : '' }}%</td>
-                        
+
                         <!-- Performance Tasks -->
                         @php $studentPTTotal = 0; @endphp
                         @foreach($performanceTasks->take(8) as $index => $task)
@@ -1773,58 +1779,50 @@
                                 $grade = $studentPerfTasks->first(function($item) use ($task) {
                                     return $item->assessment_name == $task->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $studentPTTotal += $grade->score;
                                 }
                             @endphp
-                            <td class="pt-score editable-cell" 
-                                data-student-id="{{ $student->id }}" 
-                                data-subject-id="{{ $subject->id }}" 
-                                data-quarter="{{ $quarter }}" 
-                                data-grade-type="performance_task" 
+                            <td class="pt-score editable-cell"
+                                data-student-id="{{ $student->id }}"
+                                data-subject-id="{{ $subject->id }}"
+                                data-quarter="{{ $quarter }}"
+                                data-grade-type="performance_task"
                                 data-assessment-name="{{ $task->assessment_name }}"
                                 data-assessment-index="{{ $index + 1 }}"
                                 data-max-score="{{ $task->max_score }}">
                                 {{ $grade ? number_format($grade->score, 0) : '' }}
                             </td>
                         @endforeach
-                        
+
                         @for($i = $performanceTasks->count(); $i < 8; $i++)
                             <td></td>
                         @endfor
-                        
+
                         <!-- Performance Tasks Total, PS, WS -->
                         @php
                             $ptPS = '';
                             $ptWS = '';
-                            
-                            // Calculate average percentage instead of total/max
-                            $ptAssessmentCount = 0;
-                            $ptTotalPercentage = 0;
-                            
+
+                            // Calculate total max score for performance tasks
+                            $performanceTasksMaxTotal = 0;
                             foreach($performanceTasks->take(8) as $task) {
-                                $grade = $studentPerfTasks->first(function($item) use ($task) {
-                                    return $item->assessment_name == $task->assessment_name;
-                                });
-                                
-                                if ($grade) {
-                                    $ptAssessmentCount++;
-                                    $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
-                                }
+                                $performanceTasksMaxTotal += $task->max_score;
                             }
-                            
-                            if ($ptAssessmentCount > 0) {
-                                // Average of percentages
-                                $ptPS = $ptTotalPercentage / $ptAssessmentCount;
-                                // Weighted Score
+
+                            if ($performanceTasksMaxTotal > 0 && $studentPTTotal > 0) {
+                                // Calculate PS (Percentage Score) - total score divided by total max score
+                                $ptPS = ($studentPTTotal / $performanceTasksMaxTotal) * 100;
+
+                                // Calculate WS (Weighted Score) - apply the weight percentage
                                 $ptWS = ($ptPS / 100) * $gradeConfig->performance_task_percentage;
                             }
                         @endphp
                         <td>{{ $studentPTTotal > 0 ? number_format($studentPTTotal, 0) : '' }}</td>
                         <td>{{ $ptPS !== '' ? number_format($ptPS, 2) : '' }}</td>
                         <td>{{ $ptWS !== '' ? number_format($ptWS, 1) : '' }}%</td>
-                        
+
                         <!-- Quarterly Assessment for male students -->
                         @php
                             $qaScore = '';
@@ -1839,12 +1837,12 @@
                                 $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
                             }
                         @endphp
-                        
-                        <td class="qa-score editable-cell" 
-                            data-student-id="{{ $student->id }}" 
-                            data-subject-id="{{ $subject->id }}" 
-                            data-quarter="{{ $quarter }}" 
-                            data-grade-type="quarterly" 
+
+                        <td class="qa-score editable-cell"
+                            data-student-id="{{ $student->id }}"
+                            data-subject-id="{{ $subject->id }}"
+                            data-quarter="{{ $quarter }}"
+                            data-grade-type="quarterly"
                             data-assessment-name="Quarterly Assessment"
                             data-assessment-index="1"
                             data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
@@ -1852,15 +1850,15 @@
                         </td>
                         <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
                         <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
-                        
+
                         <!-- Initial and Quarterly Grades for male students -->
                         @php
                             $initialGrade = '';
                             $quarterlyGrade = '';
-                            
+
                             // Only calculate grades if the student has actual grades
                             $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
-                            
+
                             if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
                                 // Initial grade is the sum of all weighted scores
                                 $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
@@ -1876,7 +1874,7 @@
                         <td colspan="27" class="text-center">No male students in this section</td>
                     </tr>
                 @endforelse
-                
+
                 <!-- Female Students -->
                 <tr>
                     <td class="gender-label" colspan="27" style="text-align: left; background-color: #d9d9d9; color: #000; font-size: 11pt; padding: 5px 8px; font-weight: normal; border: 1px solid #000;">FEMALE</td>
@@ -1885,7 +1883,7 @@
                 @forelse($femaleStudents as $femaleIndex => $student)
                     <tr>
                         <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $femaleIndex + 1 }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
-                        
+
                         <!-- Written Works -->
                         @php
                             $studentGradeData = $studentGrades->get($student->id, collect([]));
@@ -1893,7 +1891,7 @@
                             $studentPerfTasks = $studentGradeData->where('grade_type', 'performance_task');
                             $studentQuarterly = $studentGradeData->where('grade_type', 'quarterly')->first();
                         @endphp
-                        
+
                         <!-- Display Written Works Scores -->
                         @php $studentWWTotal = 0; @endphp
                         @foreach($writtenWorks->take(7) as $index => $work)
@@ -1901,49 +1899,49 @@
                                 $grade = $studentWrittenWorks->first(function($item) use ($work) {
                                     return $item->assessment_name == $work->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $studentWWTotal += $grade->score;
                                 }
                             @endphp
-                            <td class="ww-score editable-cell" 
-                                data-student-id="{{ $student->id }}" 
-                                data-subject-id="{{ $subject->id }}" 
-                                data-quarter="{{ $quarter }}" 
-                                data-grade-type="written_work" 
+                            <td class="ww-score editable-cell"
+                                data-student-id="{{ $student->id }}"
+                                data-subject-id="{{ $subject->id }}"
+                                data-quarter="{{ $quarter }}"
+                                data-grade-type="written_work"
                                 data-assessment-name="{{ $work->assessment_name }}"
                                 data-assessment-index="{{ $index + 1 }}"
                                 data-max-score="{{ $work->max_score }}">
                                 {{ $grade ? number_format($grade->score, 0) : '' }}
                             </td>
                         @endforeach
-                        
+
                         @for($i = $writtenWorks->count(); $i < 7; $i++)
                             <td></td>
                         @endfor
-                        
+
                         <!-- Written Works Total, PS, WS -->
                         @php
                             $wwPS = '';
                             $wwWS = '';
-                            
+
                             // Debug calculations
                             $debugWW = [];
-                            
+
                             // Calculate average percentage the same way as Grade Summary page
                             $assessmentCount = 0;
                             $totalPercentage = 0;
-                            
+
                             foreach($writtenWorks->take(7) as $work) {
                                 $grade = $studentWrittenWorks->first(function($item) use ($work) {
                                     return $item->assessment_name == $work->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $assessmentCount++;
                                     $assessmentPercentage = ($grade->score / $work->max_score) * 100;
                                     $totalPercentage += $assessmentPercentage;
-                                    
+
                                     // Debug info
                                     $debugWW[] = [
                                         'name' => $work->assessment_name,
@@ -1953,11 +1951,11 @@
                                     ];
                                 }
                             }
-                            
+
                             if ($assessmentCount > 0) {
                                 // Calculate PS (Percentage Score) - average of all percentages
                                 $wwPS = $totalPercentage / $assessmentCount;
-                                
+
                                 // Calculate WS (Weighted Score) - apply the weight percentage
                                 $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
                             }
@@ -1965,7 +1963,7 @@
                         <td>{{ $studentWWTotal > 0 ? number_format($studentWWTotal, 0) : '' }}</td>
                         <td>{{ $wwPS !== '' ? number_format($wwPS, 2) : '' }}</td>
                         <td>{{ $wwWS !== '' ? number_format($wwWS, 1) : '' }}%</td>
-                        
+
                         <!-- Performance Tasks -->
                         @php $studentPTTotal = 0; @endphp
                         @foreach($performanceTasks->take(8) as $index => $task)
@@ -1973,47 +1971,47 @@
                                 $grade = $studentPerfTasks->first(function($item) use ($task) {
                                     return $item->assessment_name == $task->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $studentPTTotal += $grade->score;
                                 }
                             @endphp
-                            <td class="pt-score editable-cell" 
-                                data-student-id="{{ $student->id }}" 
-                                data-subject-id="{{ $subject->id }}" 
-                                data-quarter="{{ $quarter }}" 
-                                data-grade-type="performance_task" 
+                            <td class="pt-score editable-cell"
+                                data-student-id="{{ $student->id }}"
+                                data-subject-id="{{ $subject->id }}"
+                                data-quarter="{{ $quarter }}"
+                                data-grade-type="performance_task"
                                 data-assessment-name="{{ $task->assessment_name }}"
                                 data-assessment-index="{{ $index + 1 }}"
                                 data-max-score="{{ $task->max_score }}">
                                 {{ $grade ? number_format($grade->score, 0) : '' }}
                             </td>
                         @endforeach
-                        
+
                         @for($i = $performanceTasks->count(); $i < 8; $i++)
                             <td></td>
                         @endfor
-                        
+
                         <!-- Performance Tasks Total, PS, WS -->
                         @php
                             $ptPS = '';
                             $ptWS = '';
-                            
+
                             // Calculate average percentage instead of total/max
                             $ptAssessmentCount = 0;
                             $ptTotalPercentage = 0;
-                            
+
                             foreach($performanceTasks->take(8) as $task) {
                                 $grade = $studentPerfTasks->first(function($item) use ($task) {
                                     return $item->assessment_name == $task->assessment_name;
                                 });
-                                
+
                                 if ($grade) {
                                     $ptAssessmentCount++;
                                     $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
                                 }
                             }
-                            
+
                             if ($ptAssessmentCount > 0) {
                                 // Average of percentages
                                 $ptPS = $ptTotalPercentage / $ptAssessmentCount;
@@ -2024,7 +2022,7 @@
                         <td>{{ $studentPTTotal > 0 ? number_format($studentPTTotal, 0) : '' }}</td>
                         <td>{{ $ptPS !== '' ? number_format($ptPS, 2) : '' }}</td>
                         <td>{{ $ptWS !== '' ? number_format($ptWS, 1) : '' }}%</td>
-                        
+
                         <!-- Quarterly Assessment for female students -->
                         @php
                             $qaScore = '';
@@ -2039,12 +2037,12 @@
                                 $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
                             }
                         @endphp
-                        
-                        <td class="qa-score editable-cell" 
-                            data-student-id="{{ $student->id }}" 
-                            data-subject-id="{{ $subject->id }}" 
-                            data-quarter="{{ $quarter }}" 
-                            data-grade-type="quarterly" 
+
+                        <td class="qa-score editable-cell"
+                            data-student-id="{{ $student->id }}"
+                            data-subject-id="{{ $subject->id }}"
+                            data-quarter="{{ $quarter }}"
+                            data-grade-type="quarterly"
                             data-assessment-name="Quarterly Assessment"
                             data-assessment-index="1"
                             data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
@@ -2052,15 +2050,15 @@
                         </td>
                         <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
                         <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
-                        
+
                         <!-- Initial and Quarterly Grades for female students -->
                         @php
                             $initialGrade = '';
                             $quarterlyGrade = '';
-                            
+
                             // Only calculate grades if the student has actual grades
                             $hasGrades = ($studentWrittenWorks->count() > 0 || $studentPerfTasks->count() > 0 || $studentQuarterly);
-                            
+
                             if ($hasGrades && ($wwWS !== '' || $ptWS !== '' || $qaWS !== '')) {
                                 // Initial grade is the sum of all weighted scores
                                 $initialGrade = ($wwWS !== '' ? $wwWS : 0) + ($ptWS !== '' ? $ptWS : 0) + ($qaWS !== '' ? $qaWS : 0);
@@ -2078,7 +2076,7 @@
                 @endforelse
             </table>
         </div>
-        
+
         <div class="signature-section">
             <div class="signature-item">
                 <p style="margin-bottom: 30px;">Prepared by:</p>
@@ -2086,14 +2084,14 @@
                 <p><strong>{{ auth()->user()->name ?? 'Teacher Name' }}</strong></p>
                 <p>Section Adviser</p>
             </div>
-            
+
             <div class="signature-item">
                 <p style="margin-bottom: 30px;">Checked by:</p>
                 <div class="signature-line"></div>
                 <p><strong>{{ $section->coordinator_name ?? 'Coordinator Name' }}</strong></p>
                 <p>Subject Coordinator</p>
             </div>
-            
+
             <div class="signature-item">
                 <p style="margin-bottom: 30px;">Approved by:</p>
                 <div class="signature-line"></div>
@@ -2102,10 +2100,10 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Mobile Floating Action Buttons -->
     <!-- Removed print button as requested -->
-    
+
     <script>
         // Auto-print when page loads
         window.onload = function() {
@@ -2120,11 +2118,11 @@
                         }
                     }
                 });
-                
+
                 // Print button code removed per request
             }
         };
-        
+
         // Print function that doesn't hide buttons afterward
         function printPage() {
             try {
@@ -2133,7 +2131,7 @@
                     clearTimeout(window.pageReloadTimer);
                     window.pageReloadTimer = null;
                 }
-                
+
                 // Hide any modals or controls before printing
                 const helpModal = document.getElementById('helpModal');
                 const editControls = document.querySelector('.edit-controls');
@@ -2141,32 +2139,32 @@
                 const actionButtons = document.querySelector('.action-buttons');
                 const closeButton = document.querySelector('.btn-print');
                 const allNoprint = document.querySelectorAll('.no-print');
-                
+
                 // Force hide all no-print elements
                 allNoprint.forEach(el => {
                     el.style.display = 'none';
                 });
-                
+
                 // Hide specific buttons and controls
                 if (helpModal) helpModal.style.display = 'none';
                 if (editControls) editControls.style.display = 'none';
                 if (toastContainer) toastContainer.innerHTML = '';
                 if (actionButtons) actionButtons.style.display = 'none';
                 if (closeButton) closeButton.style.display = 'none';
-                
+
                 // Add one-time print stylesheet
-                document.body.insertAdjacentHTML('beforeend', 
+                document.body.insertAdjacentHTML('beforeend',
                     '<style id="temp-print-styles">.no-print{display:none !important} .btn-print{display:none !important} #helpButton{display:none !important}</style>');
-                
+
                 // Directly trigger print
                 setTimeout(() => {
                     window.print();
-                    
+
                     // Remove the temporary print styles after printing
                     setTimeout(() => {
                         const tempStyles = document.getElementById('temp-print-styles');
                         if (tempStyles) tempStyles.remove();
-                        
+
                         // Remove this toast notification
                         // showToast('Print', 'Print dialog opened', 'success');
                     }, 500);
@@ -2233,13 +2231,13 @@
         function isIOS() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         }
-        
+
         // Determine request method and URL based on device
         const requestMethod = isIOS() ? 'GET' : 'POST';
-        const requestUrl = isIOS() ? 
-            '{{ route("teacher.reports.edit-assessment-get") }}' : 
+        const requestUrl = isIOS() ?
+            '{{ route("teacher.reports.edit-assessment-get") }}' :
             '{{ route("teacher.reports.edit-assessment") }}';
-            
+
         // Log device information for debugging
         console.log('Device detection:', {
             isIOS: isIOS(),
@@ -2252,35 +2250,35 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Enable edit mode for all editable cells
             setupAssessmentEditing();
-            
+
             // Setup row highlighting
             setupRowHighlighting();
-            
+
             // Check if mobile and adjust UI accordingly
             const isMobile = window.innerWidth <= 768;
             if (isMobile) {
                 // Add class to body for mobile-specific styling
                 document.body.classList.add('mobile-view');
             }
-            
+
             // Hide buttons when page is being printed
             window.addEventListener('beforeprint', function() {
                 // Force hide during ACTUAL printing only
                 const actionButtons = document.querySelector('.action-buttons');
                 const closeButton = document.querySelector('.btn-print');
                 const helpButton = document.getElementById('helpButton');
-                
+
                 if (actionButtons) actionButtons.classList.add('no-print-during-actual-printing');
                 if (closeButton) closeButton.classList.add('no-print-during-actual-printing');
                 if (helpButton) helpButton.classList.add('no-print-during-actual-printing');
             });
-            
+
             // Restore visibility after printing
             window.addEventListener('afterprint', function() {
                 // Ensure buttons are visible
                 const actionButtons = document.querySelector('.action-buttons');
                 const closeButton = document.querySelector('.btn-print');
-                
+
                 if (actionButtons) {
                     actionButtons.classList.remove('no-print-during-actual-printing');
                     actionButtons.style.display = 'flex';
@@ -2290,7 +2288,7 @@
                     closeButton.style.display = 'inline-block';
                 }
             });
-            
+
             // Print button functionality - make it reliable
             const printButton = document.getElementById('printButton');
             if (printButton) {
@@ -2299,38 +2297,38 @@
                     printPage(); // Use the direct function
                 });
             }
-            
+
             // Help button functionality
             const helpButton = document.getElementById('helpButton');
             const helpModal = document.getElementById('helpModal');
             const closeHelpBtn = document.getElementById('closeHelpBtn');
             const modalClose = document.querySelector('.modal-close');
-            
+
             if (helpButton) {
                 helpButton.addEventListener('click', function() {
                     helpModal.style.display = 'flex';
                 });
             }
-            
+
             if (closeHelpBtn) {
                 closeHelpBtn.addEventListener('click', function() {
                     helpModal.style.display = 'none';
                 });
             }
-            
+
             if (modalClose) {
                 modalClose.addEventListener('click', function() {
                     helpModal.style.display = 'none';
                 });
             }
-            
+
             // Close modal when clicking outside of it
             window.addEventListener('click', function(event) {
                 if (event.target === helpModal) {
                     helpModal.style.display = 'none';
                 }
             });
-            
+
             // Add grade ranges button event listener
             const gradeRangesButton = document.getElementById('gradeRangesButton');
             if (gradeRangesButton) {
@@ -2339,20 +2337,20 @@
                 });
             }
         });
-        
+
         // Create and show toast notification
         function showToast(title, message, type = 'success') {
             const toastContainer = document.querySelector('.toast-container');
-            
+
             // Create toast element
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            
+
             // Icon based on type
             let icon = '✓';
             if (type === 'error') icon = '✕';
             if (type === 'info') icon = 'ℹ';
-            
+
             toast.innerHTML = `
                 <div class="toast-icon">${icon}</div>
                 <div class="toast-content">
@@ -2361,15 +2359,15 @@
                 </div>
                 <div class="toast-close" onclick="this.parentNode.remove()">&times;</div>
             `;
-            
+
             // Add to container
             toastContainer.appendChild(toast);
-            
+
             // Fade in
             setTimeout(() => {
                 toast.classList.add('show');
             }, 10);
-            
+
             // Remove after delay (longer for errors)
             const removeDelay = type === 'error' ? 8000 : 5000;
             setTimeout(() => {
@@ -2381,11 +2379,11 @@
                 }, 300);
             }, removeDelay);
         }
-        
+
         function setupRowHighlighting() {
             // Get all editable cells
             const editableCells = document.querySelectorAll('.editable-score');
-            
+
             // Add mouse enter/leave events to each cell
             editableCells.forEach(cell => {
                 cell.addEventListener('mouseenter', function() {
@@ -2399,7 +2397,7 @@
                         }, 10);
                     }
                 });
-                
+
                 cell.addEventListener('mouseleave', function() {
                     // Find the parent row
                     const row = this.closest('tr');
@@ -2412,7 +2410,7 @@
                 });
             });
         }
-        
+
         function setupAssessmentEditing() {
             // Make all assessment scores editable
             const editableCells = document.querySelectorAll('.editable-cell');
@@ -2422,38 +2420,38 @@
             let originalValue = null;
             let bulkEditMode = false;
             let bulkEditCells = [];
-            
+
             // Add click handler to each editable cell
             editableCells.forEach(cell => {
                 cell.classList.add('editable-score');
-                
+
                 cell.addEventListener('click', function(e) {
                     // Check if ctrl/command key is pressed for bulk selection
                     if (e.ctrlKey || e.metaKey) {
                         handleBulkSelection(this);
                         return;
                     }
-                    
+
                     // If not bulk mode, proceed with single cell edit
                     bulkEditMode = false;
                     bulkEditCells = [];
-                    
+
                     // Reset visual selection for all cells
                     editableCells.forEach(c => c.classList.remove('bulk-selected'));
-                    
+
                     // If another cell is already being edited, cancel it
                     if (activeCell && activeCell !== this) {
                         cancelEdit(activeCell);
                     }
-                    
+
                     // Start editing this cell
                     startEditing(this);
                 });
             });
-            
+
             function handleBulkSelection(cell) {
                 bulkEditMode = true;
-                
+
                 // Toggle selection for this cell
                 if (cell.classList.contains('bulk-selected')) {
                     cell.classList.remove('bulk-selected');
@@ -2461,7 +2459,7 @@
                 } else {
                     // Only allow selecting cells of the same type
                     const cellType = cell.dataset.gradeType;
-                    
+
                     // If this is first selection or matches existing type
                     if (bulkEditCells.length === 0 || bulkEditCells[0].dataset.gradeType === cellType) {
                         cell.classList.add('bulk-selected');
@@ -2471,19 +2469,19 @@
                         showToast('Warning', 'You can only bulk edit the same type of assessments', 'error');
                     }
                 }
-                
+
                 // Update controls UI
                 if (bulkEditCells.length > 0) {
                     // Convert activeCell to a bulk editing interface
                     const cellType = bulkEditCells[0].dataset.gradeType;
                     let typeLabel = 'Unknown';
-                    
+
                     if (cellType === 'written_work') typeLabel = 'Written Work';
                     if (cellType === 'performance_task') typeLabel = 'Performance Task';
                     if (cellType === 'quarterly') typeLabel = 'Quarterly Assessment';
-                    
+
                     editingInfo.textContent = `Bulk Edit: ${typeLabel} (${bulkEditCells.length} cells)`;
-                    
+
                     // Add input field to one of the cells
                     if (!activeCell) {
                         activeCell = document.createElement('div');
@@ -2491,17 +2489,17 @@
                         activeCell.innerHTML = `
                             <input type="number" min="0" max="100" step="1" placeholder="Enter new score for all selected cells" id="bulkEditInput">
                         `;
-                        
+
                         // Show edit controls
                         editControls.querySelector('h6').textContent = 'Bulk Edit Scores';
                         editControls.style.display = 'block';
-                        
+
                         // Focus input
                         setTimeout(() => {
                             const input = document.getElementById('bulkEditInput');
                             if (input) {
                                 input.focus();
-                                
+
                                 // Add event listeners for input
                                 input.addEventListener('keydown', function(e) {
                                     if (e.key === 'Enter') {
@@ -2522,19 +2520,19 @@
                     }
                 }
             }
-            
+
             function startEditing(cell) {
                 if (!cell) return;
-                
+
                 // Set active cell
                 activeCell = cell;
-                
+
                 // Highlight the row when editing
                 const row = cell.closest('tr');
                 if (row) {
                     row.classList.add('highlight-row');
                 }
-                
+
                 const studentId = cell.dataset.studentId;
                 const subjectId = cell.dataset.subjectId;
                 const quarter = cell.dataset.quarter;
@@ -2543,19 +2541,19 @@
                 const assessmentIndex = cell.dataset.assessmentIndex;
                 // Get max score from the data attribute or default to 100
                 const maxScore = cell.dataset.maxScore || 100;
-                
+
                 // Store current value
                 originalValue = cell.textContent.trim();
-                
+
                 // Debug information
                 console.log(`Editing: Type: ${gradeType}, Name: ${assessmentName}, Index: ${assessmentIndex}, Max: ${maxScore}`);
-                
+
                 // Display which type of score is being edited
                 let typeLabel = 'Unknown';
                 if (gradeType === 'written_work') typeLabel = 'Written Work';
                 if (gradeType === 'performance_task') typeLabel = 'Performance Task';
                 if (gradeType === 'quarterly') typeLabel = 'Quarterly Assessment';
-                
+
                 // Update editing info display with assessment index if available
                 editControls.querySelector('h6').textContent = 'Edit Score';
                 if (assessmentIndex) {
@@ -2563,10 +2561,10 @@
                 } else {
                     editingInfo.textContent = `${typeLabel} (Max: ${maxScore})`;
                 }
-                
+
                 // Clear previous content and add input
                 cell.classList.add('editing');
-                cell.innerHTML = `<input type="number" min="0" max="${maxScore}" step="1" value="${originalValue}" 
+                cell.innerHTML = `<input type="number" min="0" max="${maxScore}" step="1" value="${originalValue}"
                                     style="min-width: 50px; width: auto;"
                                     data-student-id="${studentId}"
                                     data-subject-id="${subjectId}"
@@ -2575,32 +2573,32 @@
                                     data-assessment-name="${assessmentName}"
                                     data-assessment-index="${assessmentIndex}"
                                     data-max-score="${maxScore}">`;
-                
+
                 // Focus input
                 const input = cell.querySelector('input');
                 input.focus();
                 input.select();
-                
+
                 // Assign a tabindex for keyboard navigation
                 input.tabIndex = 1;
-                
+
                 // Check if on mobile and scroll to cell if needed
                 const isMobile = window.innerWidth <= 768;
                 if (isMobile) {
                     // Ensure cell is visible by scrolling to it
                     cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
+
                     // Add mobile edit class to highlight
                     cell.classList.add('mobile-editing');
-                    
+
                     // Create a compact student + assessment identifier
                     const studentName = row.querySelector('td:first-child')?.textContent.trim() || 'Student';
                     editingInfo.textContent = `${studentName}: ${typeLabel} (Max: ${maxScore})`;
                 }
-                
+
                 // Show edit controls
                 editControls.style.display = 'block';
-                
+
                 // Add event listeners for input
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
@@ -2613,7 +2611,7 @@
                         saveEdit(true); // Save and move to next
                     }
                 });
-                
+
                 // Add validation for input changes
                 input.addEventListener('input', function(e) {
                     const value = parseFloat(this.value) || 0;
@@ -2626,7 +2624,7 @@
                         this.style.borderColor = '';
                         this.style.backgroundColor = '';
                     }
-                    
+
                     // Ensure the input is sized appropriately to show at least 2 digits
                     if (this.value.length < 2) {
                         this.style.width = '50px';
@@ -2635,7 +2633,7 @@
                     }
                 });
             }
-            
+
             // Save button functionality
             const saveButton = editControls.querySelector('.save');
             saveButton.addEventListener('click', function() {
@@ -2645,7 +2643,7 @@
                     saveEdit();
                 }
             });
-            
+
             // Cancel button functionality
             const cancelButton = editControls.querySelector('.cancel');
             cancelButton.addEventListener('click', function() {
@@ -2655,13 +2653,13 @@
                     cancelEdit(activeCell);
                 }
             });
-            
+
             function saveEdit(moveToNext = false) {
                 if (!activeCell) return;
-                
+
                 const input = activeCell.querySelector('input');
                 if (!input) return;
-                
+
                 const newValue = input.value.trim();
                 const studentId = input.dataset.studentId;
                 const subjectId = input.dataset.subjectId;
@@ -2671,19 +2669,19 @@
                 const assessmentIndex = input.dataset.assessmentIndex;
                 // Use data-max-score attribute if present, otherwise default to 100
                 const maxScore = parseFloat(input.dataset.maxScore) || parseFloat(activeCell.dataset.maxScore) || 100;
-                
+
                 // Debug log
                 console.log(`Editing: Type: ${gradeType}, Name: ${assessmentName}, Index: ${assessmentIndex}, Max: ${maxScore}`);
-                
+
                 // Validate the score doesn't exceed maximum
                 if (parseFloat(newValue) > maxScore) {
                     showToast('Error', `Score cannot exceed maximum of ${maxScore}`, 'error');
                     return;
                 }
-                
+
                 // Show loading state in the cell
                 activeCell.innerHTML = '<span style="opacity: 0.5">Saving...</span>';
-                
+
                 // Make AJAX request to update the score
                 console.log('Sending data:', {
                     student_id: studentId,
@@ -2695,7 +2693,7 @@
                     score: newValue,
                     max_score: maxScore // Send the max score for server-side validation
                 });
-                
+
                 $.ajax({
                     url: requestUrl,
                     method: requestMethod,
@@ -2717,24 +2715,24 @@
                         activeCell.textContent = newValue;
                         activeCell.classList.remove('editing');
                         activeCell.classList.remove('mobile-editing');
-                        
+
                         if (moveToNext) {
                             // Find next cell and edit it
                             const allCells = Array.from(editableCells);
                             const currentIndex = allCells.indexOf(activeCell);
                             const nextCell = allCells[currentIndex + 1];
-                            
+
                             // Reset active cell
                             const prevActiveCell = activeCell;
                             activeCell = null;
-                            
+
                             // Hide edit controls only if we can't find a next cell
                             if (!nextCell) {
                                 editControls.style.display = 'none';
                             } else {
                                 startEditing(nextCell);
                             }
-                            
+
                             // Remove row highlighting from previous row
                             const prevRow = prevActiveCell.closest('tr');
                             if (prevRow) {
@@ -2743,24 +2741,24 @@
                         } else {
                             // Reset active cell
                             activeCell = null;
-                            
+
                             // Hide edit controls
                             editControls.style.display = 'none';
-                            
+
                             // Remove row highlighting
                             const row = document.querySelector('.highlight-row');
                             if (row) {
                                 row.classList.remove('highlight-row');
                             }
-                            
+
                             // Show toast notification - removed printing tip
                             showToast('Success', 'Score updated successfully. Page will reload in 2 seconds.', 'success');
-                            
+
                             // Restore the reload timer to show updated grades
                             let reloadTimer = setTimeout(function() {
                                 window.location.reload();
                             }, 2000);
-                            
+
                             // Allow canceling reload with ESC key
                             const escHandler = function(e) {
                                 if (e.key === 'Escape') {
@@ -2769,7 +2767,7 @@
                                     document.removeEventListener('keydown', escHandler);
                                 }
                             };
-                            
+
                             document.addEventListener('keydown', escHandler);
                         }
                     },
@@ -2779,36 +2777,36 @@
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = xhr.responseJSON.message;
                         }
-                        
+
                         // Show error toast
                         showToast('Error', errorMessage, 'error');
-                        
+
                         // Restore original value
                         cancelEdit(activeCell);
                     }
                 });
             }
-            
+
             function saveBulkEdit() {
                 if (bulkEditCells.length === 0) return;
-                
+
                 const input = document.getElementById('bulkEditInput');
                 if (!input) return;
-                
+
                 const newValue = input.value.trim();
                 if (!newValue) {
                     showToast('Error', 'Please enter a value', 'error');
                     return;
                 }
-                
+
                 // Get the type of assessment from the first cell
                 const firstCell = bulkEditCells[0];
                 const gradeType = firstCell.dataset.gradeType;
                 const assessmentName = firstCell.dataset.assessmentName;
-                
+
                 // Find the max score for this assessment type
                 let maxScoreValue = 100; // Default fallback
-                
+
                 // Get max score based on assessment type
                 if (gradeType === 'written_work') {
                     const writtenWorks = @json($writtenWorks);
@@ -2824,31 +2822,31 @@
                         maxScoreValue = quarterlyAssessments[0].max_score;
                     }
                 }
-                
+
                 // Validate the score doesn't exceed maximum
                 if (parseFloat(newValue) > maxScoreValue) {
                     showToast('Error', `Score cannot exceed maximum of ${maxScoreValue}`, 'error');
                     return;
                 }
-                
+
                 // Show loading message
                 showToast('Processing', `Updating ${bulkEditCells.length} scores...`, 'info');
-                
+
                 // Close edit controls
                 editControls.style.display = 'none';
-                
+
                 // Create an array of promises for each update
                 const updatePromises = bulkEditCells.map(cell => {
                     return new Promise((resolve, reject) => {
                         // Visual feedback
                         cell.innerHTML = '<span style="opacity: 0.5">Saving...</span>';
-                        
+
                         // Get cell data
                         const studentId = cell.dataset.studentId;
                         const subjectId = cell.dataset.subjectId;
                         const quarter = cell.dataset.quarter;
                         const cellAssessmentName = cell.dataset.assessmentName;
-                        
+
                         // Make AJAX request
                         $.ajax({
                             url: requestUrl,
@@ -2883,28 +2881,28 @@
                         });
                     });
                 });
-                
+
                 // Process all updates
                 Promise.allSettled(updatePromises).then(results => {
                     const successful = results.filter(r => r.status === 'fulfilled').length;
                     const failed = results.filter(r => r.status === 'rejected').length;
-                    
+
                     if (failed > 0) {
                         showToast('Partial Success', `Updated ${successful} scores, ${failed} failed`, 'error');
                     } else {
                         showToast('Success', `All ${successful} scores updated successfully. Page will reload in 2 seconds.`, 'success');
                     }
-                    
+
                     // Reset bulk mode
                     bulkEditMode = false;
                     bulkEditCells = [];
                     activeCell = null;
-                    
+
                     // Restore reload timer to show recalculated grades
                     window.pageReloadTimer = setTimeout(() => {
                         location.reload();
                     }, 2000);
-                    
+
                     // Allow cancelling the reload with ESC key
                     document.addEventListener('keydown', function escHandler(e) {
                         if (e.key === 'Escape' && window.pageReloadTimer) {
@@ -2916,52 +2914,52 @@
                     });
                 });
             }
-            
+
             function cancelBulkEdit() {
                 // Reset all the selected cells
                 bulkEditCells.forEach(cell => {
                     cell.classList.remove('bulk-selected');
                 });
-                
+
                 bulkEditMode = false;
                 bulkEditCells = [];
                 activeCell = null;
-                
+
                 // Hide edit controls
                 editControls.style.display = 'none';
             }
-            
+
             function cancelEdit(cell) {
                 if (!cell) return;
-                
+
                 // Restore original value
                 cell.innerHTML = originalValue;
                 cell.classList.remove('editing');
                 cell.classList.remove('mobile-editing');
-                
+
                 // Remove row highlighting
                 const row = cell.closest('tr');
                 if (row) {
                     row.classList.remove('highlight-row');
                 }
-                
+
                 // Hide edit controls
                 editControls.style.display = 'none';
-                
+
                 // Reset active cell
                 activeCell = null;
             }
         }
-        
+
         function fetchStudentsByGradeRanges() {
             // Show loading message
             showToast('Loading', 'Generating student lists by grade ranges...', 'info');
-            
+
             // Get the section, subject, and quarter from the page
             const sectionId = '{{ $section->id }}';
             const subjectId = '{{ $subject->id }}';
             const quarter = '{{ $quarter }}';
-            
+
             // Make AJAX request to get students by grade ranges
             $.ajax({
                 url: '{{ route("teacher.reports.students-by-grade-ranges") }}',
@@ -2979,7 +2977,7 @@
                     if (typeof hideToasts === 'function') {
                         hideToasts();
                     }
-                    
+
                     // Create modal for displaying results
                     createGradeRangesModal(response);
                 },
@@ -2989,13 +2987,13 @@
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
                     }
-                    
+
                     // Show error toast
                     showToast('Error', errorMessage, 'error');
                 }
             });
         }
-        
+
         function createGradeRangesModal(data) {
             // Create modal container if it doesn't exist
             let modal = document.getElementById('gradeRangesModal');
@@ -3005,7 +3003,7 @@
                 modal.className = 'modal';
                 document.body.appendChild(modal);
             }
-            
+
             // Create modal content
             let modalContent = `
                 <div class="modal-content" style="max-width: 90%; max-height: 90%; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 4px;">
@@ -3020,23 +3018,23 @@
                             <p style="margin: 0;"><strong>Quarter:</strong> ${data.quarter}</p>
                         </div>
             `;
-            
+
             // Add summary statistics at the top
             let totalStudents = 0;
             let countByRanges = {};
-            
+
             for (const [range, students] of Object.entries(data.ranges)) {
                 totalStudents += students.length;
                 countByRanges[range] = students.length;
             }
-            
+
             modalContent += `
                 <div class="range-summary" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
             `;
-            
+
             for (const [range, count] of Object.entries(countByRanges)) {
                 const percentage = totalStudents > 0 ? (count / totalStudents * 100).toFixed(1) : 0;
-                
+
                 modalContent += `
                     <div style="flex: 1; min-width: 120px; background-color: #f5f5f5; padding: 10px; border-radius: 4px; text-align: center; border: 1px solid #e0e0e0;">
                         <div style="font-weight: bold; margin-bottom: 5px;">${range}</div>
@@ -3045,16 +3043,16 @@
                     </div>
                 `;
             }
-            
+
             modalContent += `
                 </div>
             `;
-            
+
             // Add each range with improved but simplified styling
             for (const [range, students] of Object.entries(data.ranges)) {
                 // Skip empty ranges in print mode by adding a print-hide class
                 const printHideClass = students.length === 0 ? 'print-hide-empty' : '';
-                
+
                 modalContent += `
                     <div class="grade-range ${printHideClass}" style="margin-bottom: 25px;">
                         <h3 style="margin-top: 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e0e0e0;">
@@ -3062,7 +3060,7 @@
                             <span style="font-size: 0.9rem;">${students.length} students</span>
                         </h3>
                 `;
-                
+
                 if (students.length === 0) {
                     modalContent += `<p style="padding: 10px; text-align: center; color: #666; font-style: italic;">No students in this range.</p>`;
                 } else {
@@ -3077,11 +3075,11 @@
                             </thead>
                             <tbody>
                     `;
-                    
+
                     students.forEach((item, index) => {
                         const student = item.student;
                         const rowBg = index % 2 === 0 ? '#ffffff' : '#f9f9f9';
-                        
+
                         modalContent += `
                             <tr style="background-color: ${rowBg};">
                                 <td style="padding: 10px; border: 1px solid #e0e0e0; font-weight: 500;">${student.last_name}, ${student.first_name} ${student.middle_name ? student.middle_name.charAt(0) + '.' : ''}</td>
@@ -3090,16 +3088,16 @@
                             </tr>
                         `;
                     });
-                    
+
                     modalContent += `
                             </tbody>
                         </table>
                     `;
                 }
-                
+
                 modalContent += `</div>`;
             }
-            
+
             modalContent += `
                     </div>
                     <div class="modal-footer" style="padding: 15px 20px; background-color: #f5f5f5; border-top: 1px solid #e0e0e0; text-align: right;">
@@ -3108,10 +3106,10 @@
                     </div>
                 </div>
             `;
-            
+
             // Set modal content
             modal.innerHTML = modalContent;
-            
+
             // Add modal styling if not already present
             if (!document.getElementById('modalStyles')) {
                 const modalStyles = document.createElement('style');
@@ -3212,23 +3210,23 @@
                         table tr {
                             page-break-inside: avoid;
                         }
-                        
+
                         /* For large data sets, optimize table layout */
                         .multi-column-layout .range-table {
                             column-count: 2;
                             column-gap: 20px;
                         }
-                        
+
                         /* Orientation-specific styles */
                         .landscape-optimized {
                             /* Additional styles for landscape mode */
                         }
-                        
+
                         .portrait-optimized {
                             /* Styles for portrait mode */
                             font-size: 10px !important;
                         }
-                        
+
                         /* Apply portrait optimizations when user selects portrait */
                         @media (orientation: portrait) {
                             .range-table {
@@ -3243,22 +3241,22 @@
                 `;
                 document.head.appendChild(modalStyles);
             }
-            
+
             // Show modal
             modal.style.display = 'block';
-            
+
             // Add event listeners for close buttons
             const closeBtn = modal.querySelector('.modal-close');
             const closeRangesBtn = document.getElementById('closeRangesBtn');
-            
+
             closeBtn.addEventListener('click', function() {
                 modal.style.display = 'none';
             });
-            
+
             closeRangesBtn.addEventListener('click', function() {
                 modal.style.display = 'none';
             });
-            
+
             // Add event listener for print button
             const printRangesBtn = document.getElementById('printRangesBtn');
             printRangesBtn.addEventListener('click', function() {
@@ -3302,32 +3300,32 @@
                             -webkit-print-color-adjust: exact !important;
                             print-color-adjust: exact !important;
                         }
-                        
+
                         /* Layout optimizations for many students */
                         .grade-range:has(table tr:nth-child(n+8)) table {
                             font-size: 9px !important;
                         }
-                        
+
                         /* Compact cells when we have many students */
                         .grade-range:has(table tr:nth-child(n+12)) table td,
                         .grade-range:has(table tr:nth-child(n+12)) table th {
                             padding: 2px 4px !important;
                         }
-                        
+
                         /* Two-column layout for ranges with many students - only in landscape */
                         @media (orientation: landscape) {
                             .grade-range:has(table tr:nth-child(n+20)) {
                                 column-count: 2;
                                 column-gap: 10px;
                             }
-                            
+
                             /* For very large data sets */
                             .grade-range:has(table tr:nth-child(n+30)) {
                                 column-count: 3;
                                 column-gap: 10px;
                             }
                         }
-                        
+
                         /* Portrait mode optimizations */
                         @media (orientation: portrait) {
                             .grade-range table {
@@ -3344,7 +3342,7 @@
                     }
                 `;
                 document.head.appendChild(printStyle);
-                
+
                 // Add orientation choice UI
                 const orientationUI = document.createElement('div');
                 orientationUI.id = 'orientation-choice';
@@ -3358,12 +3356,12 @@
                     </div>
                 `;
                 document.body.appendChild(orientationUI);
-                
+
                 // Add event listener to continue to print
                 document.getElementById('continue-print').addEventListener('click', function() {
                     // Remove the orientation UI
                     document.body.removeChild(orientationUI);
-                    
+
                     // Add a title for the print
                     const printTitle = document.createElement('div');
                     printTitle.id = 'print-title-temp';
@@ -3377,24 +3375,24 @@
                     if (modalBody) {
                         modalBody.prepend(printTitle);
                     }
-                    
+
                     // Make print title visible only during printing
                     printTitle.style.display = 'block';
-                    
+
                     // Count total students with data to determine optimal layout
                     let totalStudentsWithData = 0;
                     for (const [range, students] of Object.entries(data.ranges)) {
                         totalStudentsWithData += students.length;
                     }
-                    
+
                     // Add multi-column layout class if we have many students
                     if (totalStudentsWithData > 20) {
                         modalBody.classList.add('multi-column-layout');
                     }
-                    
+
                     // Print the page
                     window.print();
-                    
+
                     // Remove the temporary print styles and title after printing
                     setTimeout(() => {
                         if (printStyle.parentNode) {
@@ -3407,24 +3405,24 @@
                     }, 1000);
                 });
             });
-            
+
             // Close modal when clicking outside of it
             window.addEventListener('click', function(event) {
                 if (event.target === modal) {
-                    modal.style.display = 'none';   
+                    modal.style.display = 'none';
                 }
             });
         }
-        
+
         // Toast notification functions
         function showToast(title, message, type = 'info') {
             // Hide any existing toasts
             hideToasts();
-            
+
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
             toast.id = 'toast';
-            
+
             let bgColor = '#4CAF50'; // Success green
             if (type === 'error') {
                 bgColor = '#f44336'; // Error red
@@ -3433,11 +3431,11 @@
             } else if (type === 'warning') {
                 bgColor = '#ff9800'; // Warning orange
             }
-            
+
             // Check if this is mobile
             const isMobile = window.innerWidth <= 768;
             const isAndroid = /Android/i.test(navigator.userAgent);
-            
+
             // Base styling
             let toastStyle = `
                 position: fixed;
@@ -3454,7 +3452,7 @@
                 opacity: 0;
                 transition: opacity 0.5s;
             `;
-            
+
             // Add specific Android fixes
             if (isAndroid) {
                 toastStyle += `
@@ -3467,9 +3465,9 @@
                     opacity: 1;
                 `;
             }
-            
+
             toast.style = toastStyle;
-            
+
             toast.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <strong>${title}</strong>
@@ -3477,16 +3475,16 @@
                 </div>
                 <div>${message}</div>
             `;
-            
+
             document.body.appendChild(toast);
-            
+
             // Fade in (except for Android)
             if (!isAndroid) {
                 setTimeout(() => {
                     toast.style.opacity = '1';
                 }, 10);
             }
-            
+
             // Auto hide after 5 seconds for success/info, longer for errors
             if (type !== 'error') {
                 setTimeout(hideToasts, 5000);
@@ -3495,7 +3493,7 @@
                 setTimeout(hideToasts, 8000);
             }
         }
-        
+
         function hideToasts() {
             const toast = document.getElementById('toast');
             if (toast) {
@@ -3518,7 +3516,7 @@
                     clearTimeout(window.pageReloadTimer);
                     window.pageReloadTimer = null;
                 }
-                
+
                 // Hide any modals or controls before printing
                 const helpModal = document.getElementById('helpModal');
                 const editControls = document.querySelector('.edit-controls');
@@ -3526,32 +3524,32 @@
                 const actionButtons = document.querySelector('.action-buttons');
                 const closeButton = document.querySelector('.btn-print');
                 const allNoprint = document.querySelectorAll('.no-print');
-                
+
                 // Force hide all no-print elements
                 allNoprint.forEach(el => {
                     el.style.display = 'none';
                 });
-                
+
                 // Hide specific buttons and controls
                 if (helpModal) helpModal.style.display = 'none';
                 if (editControls) editControls.style.display = 'none';
                 if (toastContainer) toastContainer.innerHTML = '';
                 if (actionButtons) actionButtons.style.display = 'none';
                 if (closeButton) closeButton.style.display = 'none';
-                
+
                 // Add one-time print stylesheet
-                document.body.insertAdjacentHTML('beforeend', 
+                document.body.insertAdjacentHTML('beforeend',
                     '<style id="temp-print-styles">.no-print{display:none !important} .btn-print{display:none !important} #helpButton{display:none !important}</style>');
-                
+
                 // Directly trigger print
                 setTimeout(() => {
                     window.print();
-                    
+
                     // Remove the temporary print styles after printing
                     setTimeout(() => {
                         const tempStyles = document.getElementById('temp-print-styles');
                         if (tempStyles) tempStyles.remove();
-                        
+
                         // Remove this toast notification
                         // showToast('Print', 'Print dialog opened', 'success');
                     }, 500);
@@ -3575,7 +3573,7 @@
                 bubbles: true
             });
             document.dispatchEvent(escEvent);
-            
+
             // Show a message
             showToast('Reload Canceled', 'Page reload stopped. You can now print the report.', 'info');
         }
@@ -3592,14 +3590,14 @@
             <div class="modal-body">
                 <p><strong>Section:</strong> {{ $section->name }}</p>
         `;
-        
+
         // Add each range
         for (const [range, students] of Object.entries(data.ranges)) {
             modalContent += `
                 <div class="grade-range">
                     <h3>Grade Range: ${range}</h3>
             `;
-            
+
             if (students.length === 0) {
                 modalContent += `<p>No students in this range.</p>`;
             } else {
@@ -3614,7 +3612,7 @@
                         </thead>
                         <tbody>
                 `;
-                
+
                 students.forEach(item => {
                     const student = item.student;
                     modalContent += `
@@ -3625,16 +3623,16 @@
                         </tr>
                     `;
                 });
-                
+
                 modalContent += `
                         </tbody>
                     </table>
                 `;
             }
-            
+
             modalContent += `</div>`;
         }
-        
+
         modalContent += `
                 </div>
                 <div class="modal-footer">
@@ -3643,10 +3641,10 @@
                 </div>
             </div>
         `;
-        
+
         // Set modal content
         modal.innerHTML = modalContent;
-        
+
         // Add modal styling if not already present
         if (!document.getElementById('modalStyles')) {
             const modalStyles = document.createElement('style');
@@ -3741,28 +3739,28 @@
             `;
             document.head.appendChild(modalStyles);
         }
-        
+
         // Show modal
         modal.style.display = 'block';
-        
+
         // Add event listeners for close buttons
         const closeBtn = modal.querySelector('.modal-close');
         const closeRangesBtn = document.getElementById('closeRangesBtn');
-        
+
         closeBtn.addEventListener('click', function() {
             modal.style.display = 'none';
         });
-        
+
         closeRangesBtn.addEventListener('click', function() {
             modal.style.display = 'none';
         });
-        
+
         // Add event listener for print button
         const printRangesBtn = document.getElementById('printRangesBtn');
         printRangesBtn.addEventListener('click', function() {
             window.print();
         });
-        
+
         // Close modal when clicking outside of it
         window.addEventListener('click', function(event) {
             if (event.target === modal) {
@@ -3770,16 +3768,16 @@
             }
         });
     }
-    
+
     // Toast notification functions
     function showToast(title, message, type = 'info') {
         // Hide any existing toasts
         hideToasts();
-        
+
         const toast = document.createElement('div');
         toast.className = 'toast-notification';
         toast.id = 'toast';
-        
+
         let bgColor = '#4CAF50'; // Success green
         if (type === 'error') {
             bgColor = '#f44336'; // Error red
@@ -3788,11 +3786,11 @@
         } else if (type === 'warning') {
             bgColor = '#ff9800'; // Warning orange
         }
-        
+
         // Check if this is mobile
         const isMobile = window.innerWidth <= 768;
         const isAndroid = /Android/i.test(navigator.userAgent);
-        
+
         // Base styling
         let toastStyle = `
             position: fixed;
@@ -3809,7 +3807,7 @@
             opacity: 0;
             transition: opacity 0.5s;
         `;
-        
+
         // Add specific Android fixes
         if (isAndroid) {
             toastStyle += `
@@ -3822,9 +3820,9 @@
                 opacity: 1;
             `;
         }
-        
+
         toast.style = toastStyle;
-        
+
         toast.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <strong>${title}</strong>
@@ -3832,16 +3830,16 @@
             </div>
             <div>${message}</div>
         `;
-        
+
         document.body.appendChild(toast);
-        
+
         // Fade in (except for Android)
         if (!isAndroid) {
             setTimeout(() => {
                 toast.style.opacity = '1';
             }, 10);
         }
-        
+
         // Auto hide after 5 seconds for success/info, longer for errors
         if (type !== 'error') {
             setTimeout(hideToasts, 5000);
@@ -3850,7 +3848,7 @@
             setTimeout(hideToasts, 8000);
         }
     }
-    
+
     function hideToasts() {
         const toast = document.getElementById('toast');
         if (toast) {
@@ -3863,4 +3861,4 @@
         }
     }
 </script>
-</html> 
+</html>

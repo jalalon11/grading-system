@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Http\Controllers\TeacherAdmin\DashboardController;
 use App\Http\Controllers\TeacherAdmin\SectionController;
 use App\Http\Controllers\TeacherAdmin\SubjectController;
+use App\Http\Controllers\TeacherAdmin\ReportController;
 use App\Http\Middleware\TeacherAdminMiddleware;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -27,6 +28,10 @@ class TeacherAdminServiceProvider extends ServiceProvider
 
         $this->app->singleton('TeacherAdmin.SubjectController', function ($app) {
             return new SubjectController();
+        });
+
+        $this->app->singleton('TeacherAdmin.ReportController', function ($app) {
+            return new ReportController();
         });
     }
 
