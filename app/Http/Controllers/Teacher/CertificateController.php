@@ -110,6 +110,7 @@ class CertificateController extends Controller
                     $mapehComponents = $subject->components;
                     $mapehComponentGrades = [];
                     $totalComponentGrade = 0;
+                    $totalWeight = 0;
                     $componentCount = 0;
 
                     foreach ($mapehComponents as $component) {
@@ -129,8 +130,11 @@ class CertificateController extends Controller
                                     'quarterly_grade' => $componentGrade
                                 ];
 
+                                // Use component weight if available, otherwise default to equal weights
+                                $componentWeight = $component->component_weight ?? 25;
                                 // Add to total for MAPEH average calculation
-                                $totalComponentGrade += $componentGrade;
+                                $totalComponentGrade += ($componentGrade * $componentWeight);
+                                $totalWeight += $componentWeight;
                                 $componentCount++;
                             }
                         }
@@ -139,8 +143,8 @@ class CertificateController extends Controller
                     if ($hasComponentGrades && $componentCount > 0) {
                         $hasMapeh = true;
 
-                        // Calculate MAPEH average grade
-                        $mapehAverageGrade = round($totalComponentGrade / $componentCount);
+                        // Calculate MAPEH average grade using weighted average
+                        $mapehAverageGrade = round($totalComponentGrade / $totalWeight, 1);
 
                         // Store the MAPEH average grade
                         $studentSubjects[$subject->id] = [
@@ -478,6 +482,7 @@ class CertificateController extends Controller
                     $mapehComponents = $subject->components;
                     $mapehComponentGrades = [];
                     $totalComponentGrade = 0;
+                    $totalWeight = 0;
                     $componentCount = 0;
 
                     foreach ($mapehComponents as $component) {
@@ -497,8 +502,11 @@ class CertificateController extends Controller
                                     'quarterly_grade' => $componentGrade
                                 ];
 
+                                // Use component weight if available, otherwise default to equal weights
+                                $componentWeight = $component->component_weight ?? 25;
                                 // Add to total for MAPEH average calculation
-                                $totalComponentGrade += $componentGrade;
+                                $totalComponentGrade += ($componentGrade * $componentWeight);
+                                $totalWeight += $componentWeight;
                                 $componentCount++;
                             }
                         }
@@ -507,8 +515,8 @@ class CertificateController extends Controller
                     if ($hasComponentGrades && $componentCount > 0) {
                         $hasMapeh = true;
 
-                        // Calculate MAPEH average grade
-                        $mapehAverageGrade = round($totalComponentGrade / $componentCount);
+                        // Calculate MAPEH average grade using weighted average
+                        $mapehAverageGrade = round($totalComponentGrade / $totalWeight, 1);
 
                         // Store the MAPEH average grade
                         $studentSubjects[$subject->id] = [
@@ -775,6 +783,7 @@ class CertificateController extends Controller
 
     /**
      * Calculate the average for a specific grade component
+     * Uses total score divided by total max score method
      *
      * @param \Illuminate\Support\Collection $grades
      * @return float|null
@@ -785,13 +794,17 @@ class CertificateController extends Controller
             return null;
         }
 
-        $totalPercentage = 0;
+        $totalScore = 0;
+        $totalMaxScore = 0;
 
         foreach ($grades as $grade) {
-            $totalPercentage += ($grade->score / $grade->max_score) * 100;
+            if ($grade->max_score > 0) {
+                $totalScore += $grade->score;
+                $totalMaxScore += $grade->max_score;
+            }
         }
 
-        return $totalPercentage / $grades->count();
+        return $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 1) : 0;
     }
 
     /**

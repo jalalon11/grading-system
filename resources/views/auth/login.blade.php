@@ -2,55 +2,7 @@
 
 @push('styles')
 <style>
-    /* Force light mode styles for login page */
-    html.dark .login-container {
-        background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%) !important;
-        color: initial !important;
-    }
-    
-    html.dark .login-card {
-        background: rgba(244, 246, 246, 0.95) !important;
-        color: initial !important;
-    }
-    
-    html.dark .form-control {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border-color: #e2e8f0 !important;
-        color: #333 !important;
-    }
-    
-    html.dark .input-group-text {
-        background-color: rgba(247, 250, 252, 0.9) !important;
-        border-color: #e2e8f0 !important;
-        color: #718096 !important;
-    }
-    
-    html.dark .login-title {
-        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%) !important;
-        -webkit-background-clip: text !important;
-        -webkit-text-fill-color: transparent !important;
-    }
-    
-    html.dark .login-subtitle {
-        color: #2E4053 !important;
-    }
-    
-    html.dark .btn-login {
-        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%) !important;
-    }
-    
-    html.dark .forgot-password {
-        color: #2E4053 !important;
-    }
-    
-    html.dark .form-check-label {
-        color: initial !important;
-    }
-    
-    html.dark .card-footer {
-        background: transparent !important;
-        color: initial !important;
-    }
+
 
     .login-container {
         min-height: 100vh;
@@ -63,7 +15,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .login-container::before {
         content: '';
         position: absolute;
@@ -72,21 +24,21 @@
         background: radial-gradient(circle, rgba(28,40,51,0.1) 0%, rgba(46,64,83,0.1) 100%);
         animation: rotate 20s linear infinite;
     }
-    
+
     @keyframes rotate {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
     }
-    
+
     /* Override default main padding */
     main {
         padding: 0 !important;
     }
-    
+
     #content {
         padding: 0 !important;
     }
-    
+
     .login-card {
         max-width: 420px;
         width: 100%;
@@ -97,12 +49,12 @@
         background: rgba(244, 246, 246, 0.95);
         border: 1px solid rgba(170, 183, 184, 0.2);
     }
-    
+
     .login-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
-    
+
     .school-logo {
         width: 90px;
         height: 90px;
@@ -117,7 +69,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .school-logo::after {
         content: '';
         position: absolute;
@@ -127,22 +79,22 @@
         transform: translateX(-100%);
         animation: shine 3s infinite;
     }
-    
+
     @keyframes shine {
         100% { transform: translateX(100%); }
     }
-    
+
     @keyframes float {
         0% { transform: translateY(0px); }
         50% { transform: translateY(-10px); }
         100% { transform: translateY(0px); }
     }
-    
+
     .login-header {
         text-align: center;
         margin-bottom: 2.5rem;
     }
-    
+
     .login-title {
         font-size: 2rem;
         font-weight: 700;
@@ -152,13 +104,13 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    
+
     .login-subtitle {
         color: #2E4053;
         font-size: 1rem;
         line-height: 1.5;
     }
-    
+
     .form-control {
         border: 2px solid #e2e8f0;
         padding: 0.875rem 1rem;
@@ -167,29 +119,29 @@
         transition: all 0.2s ease;
         background: rgba(255, 255, 255, 0.9);
     }
-    
+
     .form-control:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         background: #ffffff;
     }
-    
+
     .input-group-text {
         border: 2px solid #e2e8f0;
         background-color: rgba(247, 250, 252, 0.9);
         color: #718096;
         border-radius: 0.75rem 0 0 0.75rem;
     }
-    
+
     .input-group .form-control {
         border-left: 0;
         border-radius: 0 0.75rem 0.75rem 0;
     }
-    
+
     .input-group .input-group-text {
         border-right: 0;
     }
-    
+
     .btn-login {
         padding: 0.875rem 1.5rem;
         font-weight: 600;
@@ -202,7 +154,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .btn-login::before {
         content: '';
         position: absolute;
@@ -213,16 +165,16 @@
         background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
         transition: 0.5s;
     }
-    
+
     .btn-login:hover::before {
         left: 100%;
     }
-    
+
     .btn-login:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
-    
+
     .forgot-password {
         color: #2E4053;
         text-decoration: none;
@@ -230,7 +182,7 @@
         transition: all 0.2s ease;
         position: relative;
     }
-    
+
     .forgot-password::after {
         content: '';
         position: absolute;
@@ -243,20 +195,20 @@
         transform-origin: right;
         transition: transform 0.3s ease;
     }
-    
+
     .forgot-password:hover {
         color: #1C2833;
     }
-    
+
     .forgot-password:hover::after {
         transform: scaleX(1);
         transform-origin: left;
     }
-    
+
     .remember-me {
         user-select: none;
     }
-    
+
     .remember-me input[type="checkbox"] {
         border-radius: 0.375rem;
         border: 2px solid #e2e8f0;
@@ -265,12 +217,12 @@
         cursor: pointer;
         transition: all 0.2s ease;
     }
-    
+
     .remember-me input[type="checkbox"]:checked {
         background-color: #667eea;
         border-color: #667eea;
     }
-    
+
     .card-footer {
         background: transparent;
         border-top: 1px solid rgba(0, 0, 0, 0.05);
@@ -310,7 +262,7 @@
     .invalid-feedback i {
         color: #e53e3e;
     }
-    
+
 </style>
 @endpush
 
@@ -324,7 +276,7 @@
                         <div class="school-logo">
                             <i class="fas fa-graduation-cap text-white" style="font-size: 2.25rem;"></i>
                         </div>
-                        
+
                         <div class="login-header">
                             <h1 class="login-title">Welcome Back!</h1>
                             <p class="login-subtitle">Sign in to continue to your account</p>
@@ -348,9 +300,9 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-envelope"></i>
                                     </span>
-                                    <input id="email" type="email" 
-                                           class="form-control @error('email') is-invalid @enderror" 
-                                           name="email" value="{{ old('email') }}" 
+                                    <input id="email" type="email"
+                                           class="form-control @error('email') is-invalid @enderror"
+                                           name="email" value="{{ old('email') }}"
                                            required autocomplete="email" autofocus
                                            placeholder="Enter your email">
                                 </div>
@@ -375,8 +327,8 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-lock"></i>
                                     </span>
-                                    <input id="password" type="password" 
-                                           class="form-control @error('password') is-invalid @enderror" 
+                                    <input id="password" type="password"
+                                           class="form-control @error('password') is-invalid @enderror"
                                            name="password" required autocomplete="current-password"
                                            placeholder="Enter your password">
                                     <button class="btn btn-outline-secondary" type="button" id="togglePassword">

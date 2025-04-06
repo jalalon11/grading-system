@@ -12,9 +12,11 @@ use App\Http\Controllers\Teacher\GradeController;
 use App\Http\Controllers\Teacher\ReportController;
 use App\Http\Controllers\Teacher\StudentController;
 use App\Http\Controllers\Teacher\GradeConfigurationController;
+use App\Http\Controllers\Teacher\GradeApprovalController;
 use App\Http\Controllers\TeacherAdmin\DashboardController as TeacherAdminDashboardController;
 use App\Http\Controllers\TeacherAdmin\SectionController;
 use App\Http\Controllers\TeacherAdmin\SubjectController as TeacherAdminSubjectController;
+use App\Http\Controllers\TeacherAdmin\ReportController as TeacherAdminReportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Section;
@@ -103,6 +105,12 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::get('reports/section-subjects', [ReportController::class, 'getSectionSubjects'])->name('reports.section-subjects');
         Route::post('reports/students-by-grade-ranges', [ReportController::class, 'getStudentsByGradeRanges'])->name('reports.students-by-grade-ranges');
 
+        // Grade Slip Routes
+        Route::get('reports/grade-slips', [ReportController::class, 'gradeSlips'])->name('reports.grade-slips');
+        Route::post('reports/generate-grade-slips', [ReportController::class, 'generateGradeSlips'])->name('reports.generate-grade-slips');
+        Route::get('reports/generate-grade-slips', [ReportController::class, 'generateGradeSlips'])->name('reports.generate-grade-slips-get');
+        Route::get('reports/grade-slip-preview', [ReportController::class, 'previewGradeSlip'])->name('reports.grade-slip-preview');
+
         // Certificates Routes (now under reports)
         Route::get('reports/certificates', [CertificateController::class, 'index'])->name('reports.certificates.index');
         Route::get('reports/certificates/generate', [CertificateController::class, 'generate'])->name('reports.certificates.generate');
@@ -182,6 +190,10 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         // Add edit assessment route
         Route::post('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment');
         Route::get('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment-get');
+
+        // Grade Approval Routes
+        Route::get('/grade-approvals', [GradeApprovalController::class, 'index'])->name('grade-approvals.index');
+        Route::post('/grade-approvals/update', [GradeApprovalController::class, 'update'])->name('grade-approvals.update');
     });
 
     // Teacher Admin Routes
@@ -212,8 +224,13 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
                 ->name('sections.toggle-status');
             Route::patch('sections/{section}/update-adviser', [SectionController::class, 'updateAdviser'])
                 ->name('sections.update-adviser');
+
+            // Reports Management
+            Route::get('/reports', [TeacherAdminReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/consolidated-grades', [TeacherAdminReportController::class, 'consolidatedGrades'])->name('reports.consolidated-grades');
+            Route::post('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades');
+            Route::get('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades-get');
         });
 
-    // Dark mode preference update route
-    Route::post('/user/update-dark-mode', [App\Http\Controllers\UserController::class, 'updateDarkMode'])->name('user.update-dark-mode');
+
 });

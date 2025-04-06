@@ -25,45 +25,45 @@ class GradeController extends Controller
         try {
             $teacher = Auth::user();
             $teacherId = $teacher->id;
-            
+
             Log::info('Teacher accessing grades index', [
-                'teacher_id' => $teacherId, 
+                'teacher_id' => $teacherId,
                 'name' => $teacher->name,
                 'role' => $teacher->role
             ]);
-            
+
             // Get subjects through the pivot table relationship
             $subjectIds = DB::table('section_subject')
                 ->where('teacher_id', $teacherId)
                 ->pluck('subject_id')
                 ->unique()
                 ->toArray();
-            
+
             Log::info('Subject IDs from section_subject', [
                 'teacher_id' => $teacherId,
                 'subject_ids' => $subjectIds
             ]);
-            
+
             // Get the teacher's transmutation table preference
             $preferredTableId = DB::table('teacher_preferences')
                 ->where('teacher_id', $teacherId)
                 ->where('preference_key', 'transmutation_table')
                 ->value('preference_value');
-                
+
             // If no preference exists yet, set DepEd Transmutation Table (1) as default
             if (!$preferredTableId) {
                 $preferredTableId = 1; // DepEd Transmutation Table is now Table 1
                 // Save this preference
                 $this->saveTransmutationPreference($teacherId, $preferredTableId);
             }
-            
+
             // Handle locking/unlocking the transmutation table
             if ($request->has('locked_transmutation_table')) {
                 // Lock the transmutation table with the selected table ID
                 $tableIdToLock = $request->transmutation_table ?? $preferredTableId;
                 session(['locked_transmutation_table' => true]);
                 session(['locked_transmutation_table_id' => $tableIdToLock]);
-                
+
                 Log::info('Transmutation table locked', [
                     'teacher_id' => $teacherId,
                     'table_id' => $tableIdToLock,
@@ -74,7 +74,7 @@ class GradeController extends Controller
                 $tableIdToLock = $request->transmutation_table ?? $preferredTableId;
                 session(['locked_transmutation_table' => true]);
                 session(['locked_transmutation_table_id' => $tableIdToLock]);
-                
+
                 Log::info('Transmutation table locked', [
                     'teacher_id' => $teacherId,
                     'table_id' => $tableIdToLock,
@@ -84,14 +84,14 @@ class GradeController extends Controller
                 // Clear lock state if no lock inputs are present
                 session()->forget('locked_transmutation_table');
             }
-            
+
             // Store the preferred table ID in the view data
             $preferredTableId = (int) $preferredTableId;
-            
+
             // Get subjects based on section_subject pivot table
             if (!empty($subjectIds)) {
                 $subjects = Subject::whereIn('id', $subjectIds)->get();
-                
+
                 Log::info('Subjects found via pivot table', [
                     'count' => $subjects->count(),
                     'subject_ids' => $subjects->pluck('id')->toArray(),
@@ -100,83 +100,83 @@ class GradeController extends Controller
             } else {
                 // No subjects assigned in section_subject table
                 $subjects = collect();
-                
+
                 Log::warning('No subject assignments found in section_subject table', [
                     'teacher_id' => $teacherId
                 ]);
             }
-            
+
             // Get sections for this teacher (as adviser or from section_subject)
             $adviserSections = Section::where('adviser_id', $teacherId)->get();
-            
+
             $teacherSectionIds = DB::table('section_subject')
                 ->where('teacher_id', $teacherId)
                 ->pluck('section_id')
                 ->unique()
                 ->toArray();
-            
+
             $teacherSections = Section::whereIn('id', $teacherSectionIds)->get();
-            
+
             // Combine sections
             $sections = $adviserSections->merge($teacherSections)->unique('id');
-            
+
             Log::info('Sections for teacher', [
                 'count' => $sections->count(),
                 'section_ids' => $sections->pluck('id')->toArray(),
                 'section_names' => $sections->pluck('name')->toArray()
             ]);
-            
+
             // If teacher is assigned as section adviser but has no subject assignments,
             // add all subjects for those sections
             if ($subjects->isEmpty() && $sections->isNotEmpty()) {
                 $sectionIds = $sections->pluck('id')->toArray();
-                
+
                 $allSubjectIds = DB::table('section_subject')
                     ->whereIn('section_id', $sectionIds)
                     ->pluck('subject_id')
                     ->unique()
                     ->toArray();
-                
+
                 if (!empty($allSubjectIds)) {
                     $subjects = Subject::whereIn('id', $allSubjectIds)->get();
-                    
+
                     Log::info('Subjects found via advised sections', [
                         'count' => $subjects->count(),
                         'subject_ids' => $subjects->pluck('id')->toArray()
                     ]);
                 }
             }
-            
+
             // EMERGENCY FALLBACK: If still no subjects, get all subjects as a last resort
             if ($subjects->isEmpty()) {
                 Log::warning('No subjects found for teacher', [
                     'teacher_id' => $teacherId
                 ]);
-                
+
                 // Remove emergency fallback - security risk
                 // We don't want teachers accessing subjects they're not assigned to
-                
+
                 // Log the access attempt
                 Log::alert('Teacher attempted to access grades without subject assignments', [
                     'teacher_id' => $teacherId,
                     'name' => $teacher->name
                 ]);
             }
-            
+
             // Remove emergency mode session
             if (session()->has('emergency_mode')) {
                 session()->forget('emergency_mode');
             }
-            
+
             // Get selected subject or use first subject
             $selectedSubject = null;
             $selectedTerm = $request->term ?? 'Q1';
             $selectedSectionId = null;
-            
+
             if ($request->has('subject_id')) {
                 $selectedSubject = Subject::findOrFail($request->subject_id);
                 $selectedSubject->load('gradeConfiguration');
-                
+
                 // Get the section for this teacher and subject
                 if ($request->has('section_id')) {
                     $selectedSectionId = $request->section_id;
@@ -186,7 +186,7 @@ class GradeController extends Controller
                         ->where('teacher_id', $teacherId)
                         ->where('subject_id', $selectedSubject->id)
                         ->first();
-                    
+
                     if ($sectionSubject) {
                         $selectedSectionId = $sectionSubject->section_id;
                     } elseif ($sections->isNotEmpty()) {
@@ -196,20 +196,20 @@ class GradeController extends Controller
             } elseif ($subjects->count() > 0) {
                 $selectedSubject = $subjects->first();
                 $selectedSubject->load('gradeConfiguration');
-                
+
                 // Find a section where this teacher teaches this subject
                 $sectionSubject = DB::table('section_subject')
                     ->where('teacher_id', $teacherId)
                     ->where('subject_id', $selectedSubject->id)
                     ->first();
-                
+
                 if ($sectionSubject) {
                     $selectedSectionId = $sectionSubject->section_id;
                 } elseif ($sections->isNotEmpty()) {
                     $selectedSectionId = $sections->first()->id;
                 }
             }
-            
+
             if ($selectedSubject) {
                 Log::info('Selected subject', [
                     'subject_id' => $selectedSubject->id,
@@ -217,7 +217,7 @@ class GradeController extends Controller
                     'section_id' => $selectedSectionId
                 ]);
             }
-            
+
             // Get or create grade configuration for the selected subject
             if ($selectedSubject && !$selectedSubject->gradeConfiguration) {
                 $gradeConfig = GradeConfiguration::create([
@@ -229,12 +229,12 @@ class GradeController extends Controller
                 $selectedSubject->load('gradeConfiguration');
                 Log::info('Created grade configuration', ['subject_id' => $selectedSubject->id]);
             }
-            
+
             // Get students and their grades for the selected subject and section
             $students = [];
             if ($selectedSubject && $selectedSectionId) {
                 $viewAll = $request->has('view_all') && $request->view_all == 'true';
-                
+
                 if ($viewAll) {
                     // Get all subjects assigned to this section
                     $sectionSubjectIds = DB::table('section_subject')
@@ -242,7 +242,7 @@ class GradeController extends Controller
                         ->pluck('subject_id')
                         ->unique()
                         ->toArray();
-                    
+
                     $sectionStudents = Student::where('section_id', $selectedSectionId)
                         ->with(['grades' => function ($query) use ($sectionSubjectIds, $selectedTerm) {
                             $query->whereIn('subject_id', $sectionSubjectIds)
@@ -250,11 +250,11 @@ class GradeController extends Controller
                                   ->with('subject'); // Eager load the subject relation
                         }])
                         ->get();
-                    
+
                     foreach ($sectionStudents as $student) {
                         // Group grades by subject
                         $subjectGrades = [];
-                        
+
                         foreach ($sectionSubjectIds as $subjectId) {
                             $subjectName = Subject::find($subjectId)->name ?? "Unknown Subject";
                             $subjectGrades[$subjectId] = [
@@ -264,7 +264,7 @@ class GradeController extends Controller
                                 'quarterly_assessment' => $student->grades->where('subject_id', $subjectId)->where('grade_type', 'quarterly')->first(),
                             ];
                         }
-                        
+
                         $students[] = [
                             'student' => $student,
                             'view_all' => true,
@@ -279,62 +279,62 @@ class GradeController extends Controller
                                   ->where('term', $selectedTerm);
                         }])
                         ->get();
-                    
+
                     Log::info('Students found in section', [
                         'section_id' => $selectedSectionId,
                         'count' => $sectionStudents->count()
                     ]);
-                    
+
                     foreach ($sectionStudents as $student) {
                         $writtenWorks = $student->grades->where('grade_type', 'written_work')->all();
                         $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
                         $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
-                        
+
                         // Check if this is a MAPEH subject with components
                         $isMAPEH = false;
                         $mapehComponents = [];
-                        
+
                         if (isset($selectedSubject->components) && $selectedSubject->components->count() > 0) {
                             $componentNames = $selectedSubject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
                             $requiredComponents = ['music', 'arts', 'physical education', 'health'];
-                            
+
                             $matchedComponents = 0;
                             foreach ($requiredComponents as $component) {
-                                if (in_array($component, $componentNames) || 
+                                if (in_array($component, $componentNames) ||
                                     in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
                                     $matchedComponents++;
                                 }
                             }
-                            
+
                             $isMAPEH = $matchedComponents == 4;
-                            
+
                             // If MAPEH, load component grades
                             if ($isMAPEH) {
                                 $componentSubjectIds = $selectedSubject->components->pluck('id')->toArray();
-                                
+
                                 // Fetch component grades for this student
                                 $componentGrades = Grade::where('student_id', $student->id)
                                     ->whereIn('subject_id', $componentSubjectIds)
                                     ->where('term', $selectedTerm)
                                     ->get();
-                                
+
                                 // Group by component subject and grade type
                                 foreach ($selectedSubject->components as $component) {
                                     $componentWrittenWorks = $componentGrades
                                         ->where('subject_id', $component->id)
                                         ->where('grade_type', 'written_work')
                                         ->all();
-                                        
+
                                     $componentPerformanceTasks = $componentGrades
                                         ->where('subject_id', $component->id)
                                         ->where('grade_type', 'performance_task')
                                         ->all();
-                                        
+
                                     $componentQuarterlyAssessment = $componentGrades
                                         ->where('subject_id', $component->id)
                                         ->where('grade_type', 'quarterly')
                                         ->first();
-                                    
+
                                     $mapehComponents[$component->id] = [
                                         'component' => $component,
                                         'written_works' => $componentWrittenWorks,
@@ -342,7 +342,7 @@ class GradeController extends Controller
                                         'quarterly_assessment' => $componentQuarterlyAssessment,
                                     ];
                                 }
-                                
+
                                 // Add component written works to the main written works if not already there
                                 foreach ($mapehComponents as $componentData) {
                                     foreach ($componentData['written_works'] as $work) {
@@ -358,7 +358,7 @@ class GradeController extends Controller
                                 }
                             }
                         }
-                        
+
                         $students[] = [
                             'student' => $student,
                             'written_works' => $writtenWorks,
@@ -371,18 +371,18 @@ class GradeController extends Controller
                     }
                 }
             }
-            
+
             $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-            
+
             return view('teacher.grades.index', compact('subjects', 'selectedSubject', 'students', 'terms', 'selectedTerm', 'sections', 'selectedSectionId', 'preferredTableId'));
-            
+
         } catch (\Exception $e) {
             Log::error('Error in grades index: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return view('teacher.grades.index', [
                     'subjects' => collect(),
                     'students' => [],
@@ -402,29 +402,29 @@ class GradeController extends Controller
         try {
             $teacher = Auth::user();
             Log::info('Teacher accessing grade creation form', ['teacher_id' => $teacher->id, 'name' => $teacher->name]);
-            
+
             // Get sections where teacher is adviser or teaches a subject
             $sections = Section::where('adviser_id', $teacher->id)
                 ->orWhereHas('subjects', function($query) use ($teacher) {
                     $query->where('section_subject.teacher_id', $teacher->id);
                 })
                 ->get();
-            
+
             Log::info('Sections retrieved', [
                 'count' => $sections->count(),
                 'section_ids' => $sections->pluck('id')->toArray(),
                 'section_names' => $sections->pluck('name')->toArray()
             ]);
-            
+
             // Get the section ID from request or use the first section
             $sectionId = $request->section_id;
-            
+
             if (!$sectionId && $sections->count() > 0) {
                 $sectionId = $sections->first()->id;
             }
-            
+
             Log::info('Section ID selected', ['section_id' => $sectionId]);
-            
+
             // Get subjects for this teacher and section directly from section_subject
             $subjects = [];
             if ($sectionId) {
@@ -434,7 +434,7 @@ class GradeController extends Controller
                     ->where('teacher_id', $teacher->id)
                     ->pluck('subject_id')
                     ->toArray();
-                
+
                 if (!empty($subjectIds)) {
                     $subjects = Subject::whereIn('id', $subjectIds)->get();
                 } else {
@@ -442,71 +442,72 @@ class GradeController extends Controller
                     $isAdviser = Section::where('id', $sectionId)
                         ->where('adviser_id', $teacher->id)
                         ->exists();
-                    
+
                     if ($isAdviser) {
                         $subjectIds = DB::table('section_subject')
                             ->where('section_id', $sectionId)
                             ->pluck('subject_id')
                             ->toArray();
-                        
+
                         $subjects = Subject::whereIn('id', $subjectIds)->get();
                     }
                 }
-                
+
                 Log::info('Subjects retrieved for section', [
                     'section_id' => $sectionId,
                     'count' => count($subjects),
                     'subject_ids' => collect($subjects)->pluck('id')->toArray(),
                     'subject_names' => collect($subjects)->pluck('name')->toArray()
                 ]);
-                
+
                 // Direct DB query to check section_subject entries
                 $sectionSubjectEntries = DB::table('section_subject')
                     ->where('section_id', $sectionId)
                     ->where('teacher_id', $teacher->id)
                     ->get();
-                
+
                 Log::info('Section-Subject pivot entries', [
                     'count' => $sectionSubjectEntries->count(),
                     'entries' => $sectionSubjectEntries->toArray()
                 ]);
             }
-            
+
             // Get students for the selected section
             $students = [];
             if ($sectionId) {
                 $students = Student::where('section_id', $sectionId)->get();
-                
+
                 Log::info('Students retrieved for section', [
                     'section_id' => $sectionId,
                     'count' => count($students),
                     'student_ids' => collect($students)->pluck('id')->toArray()
                 ]);
             }
-            
+
             $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
             $gradeTypes = [
                 'written_work' => 'Written Work',
                 'performance_task' => 'Performance Task',
-                'quarterly' => 'Quarterly Assessment'
+                'quarterly' => 'Quarterly Exam',
+                'quarterly_exam' => 'Quarterly Exam'
             ];
-            
+
             return view('teacher.grades.create', compact(
-                'sections', 
-                'subjects', 
-                'students', 
-                'terms', 
-                'gradeTypes', 
+                'sections',
+                'subjects',
+                'students',
+                'terms',
+                'gradeTypes',
                 'sectionId'
             ));
-            
+
         } catch (\Exception $e) {
             Log::error('Error in grades create: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return redirect()->route('teacher.grades.index')
                 ->with('error', 'Error loading grade creation form. Please contact administrator.');
         }
@@ -527,44 +528,44 @@ class GradeController extends Controller
             'remarks' => 'nullable|string|max:255',
             'section_id' => 'required|exists:sections,id',
         ]);
-        
+
         try {
             $teacher = Auth::id();
             Log::info('Teacher recording grade', [
-                'teacher_id' => $teacher, 
+                'teacher_id' => $teacher,
                 'subject_id' => $request->subject_id,
                 'section_id' => $request->section_id
             ]);
-            
+
             // Check if the teacher teaches this subject in this section
             $subjectExists = DB::table('section_subject')
                 ->where('section_id', $request->section_id)
                 ->where('subject_id', $request->subject_id)
                 ->where('teacher_id', $teacher)
                 ->exists();
-                
+
             // If no explicit assignment, check if teacher is adviser for this section
             if (!$subjectExists) {
                 $isAdviser = DB::table('sections')
                     ->where('id', $request->section_id)
                     ->where('adviser_id', $teacher)
                     ->exists();
-                
+
                 Log::info('Teacher access check', [
                     'section_subject_exists' => $subjectExists,
                     'is_section_adviser' => $isAdviser
                 ]);
-                
+
                 if (!$isAdviser) {
                     return redirect()->back()->with('error', 'You are not authorized to record grades for this subject in this section.');
                 }
             }
-            
+
             // Check if the student belongs to the section
             $student = Student::where('id', $request->student_id)
                 ->where('section_id', $request->section_id)
                 ->firstOrFail();
-            
+
             // Create the grade
             $grade = Grade::create([
                 'student_id' => $student->id,
@@ -576,13 +577,13 @@ class GradeController extends Controller
                 'max_score' => $request->max_score,
                 'remarks' => $request->remarks,
             ]);
-            
+
             Log::info('Grade recorded successfully', [
                 'grade_id' => $grade->id,
                 'student_id' => $student->id,
                 'subject_id' => $request->subject_id
             ]);
-            
+
             return redirect()->route('teacher.grades.index', [
                     'subject_id' => $request->subject_id,
                     'section_id' => $request->section_id,
@@ -595,7 +596,7 @@ class GradeController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return redirect()->back()
                 ->with('error', 'Error recording grade: ' . $e->getMessage());
         }
@@ -612,13 +613,13 @@ class GradeController extends Controller
                 'teacher_id' => $teacher,
                 'request' => $request->all()
             ]);
-            
+
             // Load the subject
             $subject = Subject::with('components')->findOrFail($request->subject_id);
-            
+
             // Check if this is a MAPEH subject
             $isMAPEH = $subject->components()->count() >= 4;
-            
+
             // Log MAPEH-related data for debugging
             if ($isMAPEH) {
                 Log::info('MAPEH subject detected', [
@@ -633,7 +634,7 @@ class GradeController extends Controller
                     ]
                 ]);
             }
-            
+
             // Verify that this is a MAPEH assessment from the setup
             if ($isMAPEH && (!session('is_mapeh') || empty(session('selected_components')) || empty(session('component_max_score')))) {
                 Log::warning('Missing MAPEH session data', [
@@ -641,7 +642,7 @@ class GradeController extends Controller
                     'selected_components' => session('selected_components', []),
                     'component_max_score' => session('component_max_score', [])
                 ]);
-                
+
                 // Redirect back to setup if MAPEH data is missing
                 return redirect()->route('teacher.grades.assessment-setup', [
                     'subject_id' => $request->subject_id,
@@ -650,7 +651,7 @@ class GradeController extends Controller
                     'section_id' => $request->section_id
                 ])->with('error', 'MAPEH component data is missing. Please set up your assessment again.');
             }
-            
+
             Log::info('Assessment info', [
                 'subject_id' => $request->subject_id,
                 'term' => $request->term,
@@ -660,44 +661,44 @@ class GradeController extends Controller
                 'is_mapeh' => $isMAPEH,
                 'max_score' => $isMAPEH ? 'Using component scores' : session('max_score')
             ]);
-            
+
             // Check if the teacher teaches this subject in this section
             $subjectExists = DB::table('section_subject')
                 ->where('section_id', $request->section_id)
                 ->where('subject_id', $request->subject_id)
                 ->where('teacher_id', $teacher)
                 ->exists();
-                
+
             Log::info('Section-Subject relationship check', [
                 'section_id' => $request->section_id,
                 'subject_id' => $request->subject_id,
                 'teacher_id' => $teacher,
                 'exists' => $subjectExists
             ]);
-                
+
             if (!$subjectExists) {
                 // Check if the teacher is an adviser for this section as a fallback
                 $isAdviser = Section::where('id', $request->section_id)
                     ->where('adviser_id', $teacher)
                     ->exists();
-                    
+
                 Log::info('Teacher adviser check', [
                     'section_id' => $request->section_id,
                     'teacher_id' => $teacher,
                     'is_adviser' => $isAdviser
                 ]);
-                
+
                 if (!$isAdviser) {
                     return redirect()->back()->with('error', 'You are not authorized to record grades for this subject in this section.');
                 }
             }
-            
+
             // Make sure we have assessment parameters
             if (!session('assessment_name')) {
                 Log::warning('Missing assessment name in session', [
                     'assessment_name' => session('assessment_name')
                 ]);
-                
+
                 return redirect()->route('teacher.grades.assessment-setup', [
                     'subject_id' => $request->subject_id,
                     'term' => $request->term,
@@ -705,7 +706,7 @@ class GradeController extends Controller
                     'section_id' => $request->section_id
                 ])->with('error', 'Assessment name is missing. Please set up the assessment again.');
             }
-            
+
             // For MAPEH subjects, check if we have the selected components
             if ($isMAPEH) {
                 if (!session('selected_components') || !session('component_max_score')) {
@@ -713,7 +714,7 @@ class GradeController extends Controller
                         'selected_components' => session('selected_components'),
                         'component_max_score' => session('component_max_score')
                     ]);
-                    
+
                     return redirect()->route('teacher.grades.assessment-setup', [
                         'subject_id' => $request->subject_id,
                         'term' => $request->term,
@@ -721,7 +722,7 @@ class GradeController extends Controller
                         'section_id' => $request->section_id
                     ])->with('error', 'MAPEH component parameters are missing. Please set up the assessment again.');
                 }
-                
+
                 // Verify all selected components exist in the database
                 $componentCount = Subject::whereIn('id', session('selected_components'))->count();
                 if ($componentCount != count(session('selected_components'))) {
@@ -729,7 +730,7 @@ class GradeController extends Controller
                         'expected' => count(session('selected_components')),
                         'found' => $componentCount
                     ]);
-                    
+
                     return redirect()->route('teacher.grades.assessment-setup', [
                         'subject_id' => $request->subject_id,
                         'term' => $request->term,
@@ -743,7 +744,7 @@ class GradeController extends Controller
                     Log::warning('Missing max score in session', [
                         'max_score' => session('max_score')
                     ]);
-                    
+
                     return redirect()->route('teacher.grades.assessment-setup', [
                         'subject_id' => $request->subject_id,
                         'term' => $request->term,
@@ -752,33 +753,33 @@ class GradeController extends Controller
                     ])->with('error', 'Maximum score is missing. Please set up the assessment again.');
                 }
             }
-            
+
             // Load the section
             $section = Section::findOrFail($request->section_id);
-            
+
             // Get students for the section
             $students = Student::where('section_id', $request->section_id)->get();
-            
+
             Log::info('Students retrieved for section', [
                 'section_id' => $request->section_id,
                 'count' => $students->count(),
                 'student_ids' => $students->pluck('id')->toArray()
             ]);
-            
+
             if ($students->isEmpty()) {
                 Log::warning('No students found in section', [
                     'section_id' => $request->section_id
                 ]);
             }
-            
+
             $gradeTypes = [
                 'written_work' => 'Written Work',
                 'performance_task' => 'Performance Task',
                 'quarterly' => 'Quarterly Assessment'
             ];
-            
+
             $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-            
+
             return view('teacher.grades.batch', compact(
                 'subject',
                 'section',
@@ -795,7 +796,7 @@ class GradeController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all()
             ]);
-            
+
             return redirect()->route('teacher.grades.index', [
                 'subject_id' => $request->subject_id,
                 'term' => $request->term
@@ -810,14 +811,14 @@ class GradeController extends Controller
     {
         // Check if this is a MAPEH assessment with components
         $isMAPEH = $request->has('is_mapeh') && $request->is_mapeh == 1;
-        
+
         if ($isMAPEH) {
             // Validate MAPEH component batch
             $request->validate([
                 'subject_id' => 'required|exists:subjects,id',
                 'section_id' => 'required|exists:sections,id',
                 'term' => 'required|in:Q1,Q2,Q3,Q4',
-                'grade_type' => 'required|in:written_work,performance_task,quarterly',
+                'grade_type' => 'required|in:written_work,performance_task,quarterly,quarterly_exam',
                 'assessment_name' => 'required|string|max:255',
                 'component_ids' => 'required|array',
                 'component_ids.*' => 'required|exists:subjects,id',
@@ -832,7 +833,7 @@ class GradeController extends Controller
                 'subject_id' => 'required|exists:subjects,id',
                 'section_id' => 'required|exists:sections,id',
                 'term' => 'required|in:Q1,Q2,Q3,Q4',
-                'grade_type' => 'required|in:written_work,performance_task,quarterly',
+                'grade_type' => 'required|in:written_work,performance_task,quarterly,quarterly_exam',
                 'max_score' => 'required|numeric|min:1',
                 'assessment_name' => 'required|string|max:255',
                 'scores' => 'required|array',
@@ -841,7 +842,7 @@ class GradeController extends Controller
                 'student_ids.*' => 'required|exists:students,id',
             ]);
         }
-        
+
         try {
             $teacher = Auth::id();
             Log::info('Batch storing grades', [
@@ -851,47 +852,47 @@ class GradeController extends Controller
                 'assessment_name' => $request->assessment_name,
                 'is_mapeh' => $isMAPEH
             ]);
-            
+
             // Check if the teacher teaches this subject in this section
             $subjectExists = DB::table('section_subject')
                 ->where('section_id', $request->section_id)
                 ->where('subject_id', $request->subject_id)
                 ->where('teacher_id', $teacher)
                 ->exists();
-                
+
             // If no explicit assignment, check if teacher is adviser for this section
             if (!$subjectExists) {
                 $isAdviser = DB::table('sections')
                     ->where('id', $request->section_id)
                     ->where('adviser_id', $teacher)
                     ->exists();
-                
+
                 Log::info('Teacher access check for batch grades', [
                     'section_subject_exists' => $subjectExists,
                     'is_section_adviser' => $isAdviser
                 ]);
-                
+
                 if (!$isAdviser) {
                     return redirect()->back()->with('error', 'You are not authorized to record grades for this subject in this section.');
                 }
             }
-            
+
             if ($isMAPEH) {
                 // Process MAPEH component grades
                 $gradesAdded = 0;
-                
+
                 // Get the components from the form
                 $componentIds = $request->component_ids;
                 $componentMaxScores = $request->component_max_scores;
                 $componentScores = $request->component_scores;
-                
+
                 Log::info('MAPEH grading data received', [
                     'component_ids' => $componentIds,
                     'component_max_scores' => $componentMaxScores,
                     'component_scores_structure' => array_keys($componentScores),
                     'student_ids' => $request->student_ids
                 ]);
-                
+
                 // For each component
                 foreach ($componentIds as $componentId) {
                     if (!isset($componentMaxScores[$componentId]) || !isset($componentScores[$componentId])) {
@@ -901,22 +902,22 @@ class GradeController extends Controller
                         ]);
                         continue;
                     }
-                    
+
                     $maxScore = $componentMaxScores[$componentId];
                     Log::info("Processing component $componentId with max score $maxScore");
-                    
+
                     // For each student
                     foreach ($request->student_ids as $studentId) {
                         // Check if a score was provided for this student and component
                         if (isset($componentScores[$componentId][$studentId])) {
                             $score = $componentScores[$componentId][$studentId];
-                            
+
                             // Validate the score against max score
                             if ($score < 0 || $score > $maxScore) {
                                 Log::warning("Invalid score for student $studentId in component $componentId: $score (max: $maxScore)");
                                 continue; // Skip invalid scores
                             }
-                            
+
                             // Create grade for the specific component
                             Grade::create([
                                 'student_id' => $studentId,
@@ -928,7 +929,7 @@ class GradeController extends Controller
                                 'assessment_name' => $request->assessment_name,
                                 'remarks' => isset($request->remarks[$studentId]) ? $request->remarks[$studentId] : null
                             ]);
-                            
+
                             $gradesAdded++;
                             Log::info("Grade added for student $studentId in component $componentId: $score/$maxScore");
                         } else {
@@ -936,7 +937,7 @@ class GradeController extends Controller
                         }
                     }
                 }
-                
+
                 if ($gradesAdded === 0) {
                     Log::error('No grades were saved for MAPEH components', [
                         'component_ids' => $componentIds,
@@ -944,7 +945,7 @@ class GradeController extends Controller
                     ]);
                     return redirect()->back()->with('error', 'No grades were saved. Please check your inputs and try again.');
                 }
-                
+
                 return redirect()->route('teacher.grades.index', [
                     'subject_id' => $request->subject_id,
                     'term' => $request->term
@@ -957,7 +958,7 @@ class GradeController extends Controller
                     $student = Student::where('id', $studentId)
                         ->where('section_id', $request->section_id)
                         ->firstOrFail();
-                    
+
                     // Only create grade if score is provided
                     if (isset($request->scores[$index])) {
                         Grade::create([
@@ -973,11 +974,11 @@ class GradeController extends Controller
                         $gradesAdded++;
                     }
                 }
-                
+
                 Log::info('Grades added successfully', [
                     'count' => $gradesAdded
                 ]);
-                
+
                 return redirect()->route('teacher.grades.index', [
                     'subject_id' => $request->subject_id,
                     'term' => $request->term
@@ -990,7 +991,7 @@ class GradeController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request_data' => $request->except(['_token'])
             ]);
-            
+
             return redirect()->back()->with('error', 'An error occurred while saving grades: ' . $e->getMessage());
         }
     }
@@ -1002,13 +1003,13 @@ class GradeController extends Controller
     {
         $grade = Grade::findOrFail($id);
         $teacherId = Auth::id();
-        
+
         // Verify that the grade is for a subject taught by the teacher through section_subject relationship
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $grade->subject_id)
             ->exists();
-            
+
         // Check if teacher is section adviser
         if (!$authorized) {
             $student = Student::findOrFail($grade->student_id);
@@ -1016,27 +1017,27 @@ class GradeController extends Controller
                 ->where('adviser_id', $teacherId)
                 ->exists();
         }
-        
+
         if (!$authorized) {
             Log::alert('Unauthorized grade edit attempt', [
                 'teacher_id' => $teacherId,
                 'grade_id' => $id,
                 'subject_id' => $grade->subject_id
             ]);
-            
+
             abort(403, 'You are not authorized to edit grades for this subject.');
         }
-        
+
         $subject = Subject::findOrFail($grade->subject_id);
-        
+
         $gradeTypes = [
             'written_work' => 'Written Work',
             'performance_task' => 'Performance Task',
             'quarterly' => 'Quarterly Assessment'
         ];
-        
+
         $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-        
+
         return view('teacher.grades.edit', compact('grade', 'subject', 'gradeTypes', 'terms'));
     }
 
@@ -1047,13 +1048,13 @@ class GradeController extends Controller
     {
         $grade = Grade::findOrFail($id);
         $teacherId = Auth::id();
-        
+
         // Verify that the grade is for a subject taught by the teacher through section_subject relationship
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $grade->subject_id)
             ->exists();
-            
+
         // Check if teacher is section adviser
         if (!$authorized) {
             $student = Student::findOrFail($grade->student_id);
@@ -1061,29 +1062,29 @@ class GradeController extends Controller
                 ->where('adviser_id', $teacherId)
                 ->exists();
         }
-        
+
         if (!$authorized) {
             Log::alert('Unauthorized grade update attempt', [
                 'teacher_id' => $teacherId,
                 'grade_id' => $id,
                 'subject_id' => $grade->subject_id
             ]);
-            
+
             abort(403, 'You are not authorized to update grades for this subject.');
         }
-        
+
         $request->validate([
             'score' => 'required|numeric|min:0',
             'max_score' => 'required|numeric|min:1',
             'remarks' => 'nullable|string|max:255',
         ]);
-        
+
         $grade->update([
             'score' => $request->score,
             'max_score' => $request->max_score,
             'remarks' => $request->remarks,
         ]);
-        
+
         return redirect()->route('teacher.grades.index', [
                 'subject_id' => $grade->subject_id,
                 'term' => $grade->term
@@ -1098,13 +1099,13 @@ class GradeController extends Controller
     {
         $grade = Grade::findOrFail($id);
         $teacherId = Auth::id();
-        
+
         // Verify that the grade is for a subject taught by the teacher through section_subject relationship
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $grade->subject_id)
             ->exists();
-            
+
         // Check if teacher is section adviser
         if (!$authorized) {
             $student = Student::findOrFail($grade->student_id);
@@ -1112,22 +1113,22 @@ class GradeController extends Controller
                 ->where('adviser_id', $teacherId)
                 ->exists();
         }
-        
+
         if (!$authorized) {
             Log::alert('Unauthorized grade deletion attempt', [
                 'teacher_id' => $teacherId,
                 'grade_id' => $id,
                 'subject_id' => $grade->subject_id
             ]);
-            
+
             abort(403, 'You are not authorized to delete grades for this subject.');
         }
-        
+
         $term = $grade->term;
         $subjectId = $grade->subject_id;
-        
+
         $grade->delete();
-        
+
         return redirect()->route('teacher.grades.index', [
                 'subject_id' => $subjectId,
                 'term' => $term
@@ -1146,44 +1147,44 @@ class GradeController extends Controller
             'grade_type' => 'required|in:written_work,performance_task,quarterly',
             'section_id' => 'required|exists:sections,id',
         ]);
-        
+
         $teacherId = Auth::id();
-        
+
         // Check if the teacher is authorized to access this subject via section_subject
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $request->subject_id)
             ->where('section_id', $request->section_id)
             ->exists();
-            
+
         // If not found in section_subject, check if teacher is the adviser
         if (!$authorized) {
             $authorized = Section::where('id', $request->section_id)
                 ->where('adviser_id', $teacherId)
                 ->exists();
         }
-        
+
         if (!$authorized) {
             Log::alert('Unauthorized assessment setup attempt', [
                 'teacher_id' => $teacherId,
                 'subject_id' => $request->subject_id,
                 'section_id' => $request->section_id
             ]);
-            
+
             abort(403, 'You are not authorized to set up assessments for this subject in this section.');
         }
-            
+
         $subject = Subject::findOrFail($request->subject_id);
         $section = Section::findOrFail($request->section_id);
         $term = $request->term;
         $gradeType = $request->grade_type;
-        
+
         $gradeTypes = [
             'written_work' => 'Written Work',
             'performance_task' => 'Performance Task',
             'quarterly' => 'Quarterly Assessment'
         ];
-        
+
         return view('teacher.grades.assessment-setup', compact(
             'subject',
             'section',
@@ -1192,7 +1193,7 @@ class GradeController extends Controller
             'gradeTypes'
         ));
     }
-    
+
     /**
      * Store assessment parameters and proceed to batch grade entry
      */
@@ -1200,7 +1201,7 @@ class GradeController extends Controller
     {
         // Check if this is a MAPEH subject with components
         $isMAPEH = $request->has('is_mapeh') && $request->is_mapeh == 1;
-        
+
         if ($isMAPEH) {
             // Validate MAPEH component setup
             $request->validate([
@@ -1219,7 +1220,7 @@ class GradeController extends Controller
                 'component_max_score.*.required' => 'Maximum score is required for each selected component.',
                 'component_max_score.*.min' => 'Maximum score must be at least 1 for each component.'
             ]);
-            
+
             // Log the selected components and max scores for debugging
             Log::info('MAPEH assessment setup', [
                 'teacher_id' => Auth::id(),
@@ -1238,31 +1239,31 @@ class GradeController extends Controller
                 'section_id' => 'required|exists:sections,id',
             ]);
         }
-        
+
         $teacherId = Auth::id();
-        
+
         // Verify authorization
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $request->subject_id)
             ->where('section_id', $request->section_id)
             ->exists();
-            
+
         if (!$authorized) {
             $authorized = Section::where('id', $request->section_id)
                 ->where('adviser_id', $teacherId)
                 ->exists();
         }
-        
+
         if (!$authorized) {
             abort(403, 'You are not authorized to create assessments for this subject.');
         }
-        
+
         // Store assessment parameters in session
         session([
             'assessment_name' => $request->assessment_name
         ]);
-        
+
         if ($isMAPEH) {
             // For MAPEH, store the selected components and their max scores
             session([
@@ -1270,7 +1271,7 @@ class GradeController extends Controller
                 'selected_components' => $request->selected_components,
                 'component_max_score' => $request->component_max_score
             ]);
-            
+
             // Verify that all components exist in the database
             $components = Subject::whereIn('id', $request->selected_components)->get();
             if ($components->count() != count($request->selected_components)) {
@@ -1280,7 +1281,7 @@ class GradeController extends Controller
                 ]);
                 return redirect()->back()->with('error', 'Some selected MAPEH components are invalid. Please try again.');
             }
-            
+
             // Log before redirect for debugging
             Log::info('MAPEH session data before redirect', [
                 'is_mapeh' => session('is_mapeh'),
@@ -1295,7 +1296,7 @@ class GradeController extends Controller
                 'max_score' => $request->max_score
             ]);
         }
-        
+
         // Redirect to batch grade entry form with the parameters
         return redirect()->route('teacher.grades.batch-create', [
             'subject_id' => $request->subject_id,
@@ -1316,25 +1317,25 @@ class GradeController extends Controller
             'performance_task_percentage' => 'required|numeric|min:0|max:100',
             'quarterly_assessment_percentage' => 'required|numeric|min:0|max:100',
         ]);
-        
+
         // Verify the total adds up to 100%
-        $total = $request->written_work_percentage + 
-                 $request->performance_task_percentage + 
+        $total = $request->written_work_percentage +
+                 $request->performance_task_percentage +
                  $request->quarterly_assessment_percentage;
-                 
+
         if (abs($total - 100) > 0.01) {
             return redirect()->back()
                 ->with('error', 'The total percentage must equal 100%. Current total: ' . $total . '%');
         }
-        
+
         $teacherId = Auth::id();
-        
+
         // Check if teacher is authorized to configure this subject
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $request->subject_id)
             ->exists();
-            
+
         // Also allow section advisers to configure subjects for their section
         if (!$authorized) {
             $sectionIds = Section::where('adviser_id', $teacherId)->pluck('id')->toArray();
@@ -1345,16 +1346,16 @@ class GradeController extends Controller
                     ->exists();
             }
         }
-        
+
         if (!$authorized) {
             Log::alert('Unauthorized grade configuration attempt', [
                 'teacher_id' => $teacherId,
                 'subject_id' => $request->subject_id
             ]);
-            
+
             abort(403, 'You are not authorized to configure grades for this subject.');
         }
-        
+
         // Update or create configuration
         $config = GradeConfiguration::updateOrCreate(
             ['subject_id' => $request->subject_id],
@@ -1364,13 +1365,13 @@ class GradeController extends Controller
                 'quarterly_assessment_percentage' => $request->quarterly_assessment_percentage,
             ]
         );
-        
+
         Log::info('Grade configuration updated', [
             'subject_id' => $request->subject_id,
             'teacher_id' => $teacherId,
             'configuration' => $config->toArray()
         ]);
-        
+
         return redirect()->route('teacher.grades.index', ['subject_id' => $request->subject_id])
             ->with('success', 'Grade configuration updated successfully.');
     }
@@ -1383,16 +1384,16 @@ class GradeController extends Controller
         $request->validate([
             'subject_id' => 'required|exists:subjects,id'
         ]);
-        
+
         $teacherId = Auth::id();
         $subject = Subject::with('gradeConfiguration')->findOrFail($request->subject_id);
-        
+
         // Check if teacher is authorized to configure this subject
         $authorized = DB::table('section_subject')
             ->where('teacher_id', $teacherId)
             ->where('subject_id', $subject->id)
             ->exists();
-            
+
         // Also allow section advisers to configure subjects for their section
         if (!$authorized) {
             $sectionIds = Section::where('adviser_id', $teacherId)->pluck('id')->toArray();
@@ -1403,11 +1404,11 @@ class GradeController extends Controller
                     ->exists();
             }
         }
-        
+
         if (!$authorized) {
             abort(403, 'You are not authorized to configure grades for this subject.');
         }
-        
+
         // Create default configuration if none exists
         if (!$subject->gradeConfiguration) {
             $subject->gradeConfiguration = GradeConfiguration::create([
@@ -1417,7 +1418,7 @@ class GradeController extends Controller
                 'quarterly_assessment_percentage' => 20.00,
             ]);
         }
-        
+
         return view('teacher.grades.configure', compact('subject'));
     }
 
@@ -1429,49 +1430,49 @@ class GradeController extends Controller
         try {
             $teacher = Auth::user();
             Log::info('Teacher accessing new grades index', ['teacher_id' => $teacher->id, 'name' => $teacher->name]);
-            
+
             // Get teacher's sections (as adviser or subject teacher)
             $sections = Section::where('adviser_id', $teacher->id)
                 ->orWhereHas('subjects', function($query) use ($teacher) {
                     $query->where('section_subject.teacher_id', $teacher->id);
                 })
                 ->get();
-            
+
             // Get subject assignments for this teacher
             $subjects = Subject::whereHas('teachers', function($query) use ($teacher) {
                 $query->where('users.id', $teacher->id);
             })->with(['sections' => function($query) use ($teacher) {
                 $query->where('section_subject.teacher_id', $teacher->id);
             }])->get();
-            
+
             Log::info('Teacher subjects retrieved', [
                 'count' => $subjects->count(),
                 'subject_ids' => $subjects->pluck('id')->toArray(),
                 'subject_names' => $subjects->pluck('name')->toArray()
             ]);
-            
+
             // Include debug info in logs to help troubleshoot
             if ($subjects->isEmpty()) {
                 // Check if there are any subject-section assignments for this teacher
                 $assignments = DB::table('section_subject')
                     ->where('teacher_id', $teacher->id)
                     ->get();
-                
+
                 Log::info('Direct section_subject query results:', [
                     'count' => $assignments->count(),
                     'assignments' => $assignments->toArray()
                 ]);
             }
-            
+
             // Get selected subject or use first subject
             $selectedSubject = null;
             $selectedTerm = $request->term ?? 'Q1';
             $selectedSectionId = null;
-            
+
             if ($request->has('subject_id')) {
                 $selectedSubject = Subject::with('gradeConfiguration')
                     ->findOrFail($request->subject_id);
-                
+
                 if ($request->has('section_id')) {
                     $selectedSectionId = $request->section_id;
                 } elseif ($subjects->isNotEmpty() && $selectedSubject->sections->isNotEmpty()) {
@@ -1482,14 +1483,14 @@ class GradeController extends Controller
             } elseif ($subjects->isNotEmpty()) {
                 $selectedSubject = $subjects->first();
                 $selectedSubject->load('gradeConfiguration');
-                
+
                 if ($selectedSubject->sections->isNotEmpty()) {
                     $selectedSectionId = $selectedSubject->sections->first()->id;
                 } elseif ($sections->isNotEmpty()) {
                     $selectedSectionId = $sections->first()->id;
                 }
             }
-            
+
             // Create grade configuration if it doesn't exist
             if ($selectedSubject && !$selectedSubject->gradeConfiguration) {
                 GradeConfiguration::create([
@@ -1500,7 +1501,7 @@ class GradeController extends Controller
                 ]);
                 $selectedSubject->load('gradeConfiguration');
             }
-            
+
             // Get students and their grades
             $students = [];
             if ($selectedSubject && $selectedSectionId) {
@@ -1510,57 +1511,57 @@ class GradeController extends Controller
                               ->where('term', $selectedTerm);
                     }])
                     ->get();
-                
+
                 foreach ($sectionStudents as $student) {
                     $writtenWorks = $student->grades->where('grade_type', 'written_work')->all();
                     $performanceTasks = $student->grades->where('grade_type', 'performance_task')->all();
                     $quarterlyAssessment = $student->grades->where('grade_type', 'quarterly')->first();
-                    
+
                     // Check if this is a MAPEH subject with components
                     $isMAPEH = false;
                     $mapehComponents = [];
-                    
+
                     if (isset($selectedSubject->components) && $selectedSubject->components->count() > 0) {
                         $componentNames = $selectedSubject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
                         $requiredComponents = ['music', 'arts', 'physical education', 'health'];
-                        
+
                         $matchedComponents = 0;
                         foreach ($requiredComponents as $component) {
-                            if (in_array($component, $componentNames) || 
+                            if (in_array($component, $componentNames) ||
                                 in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
                                 $matchedComponents++;
                             }
                         }
-                        
+
                         $isMAPEH = $matchedComponents == 4;
-                        
+
                         // If MAPEH, load component grades
                         if ($isMAPEH) {
                             $componentSubjectIds = $selectedSubject->components->pluck('id')->toArray();
-                            
+
                             // Fetch component grades for this student
                             $componentGrades = Grade::where('student_id', $student->id)
                                 ->whereIn('subject_id', $componentSubjectIds)
                                 ->where('term', $selectedTerm)
                                 ->get();
-                            
+
                             // Group by component subject and grade type
                             foreach ($selectedSubject->components as $component) {
                                 $componentWrittenWorks = $componentGrades
                                     ->where('subject_id', $component->id)
                                     ->where('grade_type', 'written_work')
                                     ->all();
-                                    
+
                                 $componentPerformanceTasks = $componentGrades
                                     ->where('subject_id', $component->id)
                                     ->where('grade_type', 'performance_task')
                                     ->all();
-                                    
+
                                 $componentQuarterlyAssessment = $componentGrades
                                     ->where('subject_id', $component->id)
                                     ->where('grade_type', 'quarterly')
                                     ->first();
-                                
+
                                 $mapehComponents[$component->id] = [
                                     'component' => $component,
                                     'written_works' => $componentWrittenWorks,
@@ -1568,7 +1569,7 @@ class GradeController extends Controller
                                     'quarterly_assessment' => $componentQuarterlyAssessment,
                                 ];
                             }
-                            
+
                             // Add component written works to the main written works if not already there
                             foreach ($mapehComponents as $componentData) {
                                 foreach ($componentData['written_works'] as $work) {
@@ -1584,7 +1585,7 @@ class GradeController extends Controller
                             }
                         }
                     }
-                    
+
                     $students[] = [
                         'student' => $student,
                         'written_works' => $writtenWorks,
@@ -1593,26 +1594,26 @@ class GradeController extends Controller
                     ];
                 }
             }
-            
+
             $terms = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-            
+
             return view('teacher.grades.new_index', compact(
-                'subjects', 
-                'selectedSubject', 
-                'students', 
-                'terms', 
-                'selectedTerm', 
-                'sections', 
+                'subjects',
+                'selectedSubject',
+                'students',
+                'terms',
+                'selectedTerm',
+                'sections',
                 'selectedSectionId'
             ));
-            
+
         } catch (\Exception $e) {
             Log::error('Error in new grades index: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return view('teacher.grades.new_index', [
                     'subjects' => collect(),
                     'students' => [],
@@ -1641,15 +1642,15 @@ class GradeController extends Controller
     {
         $teacher = Auth::user();
         $locked = $request->input('locked', false);
-        
+
         // Check if the table should be locked or unlocked
         if ($locked) {
             $tableId = $request->input('table_id', 1); // Default to DepEd table (now Table 1)
-            
+
             // Store the locked state in the session only when explicitly requested
             session(['locked_transmutation_table' => true]);
             session(['locked_transmutation_table_id' => $tableId]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Transmutation table has been locked',
@@ -1659,14 +1660,14 @@ class GradeController extends Controller
             // Remove the locked state from the session
             session()->forget('locked_transmutation_table');
             session()->forget('locked_transmutation_table_id');
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Transmutation table has been unlocked'
             ]);
         }
     }
-    
+
     /**
      * Save the teacher's transmutation table preference
      */
@@ -1678,7 +1679,7 @@ class GradeController extends Controller
                 ->where('teacher_id', $teacherId)
                 ->where('preference_key', 'transmutation_table')
                 ->exists();
-                
+
             if ($exists) {
                 // Update existing preference
                 DB::table('teacher_preferences')
@@ -1698,18 +1699,18 @@ class GradeController extends Controller
                     'updated_at' => now()
                 ]);
             }
-            
+
             return true;
         } catch (\Exception $e) {
             Log::error('Error saving transmutation preference: ' . $e->getMessage(), [
                 'teacher_id' => $teacherId,
                 'table_id' => $tableId
             ]);
-            
+
             return false;
         }
     }
-    
+
     /**
      * Update the teacher's transmutation table preference
      */
@@ -1717,9 +1718,9 @@ class GradeController extends Controller
     {
         $tableId = $request->input('transmutation_table', 1); // Default to DepEd table (now Table 1)
         $teacherId = Auth::id();
-        
+
         $success = $this->saveTransmutationPreference($teacherId, $tableId);
-        
+
         if ($success) {
             return redirect()->back()->with('success', 'Transmutation table preference saved successfully.');
         } else {
@@ -1729,7 +1730,7 @@ class GradeController extends Controller
 
     /**
      * Bulk update grades from class record report
-     * 
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
@@ -1740,14 +1741,14 @@ class GradeController extends Controller
         $errors = [];
 
         DB::beginTransaction();
-        
+
         try {
             foreach ($gradesData as $studentData) {
                 $studentId = $studentData['student_id'];
                 $sectionId = $studentData['section_id'];
                 $subjectId = $studentData['subject_id'];
                 $quarter = $studentData['quarter'];
-                
+
                 // Update individual assessment grades
                 if (isset($studentData['grades']) && is_array($studentData['grades'])) {
                     foreach ($studentData['grades'] as $grade) {
@@ -1756,12 +1757,12 @@ class GradeController extends Controller
                             'assessment_id' => $grade['assessment_id'],
                             'grade_type' => $grade['grade_type']
                         ])->first();
-                        
+
                         if ($gradeModel) {
                             // Update existing grade
                             $gradeModel->score = $grade['score'];
                             $gradeModel->save();
-                            
+
                             \Illuminate\Support\Facades\Log::info('Updated existing grade', [
                                 'grade_id' => $gradeModel->id,
                                 'old_score' => $gradeModel->score,
@@ -1780,7 +1781,7 @@ class GradeController extends Controller
                                 'max_score' => $grade['max_score'],
                                 'assessment_name' => 'Assessment ' . $grade['assessment_id']
                             ]);
-                            
+
                             \Illuminate\Support\Facades\Log::info('Created new grade', [
                                 'grade_id' => $gradeModel->id,
                                 'score' => $grade['score']
@@ -1789,7 +1790,7 @@ class GradeController extends Controller
                         $updatedCount++;
                     }
                 }
-                
+
                 // Update grade summary if it exists
                 $gradeSummary = GradeSummary::where([
                     'student_id' => $studentId,
@@ -1797,7 +1798,7 @@ class GradeController extends Controller
                     'subject_id' => $subjectId,
                     'quarter' => $quarter
                 ])->first();
-                
+
                 $summaryData = [
                     'written_work_ps' => $studentData['written_work']['ps'],
                     'written_work_ws' => $studentData['written_work']['ws'],
@@ -1809,7 +1810,7 @@ class GradeController extends Controller
                     'quarterly_grade' => $studentData['quarterly_grade'],
                     'remarks' => $studentData['quarterly_grade'] >= 75 ? 'Passed' : 'Failed'
                 ];
-                
+
                 if ($gradeSummary) {
                     $gradeSummary->update($summaryData);
                 } else {
@@ -1820,16 +1821,16 @@ class GradeController extends Controller
                         'quarter' => $quarter,
                     ], $summaryData));
                 }
-                
+
                 $updatedCount++;
             }
-            
+
             DB::commit();
             return response()->json([
                 'success' => true,
                 'message' => "$updatedCount grades successfully updated.",
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -1841,7 +1842,7 @@ class GradeController extends Controller
 
     /**
      * Edit assessment score for a student
-     * 
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
@@ -1853,19 +1854,19 @@ class GradeController extends Controller
             'user_agent' => $request->header('User-Agent'),
             'params' => $request->all()
         ]);
-        
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,id',
             'subject_id' => 'required|integer|exists:subjects,id',
             'quarter' => 'required|string|in:Q1,Q2,Q3,Q4',
-            'assessment_type' => 'required|string|in:written_work,performance_task,quarterly',
+            'assessment_type' => 'required|string|in:written_work,performance_task,quarterly,quarterly_exam',
             'assessment_name' => 'required|string',
             'score' => 'required|numeric|min:0'
         ]);
 
         try {
             DB::beginTransaction();
-            
+
             // Log the request for debugging
             \Illuminate\Support\Facades\Log::info('Editing assessment', [
                 'student_id' => $request->student_id,
@@ -1877,10 +1878,10 @@ class GradeController extends Controller
                 'score' => $request->score,
                 'max_score' => $request->max_score
             ]);
-            
+
             // Get the student
             $student = \App\Models\Student::findOrFail($request->student_id);
-            
+
             // Delete any existing quarterly assessment grades first to avoid duplicates
             // This ensures we have a clean state before saving the new score
             if ($request->assessment_type === 'quarterly') {
@@ -1890,9 +1891,10 @@ class GradeController extends Controller
                     'term' => $request->quarter,
                 ])->where(function($query) {
                     $query->where('grade_type', 'quarterly')
-                          ->orWhere('grade_type', 'quarterly_assessment');
+                          ->orWhere('grade_type', 'quarterly_assessment')
+                          ->orWhere('grade_type', 'quarterly_exam');
                 })->delete();
-                
+
                 // Now create a new grade record with the updated score
                 $maxScore = $request->max_score ?? 100;
                 $grade = Grade::create([
@@ -1904,7 +1906,7 @@ class GradeController extends Controller
                     'max_score' => $maxScore,
                     'assessment_name' => $request->assessment_name
                 ]);
-                
+
                 $oldScore = 0;
                 \Illuminate\Support\Facades\Log::info('Created new quarterly assessment grade', [
                     'grade_id' => $grade->id,
@@ -1919,13 +1921,13 @@ class GradeController extends Controller
                     'grade_type' => $request->assessment_type,
                     'assessment_name' => $request->assessment_name
                 ])->first();
-                
+
                 // If grade exists, update it
                 if ($grade) {
                     $oldScore = $grade->score;
                     $grade->score = $request->score;
                     $grade->save();
-                    
+
                     \Illuminate\Support\Facades\Log::info('Updated existing grade', [
                         'grade_id' => $grade->id,
                         'old_score' => $oldScore,
@@ -1935,7 +1937,7 @@ class GradeController extends Controller
                     // Create new grade if doesn't exist
                     $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $request->subject_id)->first();
                     $maxScore = $request->max_score ?? 100;
-                    
+
                     // Create the grade
                     $grade = Grade::create([
                         'student_id' => $request->student_id,
@@ -1946,29 +1948,29 @@ class GradeController extends Controller
                         'max_score' => $maxScore,
                         'assessment_name' => $request->assessment_name
                     ]);
-                    
+
                     \Illuminate\Support\Facades\Log::info('Created new grade', [
                         'grade_id' => $grade->id,
                         'score' => $request->score
                     ]);
-                    
+
                     $oldScore = 0;
                 }
             }
-            
+
             // Now update the grade summary
             $gradeSummary = \App\Models\GradeSummary::where([
                 'student_id' => $request->student_id,
                 'subject_id' => $request->subject_id,
                 'quarter' => $request->quarter,
             ])->first();
-            
+
             if ($gradeSummary) {
                 // Get the subject's grading configurations
                 $gradeConfig = \App\Models\GradeConfiguration::where('subject_id', $request->subject_id)->firstOrFail();
-                
+
                 // Recalculate all components based on current grades
-                
+
                 // 1. Written Works
                 $writtenWorks = Grade::where([
                     'student_id' => $request->student_id,
@@ -1976,7 +1978,7 @@ class GradeController extends Controller
                     'term' => $request->quarter,
                     'grade_type' => 'written_work'
                 ])->get();
-                
+
                 $wwPercentage = 0;
                 if ($writtenWorks->count() > 0) {
                     $wwTotalPercentage = 0;
@@ -1986,7 +1988,7 @@ class GradeController extends Controller
                     $wwPercentage = $wwTotalPercentage / $writtenWorks->count();
                 }
                 $wwWeighted = ($wwPercentage / 100) * $gradeConfig->written_work_percentage;
-                
+
                 // 2. Performance Tasks
                 $performanceTasks = Grade::where([
                     'student_id' => $request->student_id,
@@ -1994,7 +1996,7 @@ class GradeController extends Controller
                     'term' => $request->quarter,
                     'grade_type' => 'performance_task'
                 ])->get();
-                
+
                 $ptPercentage = 0;
                 if ($performanceTasks->count() > 0) {
                     $ptTotalPercentage = 0;
@@ -2004,10 +2006,10 @@ class GradeController extends Controller
                     $ptPercentage = $ptTotalPercentage / $performanceTasks->count();
                 }
                 $ptWeighted = ($ptPercentage / 100) * $gradeConfig->performance_task_percentage;
-                
+
                 // 3. Quarterly Assessment
                 $qaPercentage = 0;
-                
+
                 // If this is a quarterly assessment update, use the current data directly
                 if ($request->assessment_type === 'quarterly') {
                     $maxScore = $request->max_score ?? 100;
@@ -2020,16 +2022,17 @@ class GradeController extends Controller
                         'term' => $request->quarter,
                     ])->where(function($query) {
                         $query->where('grade_type', 'quarterly')
-                              ->orWhere('grade_type', 'quarterly_assessment');
+                              ->orWhere('grade_type', 'quarterly_assessment')
+                              ->orWhere('grade_type', 'quarterly_exam');
                     })->first();
-                    
+
                     if ($quarterlyAssessment) {
                         $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
                     }
                 }
-                
+
                 $qaWeighted = ($qaPercentage / 100) * $gradeConfig->quarterly_assessment_percentage;
-                
+
                 // Update the grade summary
                 $gradeSummary->written_work_ps = $wwPercentage;
                 $gradeSummary->written_work_ws = $wwWeighted;
@@ -2037,21 +2040,21 @@ class GradeController extends Controller
                 $gradeSummary->performance_task_ws = $ptWeighted;
                 $gradeSummary->quarterly_assessment_ps = $qaPercentage;
                 $gradeSummary->quarterly_assessment_ws = $qaWeighted;
-                
+
                 // Calculate final grades
                 $initialGrade = $wwWeighted + $ptWeighted + $qaWeighted;
                 $gradeSummary->initial_grade = $initialGrade;
-                
+
                 // Transmute the grade according to DepEd rules
                 $quarterlyGrade = $this->transmutationTable1($initialGrade);
                 $gradeSummary->quarterly_grade = $quarterlyGrade;
                 $gradeSummary->remarks = $quarterlyGrade >= 75 ? 'Passed' : 'Failed';
-                
+
                 $gradeSummary->save();
             }
-            
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => "Assessment score updated successfully.",
@@ -2059,7 +2062,7 @@ class GradeController extends Controller
                 'new_score' => $request->score,
                 'grade_summary' => $gradeSummary
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -2068,10 +2071,10 @@ class GradeController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * DepEd Transmutation Table 1
-     * 
+     *
      * @param float $initialGrade
      * @return int
      */

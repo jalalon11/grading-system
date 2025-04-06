@@ -83,7 +83,7 @@ class Subject extends Model
     {
         return $this->hasMany(Grade::class);
     }
-    
+
     /**
      * Get parent subject for this component.
      */
@@ -99,7 +99,7 @@ class Subject extends Model
     {
         return $this->hasMany(Subject::class, 'parent_subject_id');
     }
-    
+
     /**
      * Check if this is a MAPEH subject
      */
@@ -109,23 +109,23 @@ class Subject extends Model
         if ($this->is_component) {
             return false;
         }
-        
+
         $components = $this->components;
-        
+
         if ($components->count() !== 4) {
             return false;
         }
-        
+
         $componentNames = $components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
         $requiredComponents = ['music', 'arts', 'physical education', 'health'];
-        
+
         foreach ($requiredComponents as $component) {
-            if (!in_array($component, $componentNames) && 
+            if (!in_array($component, $componentNames) &&
                 !in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -144,7 +144,7 @@ class Subject extends Model
             $components = $this->components;
             $totalWeightedGrade = 0;
             $totalWeight = 0;
-            
+
             foreach ($components as $component) {
                 $componentGrade = $component->calculateSubjectGrade($studentId, $term);
                 if ($componentGrade !== null) {
@@ -152,14 +152,14 @@ class Subject extends Model
                     $totalWeight += $component->component_weight;
                 }
             }
-            
+
             return $totalWeight > 0 ? ($totalWeightedGrade / $totalWeight) : null;
         }
-        
+
         // Regular subject grade calculation
         return $this->calculateSubjectGrade($studentId, $term);
     }
-    
+
     /**
      * Calculate regular grade for a subject
      */
@@ -170,15 +170,15 @@ class Subject extends Model
             ->where('student_id', $studentId)
             ->where('term', $term)
             ->get();
-            
+
         // Return null if no grades found
         if ($grades->isEmpty()) {
             return null;
         }
-        
+
         // Get grade configuration for this subject
         $config = $this->gradeConfiguration;
-        
+
         if (!$config) {
             // Use default configuration if not set
             $ww = 0.30; // Written work - 30%
@@ -189,56 +189,65 @@ class Subject extends Model
             $pt = $config->performance_task_percentage / 100;
             $qa = $config->quarterly_assessment_percentage / 100;
         }
-        
+
         // Group grades by type
         $writtenWorks = $grades->where('grade_type', 'written_work');
         $performanceTasks = $grades->where('grade_type', 'performance_task');
-        $quarterlyAssessments = $grades->where('grade_type', 'quarterly_assessment');
-        
+        $quarterlyAssessments = $grades->where(function($query) {
+            return $query->where('grade_type', 'quarterly_assessment')
+                         ->orWhere('grade_type', 'quarterly')
+                         ->orWhere('grade_type', 'quarterly_exam');
+        });
+
         // Calculate average for each component
         $wwAvg = $this->calculateComponentAverage($writtenWorks);
         $ptAvg = $this->calculateComponentAverage($performanceTasks);
         $qaAvg = $this->calculateComponentAverage($quarterlyAssessments);
-        
+
         // Calculate weighted final grade
         $finalGrade = 0;
         $weightSum = 0;
-        
+
         if ($wwAvg !== null) {
             $finalGrade += $wwAvg * $ww;
             $weightSum += $ww;
         }
-        
+
         if ($ptAvg !== null) {
             $finalGrade += $ptAvg * $pt;
             $weightSum += $pt;
         }
-        
+
         if ($qaAvg !== null) {
             $finalGrade += $qaAvg * $qa;
             $weightSum += $qa;
         }
-        
+
         // Return final grade (normalized if not all components are present)
         return $weightSum > 0 ? ($finalGrade / $weightSum) : null;
     }
-    
+
     /**
      * Calculate the average for a specific grade component
+     * Uses total score divided by total max score method
      */
     private function calculateComponentAverage($grades)
     {
         if ($grades->isEmpty()) {
             return null;
         }
-        
-        $totalPercentage = 0;
-        
+
+        $totalScore = 0;
+        $totalMaxScore = 0;
+
         foreach ($grades as $grade) {
-            $totalPercentage += ($grade->score / $grade->max_score) * 100;
+            if ($grade->max_score > 0) {
+                $totalScore += $grade->score;
+                $totalMaxScore += $grade->max_score;
+            }
         }
-        
-        return $totalPercentage / $grades->count();
+
+        return $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
     }
 
     /**
@@ -264,7 +273,7 @@ class Subject extends Model
     {
         return $query->where('school_id', $schoolId);
     }
-    
+
     /**
      * Scope a query to only include parent subjects (not components).
      */
@@ -272,7 +281,7 @@ class Subject extends Model
     {
         return $query->where('is_component', false);
     }
-    
+
     /**
      * Scope a query to only include MAPEH subjects.
      */

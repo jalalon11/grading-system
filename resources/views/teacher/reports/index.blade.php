@@ -14,7 +14,7 @@
                     <p class="text-muted mb-4">Select a report type from the options below to generate detailed student performance records.</p>
 
                     <div class="row">
-                        <div class="col-md-4 mb-4">
+                        <div class="col-md-6 col-lg-3 mb-4">
                             <div class="card h-100 shadow-sm border-0 hover-card">
                                 <div class="card-body d-flex flex-column text-center p-4">
                                     <div class="mb-4 report-icon-container">
@@ -29,7 +29,22 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-4">
+                        <div class="col-md-6 col-lg-3 mb-4">
+                            <div class="card h-100 shadow-sm border-0 hover-card">
+                                <div class="card-body d-flex flex-column text-center p-4">
+                                    <div class="mb-4 report-icon-container">
+                                        <i class="fas fa-file-alt fa-3x text-warning"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold">Grade Slips</h5>
+                                    <p class="card-text text-muted flex-grow-1">Generate grade slips for students in your advisory sections.</p>
+                                    <a href="{{ route('teacher.reports.grade-slips') }}" class="btn btn-warning mt-3">
+                                        <i class="fas fa-arrow-right me-2"></i>Generate Grade Slips
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3 mb-4">
                             <div class="card h-100 shadow-sm border-0 hover-card">
                                 <div class="card-body d-flex flex-column text-center p-4">
                                     <div class="mb-4 report-icon-container">
@@ -44,7 +59,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4 mb-4">
+                        <div class="col-md-6 col-lg-3 mb-4">
                             <div class="card h-100 shadow-sm border-0 hover-card">
                                 <div class="card-body d-flex flex-column text-center p-4">
                                     <div class="mb-4 report-icon-container">

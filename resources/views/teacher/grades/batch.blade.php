@@ -1,154 +1,7 @@
 @extends('layouts.app')
 
 @push('styles')
-<style>
-    .student-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-right: 15px;
-    }
-    .grade-input {
-        max-width: 90px;
-        margin: 0 auto;
-    }
-    .batch-table th, .batch-table td {
-        vertical-align: middle;
-    }
-    .batch-header {
-        background-color: rgba(0,123,255,0.05);
-        border-left: 4px solid #0d6efd;
-        padding: 15px;
-        margin-bottom: 25px;
-        border-radius: 5px;
-    }
-    .score-container {
-        position: relative;
-    }
-    .score-validation {
-        position: absolute;
-        top: 0;
-        right: -20px;
-    }
-    .hover-row:hover {
-        background-color: rgba(0,0,0,0.02);
-    }
-    .component-header {
-        background-color: #f8f9fa;
-        font-weight: bold;
-    }
-    .tab-content {
-        padding-top: 20px;
-    }
-    .nav-tabs .nav-link.active {
-        font-weight: bold;
-    }
-    .component-card {
-        border-left: 4px solid;
-        transition: transform 0.2s;
-    }
-    .component-card:hover {
-        transform: translateY(-3px);
-    }
-    .music-border {
-        border-left-color: #3498db !important;
-    }
-    .arts-border {
-        border-left-color: #e74c3c !important;
-    }
-    .pe-border {
-        border-left-color: #2ecc71 !important;
-    }
-    .health-border {
-        border-left-color: #f39c12 !important;
-    }
-    
-    /* Dark mode styles */
-    .dark .batch-header {
-        background-color: rgba(13, 110, 253, 0.15);
-        border-color: #0d6efd;
-    }
-    
-    .dark .card-header.bg-white {
-        background-color: var(--bg-card-header) !important;
-        color: var(--text-color);
-        border-color: var(--border-color);
-    }
-    
-    .dark .card-body {
-        background-color: var(--bg-card);
-        color: var(--text-color);
-    }
-    
-    .dark .component-header {
-        background-color: var(--bg-card-header);
-        color: var(--text-color);
-    }
-    
-    .dark .hover-row:hover {
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    .dark .form-control {
-        background-color: var(--bg-card);
-        border-color: var(--border-color);
-        color: var(--text-color);
-    }
-    
-    .dark .form-control:focus {
-        background-color: var(--bg-card);
-        border-color: #4361ee;
-        color: var(--text-color);
-    }
-    
-    .dark .table {
-        color: var(--text-color);
-    }
-    
-    .dark .table th, 
-    .dark .table td {
-        border-color: var(--border-color);
-    }
-    
-    .dark .alert-info {
-        background-color: rgba(13, 202, 240, 0.15);
-        border-color: rgba(13, 202, 240, 0.4);
-        color: var(--text-color);
-    }
-    
-    .dark .alert-secondary {
-        background-color: rgba(108, 117, 125, 0.15);
-        border-color: rgba(108, 117, 125, 0.4);
-        color: var(--text-color);
-    }
-    
-    .dark .text-muted {
-        color: var(--text-muted) !important;
-    }
-    
-    .dark .nav-tabs {
-        border-bottom-color: var(--border-color);
-    }
-    
-    .dark .nav-tabs .nav-link {
-        color: var(--text-muted);
-    }
-    
-    .dark .nav-tabs .nav-link:hover {
-        border-color: var(--border-color);
-        color: var(--text-color);
-    }
-    
-    .dark .nav-tabs .nav-link.active {
-        background-color: var(--bg-card);
-        border-color: var(--border-color);
-        border-bottom-color: var(--bg-card);
-    }
-</style>
+<link href="{{ asset('css/batch.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -244,11 +97,11 @@
                     <input type="hidden" name="grade_type" value="{{ $request->grade_type }}">
                     <input type="hidden" name="assessment_name" value="{{ session('assessment_name') }}">
                     <input type="hidden" name="section_id" value="{{ $section->id }}">
-                    
+
                     @if($isMAPEH)
                         <!-- MAPEH Subject Form -->
                         <input type="hidden" name="is_mapeh" value="1">
-                        
+
                         <div class="alert alert-info mb-4">
                             <div class="d-flex">
                                 <div class="me-3">
@@ -262,14 +115,14 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Component Navigation Tabs -->
                         <ul class="nav nav-tabs mb-3" id="mapehTabs" role="tablist">
                             @foreach($subject->components as $index => $component)
                                 @php
                                     $componentClass = '';
                                     $componentSlug = strtolower(str_replace(' ', '-', $component->name));
-                                    
+
                                     if (stripos($component->name, 'music') !== false) {
                                         $componentClass = 'text-primary';
                                     } elseif (stripos($component->name, 'art') !== false) {
@@ -279,21 +132,21 @@
                                     } elseif (stripos($component->name, 'health') !== false) {
                                         $componentClass = 'text-warning';
                                     }
-                                    
+
                                     // Check if this component was selected in assessment setup
                                     $isSelectedComponent = in_array($component->id, session('selected_components', []));
                                     $componentMaxScore = session('component_max_score.' . $component->id, 100);
                                 @endphp
-                                
+
                                 @if($isSelectedComponent)
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link {{ $index === 0 ? 'active' : '' }} {{ $componentClass }}" 
-                                            id="{{ $componentSlug }}-tab" 
-                                            data-bs-toggle="tab" 
-                                            data-bs-target="#{{ $componentSlug }}-content" 
-                                            type="button" 
-                                            role="tab" 
-                                            aria-controls="{{ $componentSlug }}-content" 
+                                    <button class="nav-link {{ $index === 0 ? 'active' : '' }} {{ $componentClass }}"
+                                            id="{{ $componentSlug }}-tab"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#{{ $componentSlug }}-content"
+                                            type="button"
+                                            role="tab"
+                                            aria-controls="{{ $componentSlug }}-content"
                                             aria-selected="{{ $index === 0 ? 'true' : 'false' }}">
                                         {{ $component->name }}
                                         <input type="hidden" name="component_ids[]" value="{{ $component->id }}">
@@ -303,14 +156,14 @@
                                 @endif
                             @endforeach
                         </ul>
-                        
+
                         <!-- Debug Information -->
                         <div class="alert alert-secondary mb-3 small d-none">
                             <h6>Debug Info:</h6>
                             <p>Selected Components: {{ implode(', ', session('selected_components', [])) }}</p>
                             <p>Component Max Scores: {{ json_encode(session('component_max_score', [])) }}</p>
                         </div>
-                        
+
                         <!-- Component Tab Contents -->
                         <div class="tab-content" id="mapehTabContent">
                             @php $firstTab = true; @endphp
@@ -318,7 +171,7 @@
                                 @php
                                     $componentSlug = strtolower(str_replace(' ', '-', $component->name));
                                     $componentClass = '';
-                                    
+
                                     if (stripos($component->name, 'music') !== false) {
                                         $componentClass = 'music-border';
                                     } elseif (stripos($component->name, 'art') !== false) {
@@ -328,18 +181,18 @@
                                     } elseif (stripos($component->name, 'health') !== false) {
                                         $componentClass = 'health-border';
                                     }
-                                    
+
                                     // Check if this component was selected in assessment setup
                                     $isSelectedComponent = in_array($component->id, session('selected_components', []));
                                     $componentMaxScore = session('component_max_score.' . $component->id, 100);
                                 @endphp
-                                
+
                                 @if($isSelectedComponent)
-                                <div class="tab-pane fade {{ $firstTab ? 'show active' : '' }}" 
-                                     id="{{ $componentSlug }}-content" 
-                                     role="tabpanel" 
+                                <div class="tab-pane fade {{ $firstTab ? 'show active' : '' }}"
+                                     id="{{ $componentSlug }}-content"
+                                     role="tabpanel"
                                      aria-labelledby="{{ $componentSlug }}-tab">
-                                    
+
                                     <div class="card mb-3 component-card {{ $componentClass }}">
                                         <div class="card-body py-2">
                                             <div class="d-flex justify-content-between align-items-center">
@@ -358,7 +211,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="table-responsive">
                                         <table class="table batch-table">
                                             <thead class="table-light">
@@ -389,11 +242,11 @@
                                                         </td>
                                                         <td class="text-center">
                                                             <div class="score-container">
-                                                                <input type="number" class="form-control form-control-sm grade-input component-score" 
-                                                                    id="score_component{{ $component->id }}_student{{ $student->id }}" 
-                                                                    name="component_scores[{{ $component->id }}][{{ $student->id }}]" 
-                                                                    min="0" 
-                                                                    max="{{ $componentMaxScore }}" 
+                                                                <input type="number" class="form-control form-control-sm grade-input component-score"
+                                                                    id="score_component{{ $component->id }}_student{{ $student->id }}"
+                                                                    name="component_scores[{{ $component->id }}][{{ $student->id }}]"
+                                                                    min="0"
+                                                                    max="{{ $componentMaxScore }}"
                                                                     value="{{ old('component_scores.' . $component->id . '.' . $student->id, '') }}"
                                                                     data-component="{{ $component->id }}"
                                                                     data-max="{{ $componentMaxScore }}"
@@ -409,10 +262,10 @@
                                                         </td>
                                                         <td>
                                                             @if($firstTab)
-                                                                <input type="text" class="form-control form-control-sm" 
-                                                                    id="remarks{{ $student->id }}" 
-                                                                    name="remarks[]" 
-                                                                    placeholder="Optional comments" 
+                                                                <input type="text" class="form-control form-control-sm"
+                                                                    id="remarks{{ $student->id }}"
+                                                                    name="remarks[]"
+                                                                    placeholder="Optional comments"
                                                                     maxlength="255"
                                                                     value="{{ old('remarks.' . $studentIndex, '') }}"
                                                                     data-bs-toggle="tooltip"
@@ -435,7 +288,7 @@
                     @else
                         <!-- Regular Subject Form -->
                         <input type="hidden" name="max_score" value="{{ session('max_score') }}">
-                        
+
                         <div class="table-responsive">
                             <table class="table batch-table">
                                 <thead class="table-light">
@@ -464,11 +317,11 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="score-container">
-                                                    <input type="number" class="form-control form-control-sm grade-input" 
-                                                        id="score{{ $student->id }}" 
-                                                        name="scores[]" 
-                                                        min="0" 
-                                                        max="{{ session('max_score') }}" 
+                                                    <input type="number" class="form-control form-control-sm grade-input"
+                                                        id="score{{ $student->id }}"
+                                                        name="scores[]"
+                                                        min="0"
+                                                        max="{{ session('max_score') }}"
                                                         value="{{ old('scores.' . $index, '') }}"
                                                         data-max="{{ session('max_score') }}"
                                                         data-bs-toggle="tooltip"
@@ -482,10 +335,10 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm" 
-                                                    id="remarks{{ $student->id }}" 
-                                                    name="remarks[]" 
-                                                    placeholder="Optional comments" 
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="remarks{{ $student->id }}"
+                                                    name="remarks[]"
+                                                    placeholder="Optional comments"
                                                     maxlength="255"
                                                     value="{{ old('remarks.' . $index, '') }}"
                                                     data-bs-toggle="tooltip"
@@ -497,7 +350,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <div class="mt-4 d-flex">
                             <button type="button" id="fillWithZeros" class="btn btn-outline-secondary btn-sm me-2">
                                 <i class="fas fa-eraser me-1"></i> Fill All with Zeros
@@ -507,7 +360,7 @@
                             </button>
                         </div>
                     @endif
-                    
+
                     <div class="mt-4 d-flex justify-content-between border-top pt-4">
                         <a href="{{ route('teacher.grades.index', ['subject_id' => $subject->id, 'term' => $request->term]) }}" class="btn btn-outline-secondary">
                             <i class="fas fa-times me-1"></i> Cancel
@@ -530,7 +383,7 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
-        
+
         // Make sure Bootstrap tabs are properly initialized
         $('#mapehTabs button').on('click', function (e) {
             e.preventDefault();
@@ -545,4 +398,4 @@
     <script src="{{ asset('js/regular-grading.js') }}"></script>
 @endif
 @endpush
-@endsection 
+@endsection

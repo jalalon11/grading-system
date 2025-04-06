@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@push('styles')
+<link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
+@endpush
+
 @section('content')
 <div class="container-fluid">
     <!-- Welcome Header -->
@@ -7,27 +11,27 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm bg-primary text-white welcome-header">
                 <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                        <div class="d-flex flex-column flex-md-row align-items-center mb-3 mb-md-0">
                             @if(Auth::user()->school && Auth::user()->school->logo_path)
-                            <div class="me-3">
+                            <div class="me-md-3 mb-3 mb-md-0 text-center">
                                 <img src="{{ asset(Auth::user()->school->logo_path) }}" alt="{{ Auth::user()->school->name }} Logo" class="rounded" style="max-height: 60px;">
                             </div>
                             @else
-                            <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-3">
+                            <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-md-3 mb-3 mb-md-0 mx-auto">
                                 <i class="fas fa-chalkboard-teacher fa-2x"></i>
                             </div>
                             @endif
-                            <div>
-                                <h2 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}</h2>
+                            <div class="text-center text-md-start">
+                                <h3 class="fw-bold mb-1">Welcome, {{ Auth::user()->name }}</h3>
                                 <p class="mb-0 opacity-75">{{ now()->format('l, F d, Y') }}</p>
                                 @if(Auth::user()->school)
                                 <p class="mb-0 opacity-75">{{ Auth::user()->school->name }}</p>
                                 @endif
                             </div>
                         </div>
-                        <div>
-                        <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light btn-lg">
+                        <div class="text-center">
+                            <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light">
                                 <i class="fas fa-plus-circle me-2"></i> Manage Attendance
                             </a>
                         </div>
@@ -67,7 +71,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-3 mb-3 mb-md-0">
             <div class="card border-0 shadow-sm h-100 overflow-hidden">
                 <div class="card-body position-relative p-4">
@@ -96,7 +100,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-3 mb-3 mb-md-0">
             <div class="card border-0 shadow-sm h-100 overflow-hidden">
                 <div class="card-body position-relative p-4">
@@ -125,7 +129,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-3 mb-3 mb-md-0">
             <div class="card border-0 shadow-sm h-100 overflow-hidden">
                 <div class="card-body position-relative p-4">
@@ -145,7 +149,7 @@
                 <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="{{ $stats['todayAttendance'] > 0 ? 'text-success' : 'text-danger' }} small">
-                            <i class="{{ $stats['todayAttendance'] > 0 ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }} me-1"></i> 
+                            <i class="{{ $stats['todayAttendance'] > 0 ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }} me-1"></i>
                             {{ $stats['todayAttendance'] > 0 ? 'Recorded' : 'Not Recorded' }}
                         </span>
                         <a href="{{ route('teacher.attendances.index') }}" class="btn btn-sm btn-outline-warning rounded-pill">
@@ -177,7 +181,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Grade Distribution -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
@@ -233,6 +237,16 @@
                             </div>
                             <i class="fas fa-chevron-right ms-auto text-muted"></i>
                         </a>
+                        <a href="{{ route('teacher.grade-approvals.index') }}" class="list-group-item list-group-item-action d-flex align-items-center py-3 px-4">
+                            <div class="avatar rounded-circle bg-warning bg-opacity-10 p-2 me-3">
+                                <i class="fas fa-check-circle text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Grade Approvals</h6>
+                                <small class="text-muted">Manage approval status for your grades</small>
+                            </div>
+                            <i class="fas fa-chevron-right ms-auto text-muted"></i>
+                        </a>
                         <a href="{{ route('teacher.profile') }}" class="list-group-item list-group-item-action d-flex align-items-center py-3 px-4">
                             <div class="avatar rounded-circle bg-danger bg-opacity-10 p-2 me-3">
                                 <i class="fas fa-user-cog text-danger"></i>
@@ -247,7 +261,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Student Performance Metrics -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
@@ -304,10 +318,10 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @php 
+                                                    @php
                                                         $score = $student->grades_avg_score ?? 0;
                                                         $stars = 0;
-                                                        
+
                                                         if ($score >= 94) {
                                                             $stars = 5;
                                                         } elseif ($score >= 87) {
@@ -422,7 +436,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Recent Subjects -->
         <div class="col-md-6 mb-4">
             <div class="card border-0 shadow-sm h-100">
@@ -450,7 +464,7 @@
                                             // Get unique grade levels for this subject from its sections
                                             $gradeLevels = $subject->sections->pluck('grade_level')->unique()->sort();
                                         @endphp
-                                        
+
                                         @foreach($gradeLevels as $gradeLevel)
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $subject->name ?? 'N/A' }}</td>
@@ -484,345 +498,7 @@
     </div>
 </div>
 
-@push('styles')
-<style>
-    .card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-    
-    .dark .card:hover {
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    .avatar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 45px;
-        height: 45px;
-    }
-    
-    .welcome-header {
-        background: linear-gradient(to right, #4e73df, #224abe);
-    }
-    
-    .dark .welcome-header {
-        background: linear-gradient(to right, #2d4383, #152a73) !important;
-        border-color: #152a73 !important;
-    }
-    
-    .dark .btn-light {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: #e4e6eb;
-    }
-    
-    .dark .btn-light:hover {
-        background-color: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.15);
-        color: #ffffff;
-    }
-    
-    .bg-gradient-primary {
-        background: linear-gradient(to right, #4e73df, #224abe);
-    }
-    
-    .dark .bg-gradient-primary {
-        background: linear-gradient(to right, #3a5cbc, #1b3d9e);
-    }
-    
-    .list-group-item:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .dark .list-group-item:hover {
-        background-color: #2d2d2d;
-    }
-    
-    /* Card headers dark mode support */
-    .dark .card-header.bg-white {
-        background-color: #242526 !important;
-        border-bottom: 1px solid #3a3b3c;
-        color: #e4e6eb;
-    }
-    
-    /* Better colors for text in dark mode headers */
-    .dark .card-header.bg-white h5,
-    .dark .card-header.bg-white i {
-        color: #e4e6eb;
-    }
-    
-    .dark .card-header.bg-white i.text-primary {
-        color: #4e7bff !important;
-    }
-    
-    .dark .card-header.bg-white i.text-success {
-        color: #28a745 !important;
-    }
-    
-    .dark .card-header.bg-white i.text-warning {
-        color: #ffc107 !important;
-    }
-    
-    .dark .card-header.bg-white i.text-info {
-        color: #17a2b8 !important;
-    }
-    
-    .attendance-period-btn.active {
-        background-color: #4e73df;
-        color: white;
-        border-color: #4e73df;
-    }
-    
-    .dark .attendance-period-btn {
-        color: #e4e6eb;
-        border-color: #3a3b3c;
-    }
-    
-    .dark .attendance-period-btn.active {
-        background-color: #3a5cbc;
-        border-color: #3a5cbc;
-    }
-    
-    /* Table dark mode styling improvements */
-    .dark .table {
-        color: #e4e6eb;
-        background-color: #242526;
-    }
-    
-    /* Table header styling for dark mode */
-    .dark .table-light,
-    .dark .table thead.table-light,
-    .dark .table th.table-light,
-    .dark table.table thead tr,
-    .dark table.table thead th {
-        color: #ffffff !important;
-        background-color: #1e1e1e !important;
-        border-color: #3a3b3c !important;
-        border-bottom-color: #3a3b3c !important;
-    }
-    
-    .dark .table-hover tbody tr:hover {
-        background-color: rgba(255, 255, 255, 0.075);
-        color: #e4e6eb;
-    }
-    
-    /* Fix table rows in dark mode */
-    .dark .table tr {
-        background-color: #242526;
-        border-color: #3a3b3c;
-    }
-    
-    .dark .table td,
-    .dark .table th {
-        border-color: #3a3b3c;
-    }
-    
-    /* Table cell styling for dark mode */
-    .dark .table > :not(caption) > * > * {
-        padding: 0.5rem 0.5rem;
-        color: var(--bs-table-color-state, var(--bs-table-color-type, #ebebeb));
-        background-color: #2d2d2d;
-        border-bottom-width: var(--bs-border-width);
-        box-shadow: inset 0 0 0 9999px var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));
-    }
-    
-    /* Specific fix for subject code display in dark mode */
-    .dark .table code {
-        background-color: #3a3b3c;
-        color: #ff8fa3;
-        padding: 3px 6px;
-        border-radius: 4px;
-    }
-    
-    /* Text-muted in table cells */
-    .dark .table small.text-muted,
-    .dark .table .text-muted {
-        color: #9fa6b2 !important;
-    }
-    
-    /* Specific selector for headers in specific table sections */
-    .dark div[class*="student-performance"] thead tr,
-    .dark div[class*="assigned-sections"] thead tr,
-    .dark div[class*="assigned-subjects"] thead tr,
-    .dark .student-performance-table thead,
-    .dark .table thead,
-    .dark h5 + .table-responsive .table thead {
-        background-color: #1e1e1e !important;
-        color: #ffffff !important;
-    }
-    
-    /* Direct fixes for specific tables */
-    .dark .student-performance-metrics-table .table thead,
-    .dark .student-performance-metrics-table .table thead tr,
-    .dark .student-performance-metrics-table .table thead th,
-    .dark .assigned-sections-table .table thead,
-    .dark .assigned-sections-table .table thead tr,
-    .dark .assigned-sections-table .table thead th,
-    .dark .assigned-subjects-table .table thead,
-    .dark .assigned-subjects-table .table thead tr,
-    .dark .assigned-subjects-table .table thead th {
-        background-color: #1e1e1e !important;
-        color: #ffffff !important;
-        border-color: #3a3b3c !important;
-    }
-    
-    /* Fix for the table rows */
-    .dark .student-performance-metrics-table .table tbody tr,
-    .dark .assigned-sections-table .table tbody tr,
-    .dark .assigned-subjects-table .table tbody tr {
-        background-color: #242526;
-        border-color: #3a3b3c;
-    }
-    
-    /* Ensure proper hover highlighting in dark mode */
-    .dark .table-hover tbody tr:hover {
-        background-color: rgba(255, 255, 255, 0.075) !important;
-    }
-    
-    /* Override any Bootstrap default styles that might interfere */
-    .dark .table-light th {
-        background-color: #1e1e1e !important;
-        color: #ffffff !important;
-        border-color: #3a3b3c !important;
-    }
-    
-    .progress {
-        height: 4px;
-        margin-bottom: 0;
-    }
-    
-    .progress-taller {
-        height: 6px;
-    }
-    
-    .performance-progress {
-        flex-grow: 1;
-        margin-right: 0.5rem;
-    }
-    
-    /* Dark mode specific chart styles */
-    .dark .chart-container canvas {
-        filter: brightness(0.9) contrast(1.1);
-    }
-    
-    .dark .rounded-circle.bg-primary.bg-opacity-10 {
-        background-color: rgba(78, 115, 223, 0.2) !important;
-    }
-    
-    .dark .rounded-circle.bg-success.bg-opacity-10 {
-        background-color: rgba(40, 167, 69, 0.2) !important;
-    }
-    
-    .dark .rounded-circle.bg-info.bg-opacity-10 {
-        background-color: rgba(23, 162, 184, 0.2) !important;
-    }
-    
-    .dark .rounded-circle.bg-warning.bg-opacity-10 {
-        background-color: rgba(255, 193, 7, 0.2) !important;
-    }
-    
-    .dark .rounded-circle.bg-danger.bg-opacity-10 {
-        background-color: rgba(220, 53, 69, 0.2) !important;
-    }
-    
-    .dark code {
-        color: #e83e8c;
-        background-color: #2d2d2d;
-    }
-    
-    .dark .badge {
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    .dark .badge.bg-primary {
-        background-color: #375aad !important;
-    }
-    
-    .dark .badge.bg-success {
-        background-color: #28a745 !important;
-    }
-    
-    .dark .badge.bg-info {
-        background-color: #17a2b8 !important;
-    }
-    
-    .dark .badge.bg-warning {
-        background-color: #ffc107 !important;
-        color: #212529;
-    }
-    
-    .dark .badge.bg-danger {
-        background-color: #dc3545 !important;
-    }
-    
-    .dark .btn-outline-primary {
-        color: #4e7bff;
-        border-color: #375aad;
-    }
-    
-    .dark .btn-outline-primary:hover {
-        background-color: #375aad;
-        border-color: #375aad;
-        color: #ffffff;
-    }
-    
-    .dark .btn-outline-success {
-        color: #28a745;
-        border-color: #28a745;
-    }
-    
-    .dark .btn-outline-success:hover {
-        background-color: #28a745;
-        border-color: #28a745;
-        color: #ffffff;
-    }
-    
-    .dark .btn-outline-info {
-        color: #17a2b8;
-        border-color: #17a2b8;
-    }
-    
-    .dark .btn-outline-info:hover {
-        background-color: #17a2b8;
-        border-color: #17a2b8;
-        color: #ffffff;
-    }
-    
-    .dark .btn-outline-warning {
-        color: #ffc107;
-        border-color: #ffc107;
-    }
-    
-    .dark .btn-outline-warning:hover {
-        background-color: #ffc107;
-        border-color: #ffc107;
-        color: #212529;
-    }
-    
-    /* Fix dark mode for form inputs in dashboard */
-    .dark .form-select {
-        background-color: #3a3b3c;
-        border-color: #2d2d2d;
-        color: #e4e6eb;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23e4e6eb' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-    }
-    
-    /* Performance empty state in dark mode */
-    .dark .avatar.bg-light {
-        background-color: #2d2d2d !important;
-    }
-    
-    .dark .avatar.bg-light i {
-        color: #6c757d !important;
-    }
-</style>
-@endpush
+
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -831,26 +507,23 @@
         // Define API routes
         const attendanceDataUrl = "{{ route('teacher.dashboard.attendance-data') }}";
         const performanceDataUrl = "{{ route('teacher.dashboard.performance-data') }}";
-        
+
         // Chart instances
         let attendanceChart, gradeChart;
-        
-        // Function to initialize charts based on current theme
+
+        // Function to initialize charts
         function initCharts() {
-            // Check if dark mode is active
-            const isDarkMode = document.documentElement.classList.contains('dark');
-            
-            // Set chart defaults based on theme
-            const fontColor = isDarkMode ? '#e4e6eb' : '#666';
-            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            
+            // Set chart defaults
+            const fontColor = '#666';
+            const gridColor = 'rgba(0, 0, 0, 0.1)';
+
             Chart.defaults.color = fontColor;
             Chart.defaults.scale.grid.color = gridColor;
-            
+
             // Destroy existing charts if they exist
             if (attendanceChart) attendanceChart.destroy();
             if (gradeChart) gradeChart.destroy();
-            
+
             // Initialize Attendance Chart
             const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
             attendanceChart = new Chart(attendanceCtx, {
@@ -957,7 +630,7 @@
                     }
                 }
             });
-            
+
             // Initialize Grade Distribution Chart
             const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
             gradeChart = new Chart(gradeCtx, {
@@ -980,7 +653,7 @@
                             '#dc3545'
                         ],
                         borderWidth: 1,
-                        borderColor: isDarkMode ? '#242526' : '#ffffff'
+                        borderColor: '#ffffff'
                     }]
                 },
                 options: {
@@ -998,10 +671,10 @@
                             }
                         },
                         tooltip: {
-                            backgroundColor: isDarkMode ? '#2d2d2d' : 'rgba(0, 0, 0, 0.7)',
-                            titleColor: isDarkMode ? '#e4e6eb' : '#fff',
-                            bodyColor: isDarkMode ? '#e4e6eb' : '#fff',
-                            borderColor: isDarkMode ? '#3a3b3c' : 'rgba(0, 0, 0, 0.1)',
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(0, 0, 0, 0.1)',
                             borderWidth: 1
                         }
                     },
@@ -1009,30 +682,12 @@
                 }
             });
         }
-        
+
         // Initialize charts
         initCharts();
-        
-        // Listen for dark mode changes
-        window.addEventListener('storage', function(event) {
-            if (event.key === 'darkMode') {
-                initCharts();
-            }
-        });
-        
-        // Alternative way to detect theme changes using MutationObserver
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    initCharts();
-                }
-            });
-        });
-        
-        observer.observe(document.documentElement, {
-            attributes: true
-        });
-        
+
+
+
         // Handle attendance period buttons
         document.querySelectorAll('.attendance-period-btn').forEach(button => {
             button.addEventListener('click', function() {
@@ -1040,17 +695,17 @@
                 document.querySelectorAll('.attendance-period-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                
+
                 // Add active class to clicked button
                 this.classList.add('active');
-                
+
                 // Get selected period
                 const period = this.dataset.period;
-                
+
                 // Get selected section ID (if any)
                 const sectionSelect = document.getElementById('performanceMetricSection');
                 const sectionId = sectionSelect ? sectionSelect.value : null;
-                
+
                 // Fetch attendance data by period via AJAX
                 fetch(`${attendanceDataUrl}?period=${period}${sectionId ? '&section_id='+sectionId : ''}`)
                     .then(response => response.json())
@@ -1062,15 +717,15 @@
                         attendanceChart.data.datasets[2].data = data.half_day;
                         attendanceChart.data.datasets[3].data = data.absent;
                         attendanceChart.data.datasets[4].data = data.excused;
-                        
+
                         // Determine the max value for y-axis
                         const allValues = [...data.present, ...data.late, ...data.half_day, ...data.absent, ...data.excused];
                         const maxValue = Math.max(...allValues, 1); // Minimum of 1
-                        
+
                         // Update y-axis max value and step size
                         const stepSize = maxValue <= 10 ? 1 : Math.ceil(maxValue / 10);
                         attendanceChart.options.scales.y.ticks.stepSize = stepSize;
-                        
+
                         attendanceChart.update();
                     })
                     .catch(error => {
@@ -1079,17 +734,17 @@
                     });
             });
         });
-        
+
         // Add event listener for section select change to update performance metrics
         const sectionSelect = document.getElementById('performanceMetricSection');
         if (sectionSelect) {
             sectionSelect.addEventListener('change', function() {
                 const sectionId = this.value;
-                
+
                 // Update attendance chart for the selected section
                 const activePeriodBtn = document.querySelector('.attendance-period-btn.active');
                 const period = activePeriodBtn ? activePeriodBtn.dataset.period : 'week';
-                
+
                 // Show loading state
                 const performanceTable = document.querySelector('.student-performance-table tbody');
                 if (performanceTable) {
@@ -1104,7 +759,7 @@
                         </tr>
                     `;
                 }
-                
+
                 // Fetch attendance data for the selected section
                 fetch(`${attendanceDataUrl}?period=${period}&section_id=${sectionId}`)
                     .then(response => {
@@ -1121,21 +776,21 @@
                         attendanceChart.data.datasets[2].data = data.half_day;
                         attendanceChart.data.datasets[3].data = data.absent;
                         attendanceChart.data.datasets[4].data = data.excused;
-                        
+
                         // Determine the max value for y-axis
                         const allValues = [...data.present, ...data.late, ...data.half_day, ...data.absent, ...data.excused];
                         const maxValue = Math.max(...allValues, 1); // Minimum of 1
-                        
+
                         // Update y-axis max value and step size
                         const stepSize = maxValue <= 10 ? 1 : Math.ceil(maxValue / 10);
                         attendanceChart.options.scales.y.ticks.stepSize = stepSize;
-                        
+
                         attendanceChart.update();
                     })
                     .catch(error => {
                         console.error('Error fetching section attendance data:', error);
                     });
-                
+
                 // Also update the student performance metrics table
                 fetch(`${performanceDataUrl}?section_id=${sectionId}`)
                     .then(response => {
@@ -1147,7 +802,7 @@
                     .then(data => {
                         // Debug log to check response structure
                         console.log('Performance data response:', data);
-                        
+
                         // Update the student performance table with new data
                         if (performanceTable && data.students && data.students.length > 0) {
                             let tableHTML = '';
@@ -1155,7 +810,7 @@
                                 // Calculate stars based on new grading scale
                                 let stars = 0;
                                 const score = student.grades_avg_score || 0;
-                                
+
                                 if (score >= 94) {
                                     stars = 5;
                                 } else if (score >= 87) {
@@ -1167,20 +822,20 @@
                                 } else if (score >= 75) {
                                     stars = 1;
                                 }
-                                
+
                                 // Generate star icons
                                 let starsHTML = '';
                                 for (let i = 1; i <= 5; i++) {
                                     starsHTML += `<i class="fas fa-star ${i <= stars ? 'text-warning' : 'text-muted'} me-1"></i>`;
                                 }
-                                
+
                                 // Determine grade badge color
                                 let badgeClass = 'bg-danger';
                                 if (score >= 90) badgeClass = 'bg-success';
                                 else if (score >= 80) badgeClass = 'bg-primary';
                                 else if (score >= 70) badgeClass = 'bg-info';
                                 else if (score >= 60) badgeClass = 'bg-warning';
-                                
+
                                 // Add row to table
                                 tableHTML += `
                                     <tr>
@@ -1266,4 +921,4 @@
     });
 </script>
 @endpush
-@endsection 
+@endsection

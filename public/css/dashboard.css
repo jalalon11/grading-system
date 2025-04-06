@@ -1,0 +1,253 @@
+/* Dashboard Styles */
+.chart-container {
+    position: relative;
+    height: 250px;
+    margin-bottom: 1rem;
+}
+
+.chart-container canvas {
+    filter: none;
+}
+
+.attendance-trend-card {
+    height: 100%;
+}
+
+.grade-distribution-card {
+    height: 100%;
+}
+
+.performance-progress {
+    flex: 1;
+    height: 6px;
+    margin-right: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-taller {
+    height: 8px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.avatar.sm {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+}
+
+.avatar.lg {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.student-performance-table th,
+.student-performance-table td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+
+.student-performance-table tbody tr {
+    transition: all 0.2s;
+}
+
+.student-performance-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.student-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.student-id {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-card {
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    border-left-color: #4e73df;
+}
+
+.quick-action-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(78, 115, 223, 0.1);
+    color: #4e73df;
+    margin-right: 1rem;
+}
+
+/* Custom card styles */
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+    transition: all 0.2s;
+}
+
+.card.shadow-sm:hover {
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* Stat card styles */
+.stat-card {
+    border-left: 4px solid;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-card.primary {
+    border-left-color: #4e73df;
+}
+
+.stat-card.success {
+    border-left-color: #1cc88a;
+}
+
+.stat-card.info {
+    border-left-color: #36b9cc;
+}
+
+.stat-card.warning {
+    border-left-color: #f6c23e;
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+    opacity: 0.3;
+}
+
+/* Background colors with opacity */
+.bg-light-blue {
+    background-color: rgba(78, 115, 223, 0.1);
+}
+
+.bg-light-green {
+    background-color: rgba(28, 200, 138, 0.1);
+}
+
+.bg-light-yellow {
+    background-color: rgba(246, 194, 62, 0.1);
+}
+
+/* Form styles */
+.form-select {
+    background-color: #fff;
+    border-color: #d1d3e2;
+    color: #6e707e;
+}
+
+/* Custom button styles */
+.btn-outline-primary {
+    color: #4e73df;
+    border-color: #4e73df;
+}
+
+.btn-outline-primary:hover {
+    background-color: #4e73df;
+    border-color: #4e73df;
+    color: #ffffff;
+}
+
+.btn-outline-success {
+    color: #1cc88a;
+    border-color: #1cc88a;
+}
+
+.btn-outline-success:hover {
+    background-color: #1cc88a;
+    border-color: #1cc88a;
+    color: #ffffff;
+}
+
+.btn-outline-info {
+    color: #36b9cc;
+    border-color: #36b9cc;
+}
+
+.btn-outline-info:hover {
+    background-color: #36b9cc;
+    border-color: #36b9cc;
+    color: #ffffff;
+}
+
+.btn-outline-warning {
+    color: #f6c23e;
+    border-color: #f6c23e;
+}
+
+.btn-outline-warning:hover {
+    background-color: #f6c23e;
+    border-color: #f6c23e;
+    color: #212529;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 200px;
+    }
+    
+    .student-performance-table th,
+    .student-performance-table td {
+        padding: 0.5rem;
+    }
+    
+    .avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+}
