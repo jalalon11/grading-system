@@ -67,6 +67,9 @@
                                                 {{ $value }}
                                             </option>
                                         @endforeach
+                                        <option value="all" {{ old('quarter') == 'all' ? 'selected' : '' }}>
+                                            All Quarters
+                                        </option>
                                     </select>
                                     @error('quarter')
                                         <div class="invalid-feedback">{{ $message }}</div>
