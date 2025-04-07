@@ -106,12 +106,18 @@
         overflow: hidden;
         padding: 1.5rem;
         color: white;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         height: 100%;
         position: relative;
         z-index: 1;
+        transition: all 0.3s ease;
     }
     
+    .counter-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.18);
+    }
+
     .counter-card::before {
         content: "";
         position: absolute;
@@ -119,77 +125,119 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        clip-path: circle(65px at 85% 25%);
+        background: rgba(255, 255, 255, 0.12);
+        clip-path: circle(80px at 85% 25%);
         z-index: -1;
     }
-    
+
     .counter-card::after {
         content: "";
         position: absolute;
-        top: -15px;
-        right: -15px;
-        width: 120px;
-        height: 120px;
-        background: rgba(255, 255, 255, 0.08);
+        top: -25px;
+        right: -25px;
+        width: 140px;
+        height: 140px;
+        background: rgba(255, 255, 255, 0.1);
         border-radius: 50%;
         z-index: -1;
     }
     
-    .bg-gradient-primary {
-        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
-    }
-    
-    .bg-gradient-success {
-        background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
-    }
-    
-    .bg-gradient-info {
-        background: linear-gradient(135deg, #4895ef 0%, #3f37c9 100%);
-    }
-    
-    .bg-gradient-warning {
-        background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
-    }
-    
     .counter-title {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        opacity: 0.9;
+        letter-spacing: 1.2px;
+        opacity: 0.95;
         font-weight: 600;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
     
     .counter-value {
-        font-size: 2.25rem;
+        font-size: 2.5rem;
         font-weight: 700;
         line-height: 1;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.75rem;
     }
     
+    .counter-icon {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+    
+    .counter-subtitle {
+        font-size: 0.85rem;
+        opacity: 0.85;
+    }
+
     /* Headers and Organization */
     .section-header {
-        padding: 18px 20px;
+        background: linear-gradient(to right, rgba(67, 97, 238, 0.08), rgba(67, 97, 238, 0.15));
+        padding: 1.25rem 1.5rem;
         border-radius: var(--border-radius);
         margin-bottom: 25px;
-        background: var(--gray-100);
         border-left: 4px solid var(--primary-color);
-        box-shadow: var(--box-shadow);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         transition: var(--transition);
     }
     
     .section-header:hover {
         transform: translateX(5px);
-        background: linear-gradient(to right, rgba(67, 97, 238, 0.05), rgba(255, 255, 255, 1));
     }
     
     .grade-level-header {
-        padding: 18px 20px;
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
         margin-bottom: 25px;
-        background: linear-gradient(to right, rgba(67, 97, 238, 0.05), rgba(67, 97, 238, 0.1));
         border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
+        box-shadow: 0 6px 15px rgba(67, 97, 238, 0.15);
+    }
+    
+    .grade-level-header h4 {
+        margin-bottom: 0;
+        color: white;
+    }
+    
+    .grade-level-header .badge-count {
+        background-color: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    
+    .grade-level-header .toggle-grade-btn {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .grade-level-header .toggle-grade-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Improved Assigned Sections Header */
+    .assigned-section-header {
+        background: linear-gradient(135deg, #4895ef 0%, #4361ee 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 6px 15px rgba(72, 149, 239, 0.15);
+    }
+    
+    .assigned-section-header h4 {
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+    
+    .assigned-section-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 0;
     }
     
     /* Search and Filters */
@@ -396,18 +444,15 @@
     }
     
     .dark .section-header {
-        background: var(--bg-card-header);
-        border-left-color: #4361ee;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    }
-    
-    .dark .section-header:hover {
-        background: linear-gradient(to right, rgba(67, 97, 238, 0.15), var(--bg-card-header));
+        background: linear-gradient(to right, rgba(67, 97, 238, 0.15), rgba(67, 97, 238, 0.25));
     }
     
     .dark .grade-level-header {
-        background: linear-gradient(to right, rgba(67, 97, 238, 0.15), rgba(67, 97, 238, 0.2));
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, #3a0ca3 0%, #480ca8 100%);
+    }
+    
+    .dark .assigned-section-header {
+        background: linear-gradient(135deg, #3f37c9 0%, #3a0ca3 100%);
     }
     
     .dark .search-input {
@@ -907,6 +952,147 @@
     .dark .required-field-text i {
         color: #dc3545;
     }
+
+    /* Gender Distribution Card */
+    .gender-distribution-card {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        height: 100%;
+        border: 1px solid var(--gray-200);
+    }
+    
+    .gender-distribution-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .gender-distribution-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .gender-distribution-body {
+        padding: 1.25rem;
+    }
+    
+    .gender-stat {
+        border-radius: 8px;
+        padding: 1rem;
+        background-color: rgba(67, 97, 238, 0.05);
+        margin-bottom: 1rem;
+        border: 1px solid rgba(67, 97, 238, 0.1);
+    }
+    
+    .gender-stat:last-child {
+        margin-bottom: 0;
+    }
+    
+    .gender-stat-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .gender-stat-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+    
+    /* Search and Filter Enhancements */
+    .search-filter-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--gray-200);
+    }
+    
+    .search-wrapper {
+        position: relative;
+    }
+    
+    .search-input {
+        padding-left: 3rem;
+        height: 3rem;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-300);
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+    
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-500);
+        font-size: 1.25rem;
+    }
+    
+    .filter-dropdown {
+        height: 3rem;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--gray-300);
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+    
+    .filter-dropdown:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+    
+    /* Dark mode improvements */
+    .dark .gender-distribution-card {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+    }
+    
+    .dark .gender-distribution-header {
+        border-bottom-color: var(--border-color);
+    }
+    
+    .dark .gender-stat {
+        background-color: rgba(67, 97, 238, 0.1);
+        border-color: rgba(67, 97, 238, 0.2);
+    }
+    
+    .dark .gender-stat:hover {
+        background-color: rgba(67, 97, 238, 0.15);
+    }
+    
+    .dark .gender-stat-value {
+        color: var(--text-color);
+    }
+    
+    .dark .grade-level-header {
+        background: linear-gradient(135deg, #3a0ca3 0%, #480ca8 100%);
+    }
+    
+    .dark .assigned-section-header {
+        background: linear-gradient(135deg, #3f37c9 0%, #3a0ca3 100%);
+    }
+    
+    .dark .section-header {
+        background: linear-gradient(to right, rgba(67, 97, 238, 0.15), rgba(67, 97, 238, 0.25));
+    }
+    
+    .dark .search-filter-card {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+    }
 </style>
 @endpush
 
@@ -958,56 +1144,52 @@
     @endif
 
     @if($students->count() > 0)
-        <!-- Quick Analytics -->
+        <!-- Improved Statistics Cards with Gender Distribution -->
         <div class="row mb-4">
-            <!-- Key Stats -->
             <div class="col-lg-9">
                 <div class="row">
                     <!-- Total Students -->
-                    <div class="col-md-3 mb-4">
-                        <div class="counter-card bg-gradient-primary shadow">
+                    <div class="col-md-4 mb-4">
+                        <div class="counter-card" style="background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);">
+                            <div class="counter-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
                             <div class="counter-title">Total Students</div>
                             <div class="counter-value">{{ $students->count() }}</div>
-                            <div class="d-flex align-items-center mt-2">
-                                <div class="rounded-circle p-2 me-2" style="background-color: rgba(255, 255, 255, 0.2);">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div class="small">Across all sections</div>
-                            </div>
+                            <div class="counter-subtitle">Across all sections</div>
                         </div>
                     </div>
                     
                     <!-- Sections Count -->
-                    <div class="col-md-3 mb-4">
-                        <div class="counter-card bg-gradient-success shadow">
+                    <div class="col-md-4 mb-4">
+                        <div class="counter-card" style="background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);">
+                            <div class="counter-icon">
+                                <i class="fas fa-door-open"></i>
+                            </div>
                             <div class="counter-title">Active Sections</div>
                             <div class="counter-value">{{ $students->pluck('section.name')->unique()->count() }}</div>
-                            <div class="d-flex align-items-center mt-2">
-                                <div class="rounded-circle p-2 me-2" style="background-color: rgba(255, 255, 255, 0.2);">
-                                    <i class="fas fa-door-open"></i>
-                                </div>
-                                <div class="small">Under your supervision</div>
-                            </div>
+                            <div class="counter-subtitle">Under your supervision</div>
                         </div>
                     </div>
                     
                     <!-- Grade Levels -->
-                    <div class="col-md-3 mb-4">
-                        <div class="counter-card bg-gradient-info shadow">
+                    <div class="col-md-4 mb-4">
+                        <div class="counter-card" style="background: linear-gradient(135deg, #4895ef 0%, #3f37c9 100%);">
+                            <div class="counter-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
                             <div class="counter-title">Grade Levels</div>
                             <div class="counter-value">{{ $students->pluck('section.grade_level')->unique()->count() }}</div>
-                            <div class="d-flex align-items-center mt-2">
-                                <div class="rounded-circle p-2 me-2" style="background-color: rgba(255, 255, 255, 0.2);">
-                                    <i class="fas fa-layer-group"></i>
-                                </div>
-                                <div class="small">Active curriculum levels</div>
-                            </div>
+                            <div class="counter-subtitle">Active curriculum levels</div>
                         </div>
                     </div>
                     
                     <!-- Average Age -->
-                    <div class="col-md-3 mb-4">
-                        <div class="counter-card bg-gradient-warning shadow">
+                    <div class="col-md-4 mb-4">
+                        <div class="counter-card" style="background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);">
+                            <div class="counter-icon">
+                                <i class="fas fa-birthday-cake"></i>
+                            </div>
                             <div class="counter-title">Average Age</div>
                             <div class="counter-value">
                                 @php
@@ -1024,112 +1206,117 @@
                                 @endphp
                                 {{ $averageAge }}
                             </div>
-                            <div class="d-flex align-items-center mt-2">
-                                <div class="rounded-circle p-2 me-2" style="background-color: rgba(255, 255, 255, 0.2);">
-                                    <i class="fas fa-birthday-cake"></i>
-                                </div>
-                                <div class="small">Years old</div>
-                            </div>
+                            <div class="counter-subtitle">Years old</div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Gender Distribution -->
+            <!-- Improved Gender Distribution -->
             <div class="col-lg-3 mb-4">
-                <div class="analytics-container h-100 shadow-sm">
-                    <h6 class="analytics-title d-flex align-items-center">
-                        <span class="bg-info bg-opacity-10 p-2 rounded-circle me-2 text-info">
-                            <i class="fas fa-venus-mars"></i>
-                        </span>
-                        Gender Distribution
-                    </h6>
-                    
-                    <!-- Section selector for gender distribution -->
-                    <div class="mb-3">
-                        <select id="genderSectionFilter" class="form-select form-select-sm">
-                            <option value="all">All Sections</option>
-                            @foreach($students->pluck('section.name', 'section.id')->unique() as $id => $name)
-                                <option value="{{ $id }}">{{ $name }}</option>
-                            @endforeach
-                        </select>
+                <div class="gender-distribution-card h-100">
+                    <div class="gender-distribution-header">
+                        <h6 class="gender-distribution-title">
+                            <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-2 text-primary d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                <i class="fas fa-venus-mars"></i>
+                            </span>
+                            Gender Distribution
+                        </h6>
                     </div>
                     
-                    @php
-                        // Debug: collect all unique gender values from the database
-                        $uniqueGenders = $students->pluck('gender')->unique()->toArray();
-                        
-                        // Convert to lowercase for case-insensitive comparison
-                        $maleCount = $students->filter(function($student) {
-                            return strtolower($student->gender) === 'male';
-                        })->count();
-                        
-                        $femaleCount = $students->filter(function($student) {
-                            return strtolower($student->gender) === 'female';
-                        })->count();
-                        
-                        $totalStudents = $students->count();
-                        $malePercentage = $totalStudents > 0 ? round(($maleCount / $totalStudents) * 100) : 0;
-                        $femalePercentage = $totalStudents > 0 ? round(($femaleCount / $totalStudents) * 100) : 0;
-                    @endphp
-                    
-                    <div id="gender-stats-container">
-                        <div class="gender-stat d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-male text-primary me-2"></i> Male Students
-                            </div>
-                            <div class="fw-bold">{{ $maleCount }} ({{ $malePercentage }}%)</div>
+                    <div class="gender-distribution-body">
+                        <!-- Section selector for gender distribution -->
+                        <div class="mb-3">
+                            <select id="genderSectionFilter" class="form-select">
+                                <option value="all">All Sections</option>
+                                @foreach($students->pluck('section.name', 'section.id')->unique() as $id => $name)
+                                    <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         
-                        <div class="gender-stat d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-female text-danger me-2"></i> Female Students
-                            </div>
-                            <div class="fw-bold">{{ $femaleCount }} ({{ $femalePercentage }}%)</div>
-                        </div>
+                        @php
+                            // Convert to lowercase for case-insensitive comparison
+                            $maleCount = $students->filter(function($student) {
+                                return strtolower($student->gender) === 'male';
+                            })->count();
+                            
+                            $femaleCount = $students->filter(function($student) {
+                                return strtolower($student->gender) === 'female';
+                            })->count();
+                            
+                            $totalStudents = $students->count();
+                            $malePercentage = $totalStudents > 0 ? round(($maleCount / $totalStudents) * 100) : 0;
+                            $femalePercentage = $totalStudents > 0 ? round(($femaleCount / $totalStudents) * 100) : 0;
+                        @endphp
                         
-                        <div class="progress mt-3" style="height: 10px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: <?php echo $malePercentage; ?>%" aria-valuenow="<?php echo $malePercentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: <?php echo $femalePercentage; ?>%" aria-valuenow="<?php echo $femalePercentage; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div id="gender-stats-container">
+                            <div class="gender-stat">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="gender-stat-label">
+                                        <i class="fas fa-male text-primary me-2"></i> Male Students
+                                    </div>
+                                    <div class="gender-stat-value">{{ $maleCount }}</div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $malePercentage }}%"></div>
+                                </div>
+                                <div class="text-end mt-1">
+                                    <small class="text-muted">{{ $malePercentage }}%</small>
+                                </div>
+                            </div>
+                            
+                            <div class="gender-stat">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div class="gender-stat-label">
+                                        <i class="fas fa-female text-danger me-2"></i> Female Students
+                                    </div>
+                                    <div class="gender-stat-value">{{ $femaleCount }}</div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $femalePercentage }}%"></div>
+                                </div>
+                                <div class="text-end mt-1">
+                                    <small class="text-muted">{{ $femalePercentage }}%</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Search and Filter Row -->
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body p-4">
-                <div class="row g-3">
-                    <!-- Search Input -->
-                    <div class="col-md-6">
-                        <label for="studentSearch" class="form-label small text-muted mb-1">Search Students</label>
-                        <div class="search-wrapper">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="studentSearch" class="form-control search-input" placeholder="Search by name, ID, or section...">
-                        </div>
+        <!-- Improved Search and Filter Section -->
+        <div class="search-filter-card mb-4">
+            <div class="row g-3">
+                <!-- Search Input -->
+                <div class="col-md-6">
+                    <label for="studentSearch" class="form-label fw-medium mb-2">Search Students</label>
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="studentSearch" class="form-control search-input" placeholder="Search by name, ID, or section...">
                     </div>
-                    
-                    <!-- Filter Dropdowns -->
-                    <div class="col-md-3">
-                        <label for="gradeFilter" class="form-label small text-muted mb-1">Grade Level</label>
-                        <select id="gradeFilter" class="form-select filter-dropdown">
-                            <option value="">All Grade Levels</option>
-                            @foreach($students->pluck('section.grade_level')->unique()->sort() as $gradeLevel)
-                                <option value="{{ $gradeLevel }}">Grade {{ $gradeLevel }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label for="sectionFilter" class="form-label small text-muted mb-1">Section</label>
-                        <select id="sectionFilter" class="form-select filter-dropdown">
-                            <option value="">All Sections</option>
-                            @foreach($students->pluck('section.name', 'section.id')->unique() as $id => $name)
-                                <option value="{{ $id }}">{{ $name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                </div>
+                
+                <!-- Filter Dropdowns -->
+                <div class="col-md-3">
+                    <label for="gradeFilter" class="form-label fw-medium mb-2">Grade Level</label>
+                    <select id="gradeFilter" class="form-select filter-dropdown">
+                        <option value="">All Grade Levels</option>
+                        @foreach($students->pluck('section.grade_level')->unique()->sort() as $gradeLevel)
+                            <option value="{{ $gradeLevel }}">Grade {{ $gradeLevel }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="sectionFilter" class="form-label fw-medium mb-2">Section</label>
+                    <select id="sectionFilter" class="form-select filter-dropdown">
+                        <option value="">All Sections</option>
+                        @foreach($students->pluck('section.name', 'section.id')->unique() as $id => $name)
+                            <option value="{{ $id }}">{{ $name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </div>
@@ -1145,14 +1332,14 @@
             <div class="grade-level-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h4 class="mb-0 d-flex align-items-center">
-                        <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-3 text-primary">
+                        <span class="bg-white bg-opacity-25 p-2 rounded-circle me-3 text-white">
                             <i class="fas fa-graduation-cap"></i>
                         </span>
                         Grade {{ $gradeLevel }}
-                        <span class="badge bg-primary ms-2 badge-count">{{ $gradeStudents->count() }} students</span>
+                        <span class="badge ms-2 badge-count">{{ $gradeStudents->count() }} students</span>
                     </h4>
                     <div>
-                        <button class="btn btn-sm btn-outline-primary toggle-grade-btn rounded-pill" data-grade="{{ $gradeLevel }}">
+                        <button class="btn btn-sm toggle-grade-btn rounded-pill" data-grade="{{ $gradeLevel }}">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                     </div>
@@ -1171,11 +1358,11 @@
                     <div class="section-header" data-section-id="{{ $sectionStudents->first()->section->id ?? '' }}">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 d-flex align-items-center">
-                                <span class="bg-info bg-opacity-10 p-2 rounded-circle me-2 text-info">
+                                <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-2 text-primary">
                                     <i class="fas fa-users"></i>
                                 </span>
-                                Section: {{ $sectionName }}
-                                <span class="badge bg-info ms-2 badge-count">{{ $sectionStudents->count() }} students</span>
+                                {{ $sectionName }}
+                                <span class="badge bg-primary ms-2 badge-count">{{ $sectionStudents->count() }} students</span>
                             </h5>
                         </div>
                     </div>
@@ -1297,22 +1484,19 @@
         
         <!-- Assigned Subjects Sections -->
         @if($assignedStudents->count() > 0)
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-body p-4 bg-gradient-light">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="mb-0 d-flex align-items-center">
-                            <span class="bg-primary p-2 rounded-circle me-3 text-white">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                            </span>
-                            Assigned Subject Sections
-                            <span class="badge bg-primary ms-2 badge-count">{{ $assignedSections->count() }} sections</span>
-                        </h4>
-                    </div>
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Sections where you teach subjects but are not the adviser. You can only view grades for subjects you teach.
-                    </p>
+            <div class="assigned-section-header">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0 d-flex align-items-center">
+                        <span class="bg-white bg-opacity-25 p-2 rounded-circle me-3 text-white">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </span>
+                        Assigned Subject Sections
+                    </h4>
                 </div>
+                <p class="mb-0">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Sections where you teach subjects but are not the adviser. You can only view grades for subjects you teach.
+                </p>
             </div>
             
             <!-- Group assigned students by section -->
@@ -1581,23 +1765,34 @@
                 .then(data => {
                     // Create the gender stats HTML
                     let html = `
-                        <div class="gender-stat d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-male text-primary me-2"></i> Male Students
+                        <div class="gender-stat">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div class="gender-stat-label">
+                                    <i class="fas fa-male text-primary me-2"></i> Male Students
+                                </div>
+                                <div class="gender-stat-value">${data.male_count}</div>
                             </div>
-                            <div class="fw-bold">${data.male_count} (${data.male_percentage}%)</div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: ${data.male_percentage}%"></div>
+                            </div>
+                            <div class="text-end mt-1">
+                                <small class="text-muted">${data.male_percentage}%</small>
+                            </div>
                         </div>
                         
-                        <div class="gender-stat d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-female text-danger me-2"></i> Female Students
+                        <div class="gender-stat">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div class="gender-stat-label">
+                                    <i class="fas fa-female text-danger me-2"></i> Female Students
+                                </div>
+                                <div class="gender-stat-value">${data.female_count}</div>
                             </div>
-                            <div class="fw-bold">${data.female_count} (${data.female_percentage}%)</div>
-                        </div>
-                        
-                        <div class="progress mt-3" style="height: 10px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: ${data.male_percentage}%" aria-valuenow="${data.male_percentage}" aria-valuemin="0" aria-valuemax="100"></div>
-                            <div class="progress-bar bg-danger" role="progressbar" style="width: ${data.female_percentage}%" aria-valuenow="${data.female_percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" role="progressbar" style="width: ${data.female_percentage}%"></div>
+                            </div>
+                            <div class="text-end mt-1">
+                                <small class="text-muted">${data.female_percentage}%</small>
+                            </div>
                         </div>
                     `;
                     
@@ -1616,7 +1811,11 @@
         }
 
         // Call updateGenderDistribution when page loads
-        updateGenderDistribution();
+        if (genderSectionFilter) {
+            updateGenderDistribution();
+            // Add event listener
+            genderSectionFilter.addEventListener('change', updateGenderDistribution);
+        }
 
         // Toggle grade level sections
         toggleGradeBtns.forEach(btn => {
@@ -1625,27 +1824,38 @@
                 const container = document.querySelector(`.grade-level-container[data-grade="${grade}"]`);
                 const icon = this.querySelector('i');
                 
-                container.classList.toggle('d-none');
-                icon.classList.toggle('fa-chevron-down');
-                icon.classList.toggle('fa-chevron-up');
+                if (container) {
+                    container.classList.toggle('d-none');
+                    icon.classList.toggle('fa-chevron-down');
+                    icon.classList.toggle('fa-chevron-up');
+                }
             });
         });
 
-        // Add event listeners
-        studentSearch.addEventListener('input', filterStudents);
-        gradeFilter.addEventListener('change', filterStudents);
-        sectionFilter.addEventListener('change', filterStudents);
-        genderSectionFilter.addEventListener('change', updateGenderDistribution);
+        // Add event listeners for search and filters
+        if (studentSearch) {
+            studentSearch.addEventListener('input', filterStudents);
+        }
+        
+        if (gradeFilter) {
+            gradeFilter.addEventListener('change', filterStudents);
+        }
+        
+        if (sectionFilter) {
+            sectionFilter.addEventListener('change', filterStudents);
+        }
         
         // Reset filters
-        resetFiltersBtn.addEventListener('click', function() {
-            studentSearch.value = '';
-            gradeFilter.value = '';
-            sectionFilter.value = '';
-            genderSectionFilter.value = 'all';
-            filterStudents();
-            updateGenderDistribution();
-        });
+        if (resetFiltersBtn) {
+            resetFiltersBtn.addEventListener('click', function() {
+                if (studentSearch) studentSearch.value = '';
+                if (gradeFilter) gradeFilter.value = '';
+                if (sectionFilter) sectionFilter.value = '';
+                if (genderSectionFilter) genderSectionFilter.value = 'all';
+                filterStudents();
+                if (genderSectionFilter) updateGenderDistribution();
+            });
+        }
         
         // Fix dropdown functionality for "View Subject Grades"
         document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
@@ -1661,7 +1871,9 @@
                 });
                 
                 // Toggle current dropdown
-                dropdownMenu.classList.toggle('show');
+                if (dropdownMenu) {
+                    dropdownMenu.classList.toggle('show');
+                }
             });
         });
         

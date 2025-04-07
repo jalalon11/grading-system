@@ -441,16 +441,54 @@ class ReportController extends Controller
         // Validate the request
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
-            'quarter' => 'required|in:Q1,Q2,Q3,Q4',
+            'quarter' => 'required|in:Q1,Q2,Q3,Q4,all',
             'debug' => 'nullable|boolean',
             'transmutation_table' => 'nullable|in:1,2,3,4',
         ]);
 
         $debug = $request->has('debug') ? (bool)$request->debug : false;
         $transmutationTable = $request->input('transmutation_table', 1); // Default to table 1 if not specified
+        $isAllQuarters = $validated['quarter'] === 'all';
 
         $teacher = Auth::user();
         $section = Section::with('adviser', 'school')->findOrFail($validated['section_id']);
+
+        // If 'all' is selected for quarter, we'll handle it differently
+        if ($isAllQuarters) {
+            // Get all students in the section
+            $students = Student::where('section_id', $section->id)
+                ->orderBy('gender')
+                ->orderBy('last_name')
+                ->orderBy('first_name')
+                ->get();
+
+            // For the all quarters view, we'll use Q1 as the base quarter for the list view
+            // The actual all quarters data will be loaded when viewing individual student grade slips
+            return view('teacher.reports.grade_slips_list', [
+                'section' => $section,
+                'quarter' => 'Q1',  // Use Q1 as base quarter for the list
+                'quarterName' => 'All Quarters',
+                'subjects' => $section->subjects()->where('subjects.is_active', true)->orderBy('subjects.name')->get(),
+                'students' => $students,
+                'studentGrades' => [],
+                'gradeApprovals' => [],
+                'mapehSubjects' => [],
+                'mapehComponents' => [],
+                'mapehParentMap' => [],
+                'schoolYear' => $section->school_year ?? date('Y') . '-' . (date('Y') + 1),
+                'currentTime' => Carbon::now('Asia/Manila'),
+                'debug' => $debug,
+                'debugData' => [],
+                'transmutationTable' => $transmutationTable,
+                'transmutationTableNames' => [
+                    1 => 'DepEd Transmutation Table',
+                    2 => 'Grades 1-10 & Non-Core TVL',
+                    3 => 'SHS Core & Work Immersion',
+                    4 => 'SHS Academic Track'
+                ],
+                'isAllQuarters' => true
+            ]);
+        }
 
         // Check if teacher is the adviser of this section
         if ($section->adviser_id != $teacher->id) {
@@ -748,13 +786,15 @@ class ReportController extends Controller
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'section_id' => 'required|exists:sections,id',
-            'quarter' => 'required|in:Q1,Q2,Q3,Q4',
+            'quarter' => 'required|in:Q1,Q2,Q3,Q4,all',
             'debug' => 'nullable|boolean',
             'transmutation_table' => 'nullable|in:1,2,3,4',
+            'all_quarters' => 'nullable|boolean',
         ]);
 
         $debug = $request->has('debug') ? (bool)$request->debug : false;
         $transmutationTable = $request->input('transmutation_table', 1); // Default to table 1 if not specified
+        $allQuarters = $request->has('all_quarters') ? (bool)$request->all_quarters : ($validated['quarter'] === 'all');
 
         $teacher = Auth::user();
         $student = Student::findOrFail($validated['student_id']);
@@ -771,7 +811,8 @@ class ReportController extends Controller
             'student_name' => $student->first_name . ' ' . $student->last_name,
             'section_id' => $section->id,
             'section_name' => $section->name,
-            'quarter' => $validated['quarter']
+            'quarter' => $validated['quarter'],
+            'all_quarters' => $allQuarters
         ]);
 
         // Get all subjects for this section
@@ -782,12 +823,20 @@ class ReportController extends Controller
 
         // Identify MAPEH subjects
         $mapehSubjects = $subjects->filter(function($subject) {
-            return $subject->is_mapeh;
+            return $subject->getIsMAPEHAttribute();
         });
 
-        $mapehComponents = $subjects->filter(function($subject) {
+        // Get all MAPEH component subjects (including those not in the section)
+        $allComponents = \App\Models\Subject::where('is_component', true)
+            ->whereIn('parent_subject_id', $mapehSubjects->pluck('id'))
+            ->get();
+
+        // Combine section components with all components
+        $sectionComponents = $subjects->filter(function($subject) {
             return $subject->mapeh_component;
         });
+
+        $mapehComponents = $sectionComponents->merge($allComponents)->unique('id');
 
         // Create a map of MAPEH components to their parent subject
         $mapehParentMap = [];
@@ -799,6 +848,11 @@ class ReportController extends Controller
             if ($parent) {
                 $mapehParentMap[$component->id] = $parent->id;
             }
+        }
+
+        // If showing all quarters, we'll process each quarter separately
+        if ($allQuarters) {
+            return $this->previewAllQuartersGradeSlip($student, $section, $subjects, $mapehSubjects, $mapehComponents, $mapehParentMap, $transmutationTable, $debug);
         }
 
         // Get all grade approvals for this section, quarter, and subjects
@@ -827,9 +881,39 @@ class ReportController extends Controller
         // Initialize student grades array
         $studentGrades = [];
 
-        // Process each subject
+        // First, process MAPEH components directly to ensure we have their grades
         foreach ($subjects as $subject) {
-            // Skip MAPEH components as they'll be handled with their parent
+            if ($subject->mapeh_component) {
+                // Get the component's grade configuration
+                $componentConfig = GradeConfiguration::where('subject_id', $subject->id)->first();
+                if (!$componentConfig) {
+                    // Use default percentages if no configuration exists
+                    $componentConfig = new GradeConfiguration([
+                        'written_work_percentage' => 25,
+                        'performance_task_percentage' => 50,
+                        'quarterly_assessment_percentage' => 25,
+                    ]);
+                }
+
+                // Calculate the component grade
+                $componentGrade = $this->calculateSubjectGrade(
+                    $student,
+                    $subject,
+                    $validated['quarter'],
+                    $componentConfig,
+                    $transmutationTable
+                );
+
+                if ($componentGrade) {
+                    // Store the component grade directly in studentGrades
+                    $studentGrades[$subject->id] = $componentGrade;
+                }
+            }
+        }
+
+        // Now process regular subjects and MAPEH parent subjects
+        foreach ($subjects as $subject) {
+            // Skip MAPEH components as we've already processed them
             if ($subject->mapeh_component) {
                 continue;
             }
@@ -851,34 +935,50 @@ class ReportController extends Controller
 
                 // Process each component
                 foreach ($components as $component) {
-                    // Get the component's grade configuration
-                    $componentConfig = GradeConfiguration::where('subject_id', $component->id)->first();
-                    if (!$componentConfig) {
-                        // Use default percentages if no configuration exists
-                        $componentConfig = new GradeConfiguration([
-                            'written_work_percentage' => 25,
-                            'performance_task_percentage' => 50,
-                            'quarterly_assessment_percentage' => 25,
-                        ]);
-                    }
+                    // Check if we already have the component grade
+                    if (isset($studentGrades[$component->id])) {
+                        $componentGrade = $studentGrades[$component->id];
 
-                    // Get all grades for this student in this component and quarter
-                    $componentGrades[$component->id] = $this->calculateSubjectGrade(
-                        $student,
-                        $component,
-                        $validated['quarter'],
-                        $componentConfig,
-                        $transmutationTable
-                    );
+                        // Store the component grade in the MAPEH component_grades array
+                        $componentGrades[$component->id] = $componentGrade;
 
-                    // If component has a grade, include it in the MAPEH average
-                    if (isset($componentGrades[$component->id])) {
-                        $grade = $componentGrades[$component->id]->quarterly_grade;
-                        // Use component weight if available, otherwise default to equal weights
-                        $componentWeight = $component->component_weight ?? 25;
-                        $totalWeightedGrade += ($grade * $componentWeight);
+                        // Add to weighted average calculation
+                        $componentWeight = $component->component_weight ?? 25; // Default to 25% if not set
+                        $totalWeightedGrade += ($componentGrade->quarterly_grade * $componentWeight);
                         $totalWeight += $componentWeight;
                         $componentCount++;
+                    } else {
+                        // If we don't have the grade yet, calculate it
+                        $componentConfig = GradeConfiguration::where('subject_id', $component->id)->first();
+                        if (!$componentConfig) {
+                            // Use default percentages if no configuration exists
+                            $componentConfig = new GradeConfiguration([
+                                'written_work_percentage' => 25,
+                                'performance_task_percentage' => 50,
+                                'quarterly_assessment_percentage' => 25,
+                            ]);
+                        }
+
+                        // Calculate the component grade
+                        $componentGrade = $this->calculateSubjectGrade(
+                            $student,
+                            $component,
+                            $validated['quarter'],
+                            $componentConfig,
+                            $transmutationTable
+                        );
+
+                        if ($componentGrade) {
+                            // Store the component grade
+                            $componentGrades[$component->id] = $componentGrade;
+                            $studentGrades[$component->id] = $componentGrade; // Also store directly
+
+                            // Add to weighted average calculation
+                            $componentWeight = $component->component_weight ?? 25; // Default to 25% if not set
+                            $totalWeightedGrade += ($componentGrade->quarterly_grade * $componentWeight);
+                            $totalWeight += $componentWeight;
+                            $componentCount++;
+                        }
                     }
                 }
 
@@ -890,6 +990,7 @@ class ReportController extends Controller
                     // Store the MAPEH grade
                     $studentGrades[$subject->id] = (object) [
                         'quarterly_grade' => $mapehGrade,
+                        'transmuted_grade' => GradeHelper::getTransmutedGrade($mapehGrade, $transmutationTable),
                         'component_grades' => $componentGrades,
                         'remarks' => $mapehGrade >= 75 ? 'Passed' : 'Failed'
                     ];
@@ -1005,6 +1106,7 @@ class ReportController extends Controller
             'subjects' => $subjects->reject(function($subject) {
                 return $subject->mapeh_component;
             }),
+            'extendedApprovals' => $extendedApprovals,
             'studentGrades' => $studentGrades,
             'gradeApprovals' => $extendedApprovals,
             'mapehSubjects' => $mapehSubjects,
@@ -1013,6 +1115,307 @@ class ReportController extends Controller
             'schoolYear' => $schoolYear,
             'overallAverage' => $overallAverage,
             'allPassed' => $allPassed,
+            'currentTime' => $currentTime,
+            'debug' => $debug,
+            'debugData' => $debugData,
+            'transmutationTable' => $transmutationTable,
+            'transmutationTableNames' => [
+                1 => 'DepEd Transmutation Table',
+                2 => 'Grades 1-10 & Non-Core TVL',
+                3 => 'SHS Core & Work Immersion',
+                4 => 'SHS Academic Track'
+            ],
+        ]);
+    }
+
+    /**
+     * Preview a student's grade slip for all quarters
+     *
+     * @param object $student The student object
+     * @param object $section The section object
+     * @param object $subjects Collection of subjects
+     * @param object $mapehSubjects Collection of MAPEH subjects
+     * @param object $mapehComponents Collection of MAPEH components
+     * @param array $mapehParentMap Map of MAPEH components to their parent subjects
+     * @param int $transmutationTable The transmutation table to use (1-4)
+     * @return \Illuminate\View\View
+     */
+    private function previewAllQuartersGradeSlip($student, $section, $subjects, $mapehSubjects, $mapehComponents, $mapehParentMap, $transmutationTable, $debug = false)
+    {
+        // Get current school year
+        $schoolYear = $section->school_year ?? date('Y') . '-' . (date('Y') + 1);
+
+        // Get current time in Manila timezone
+        $currentTime = Carbon::now('Asia/Manila');
+
+        // Initialize arrays to store grades for all quarters
+        $allQuartersGrades = [
+            'Q1' => [],
+            'Q2' => [],
+            'Q3' => [],
+            'Q4' => []
+        ];
+
+        // Initialize arrays for quarterly averages, final grades, and approvals
+        $quarterlyAverages = [];
+        $finalGrades = [];
+        $finalComponentGrades = [];
+        $allQuartersApprovals = [
+            'Q1' => [],
+            'Q2' => [],
+            'Q3' => [],
+            'Q4' => []
+        ];
+
+        // Process each quarter
+        foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $quarter) {
+            // Get all grade approvals for this section, quarter, and subjects
+            $gradeApprovals = GradeApproval::where('section_id', $section->id)
+                ->where('quarter', $quarter)
+                ->whereIn('subject_id', $subjects->pluck('id'))
+                ->get()
+                ->keyBy('subject_id');
+
+            // Extend approvals to include MAPEH components if the parent is approved
+            $extendedApprovals = clone $gradeApprovals;
+            foreach ($mapehParentMap as $componentId => $parentId) {
+                if (isset($gradeApprovals[$parentId]) && $gradeApprovals[$parentId]->is_approved) {
+                    // Create a virtual approval for the component
+                    $componentApproval = new GradeApproval([
+                        'subject_id' => $componentId,
+                        'section_id' => $section->id,
+                        'quarter' => $quarter,
+                        'is_approved' => true,
+                        'inherited_from_parent' => true
+                    ]);
+                    $extendedApprovals[$componentId] = $componentApproval;
+                }
+            }
+
+            // Store the approvals for this quarter
+            $allQuartersApprovals[$quarter] = $extendedApprovals;
+
+            // Process each subject
+            foreach ($subjects as $subject) {
+                // Skip MAPEH components as they'll be handled with their parent
+                if ($subject->mapeh_component) {
+                    continue;
+                }
+
+                // Check if this is a MAPEH subject
+                $isMAPEH = $subject->is_mapeh;
+
+                if ($isMAPEH) {
+                    // Handle MAPEH subject (get component grades and calculate average)
+                    $componentGrades = [];
+                    $totalWeightedGrade = 0;
+                    $totalWeight = 0;
+                    $componentCount = 0;
+
+                    // Find all components for this MAPEH subject
+                    $components = $mapehComponents->filter(function($comp) use ($subject) {
+                        return $comp->parent_subject_id == $subject->id;
+                    });
+
+                    // Process each component
+                    foreach ($components as $component) {
+                        // Get the component's grade configuration
+                        $componentConfig = GradeConfiguration::where('subject_id', $component->id)->first();
+                        if (!$componentConfig) {
+                            // Use default percentages if no configuration exists
+                            $componentConfig = new GradeConfiguration([
+                                'written_work_percentage' => 25,
+                                'performance_task_percentage' => 50,
+                                'quarterly_assessment_percentage' => 25,
+                            ]);
+                        }
+
+                        // Get all grades for this student in this component and quarter
+                        $componentGrades[$component->id] = $this->calculateSubjectGrade(
+                            $student,
+                            $component,
+                            $quarter,
+                            $componentConfig,
+                            $transmutationTable
+                        );
+
+                        // If component has a grade, include it in the MAPEH average
+                        if (isset($componentGrades[$component->id])) {
+                            $grade = $componentGrades[$component->id]->quarterly_grade;
+                            // Use component weight if available, otherwise default to equal weights
+                            $componentWeight = $component->component_weight ?? 25;
+                            $totalWeightedGrade += ($grade * $componentWeight);
+                            $totalWeight += $componentWeight;
+                            $componentCount++;
+                        }
+                    }
+
+                    // Calculate MAPEH grade if we have components
+                    if ($componentCount > 0) {
+                        // Calculate weighted average
+                        $mapehGrade = $totalWeight > 0 ? round($totalWeightedGrade / $totalWeight, 1) : 0;
+
+                        // Store the MAPEH grade
+                        $allQuartersGrades[$quarter][$subject->id] = (object) [
+                            'quarterly_grade' => $mapehGrade,
+                            'transmuted_grade' => GradeHelper::getTransmutedGrade($mapehGrade, $transmutationTable),
+                            'component_grades' => $componentGrades,
+                            'remarks' => $mapehGrade >= 75 ? 'Passed' : 'Failed'
+                        ];
+                    }
+                } else {
+                    // Handle regular subject
+                    // Get the subject's grade configuration
+                    $gradeConfig = GradeConfiguration::where('subject_id', $subject->id)->first();
+                    if (!$gradeConfig) {
+                        // Use default percentages if no configuration exists
+                        $gradeConfig = new GradeConfiguration([
+                            'written_work_percentage' => 25,
+                            'performance_task_percentage' => 50,
+                            'quarterly_assessment_percentage' => 25,
+                        ]);
+                    }
+
+                    // Calculate the subject grade
+                    $subjectGrade = $this->calculateSubjectGrade(
+                        $student,
+                        $subject,
+                        $quarter,
+                        $gradeConfig,
+                        $transmutationTable
+                    );
+
+                    if ($subjectGrade) {
+                        $allQuartersGrades[$quarter][$subject->id] = $subjectGrade;
+                    }
+                }
+            }
+
+            // Calculate overall average for this quarter
+            $totalGrade = 0;
+            $subjectCount = 0;
+
+            foreach ($allQuartersGrades[$quarter] as $subjectId => $grade) {
+                // Only include approved grades in the average
+                if (isset($allQuartersApprovals[$quarter][$subjectId]) && $allQuartersApprovals[$quarter][$subjectId]->is_approved) {
+                    $totalGrade += $grade->quarterly_grade;
+                    $subjectCount++;
+                }
+            }
+
+            $quarterlyAverages[$quarter] = $subjectCount > 0 ?
+                GradeHelper::getTransmutedGrade(round($totalGrade / $subjectCount, 1), $transmutationTable) :
+                null;
+        }
+
+        // Calculate final grades for each subject
+        foreach ($subjects as $subject) {
+            if ($subject->mapeh_component) {
+                continue;
+            }
+
+            $totalGrade = 0;
+            $quarterCount = 0;
+
+            foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $quarter) {
+                if (isset($allQuartersGrades[$quarter][$subject->id])) {
+                    $totalGrade += $allQuartersGrades[$quarter][$subject->id]->transmuted_grade;
+                    $quarterCount++;
+                }
+            }
+
+            if ($quarterCount > 0) {
+                $finalGrades[$subject->id] = round($totalGrade / $quarterCount);
+            }
+
+            // If this is MAPEH, calculate final grades for components too
+            if ($subject->is_mapeh) {
+                $components = $mapehComponents->filter(function($comp) use ($subject) {
+                    return $comp->parent_subject_id == $subject->id;
+                });
+
+                foreach ($components as $component) {
+                    $totalComponentGrade = 0;
+                    $componentQuarterCount = 0;
+
+                    foreach (['Q1', 'Q2', 'Q3', 'Q4'] as $quarter) {
+                        if (isset($allQuartersGrades[$quarter][$subject->id]) &&
+                            isset($allQuartersGrades[$quarter][$subject->id]->component_grades[$component->id])) {
+                            $componentGrade = $allQuartersGrades[$quarter][$subject->id]->component_grades[$component->id];
+                            if (isset($componentGrade->transmuted_grade)) {
+                                $totalComponentGrade += $componentGrade->transmuted_grade;
+                                $componentQuarterCount++;
+                            }
+                        }
+                    }
+
+                    if ($componentQuarterCount > 0) {
+                        $finalComponentGrades[$component->id] = round($totalComponentGrade / $componentQuarterCount);
+                    }
+                }
+            }
+        }
+
+        // Calculate overall final average
+        $totalFinalGrade = 0;
+        $finalSubjectCount = 0;
+
+        foreach ($finalGrades as $subjectId => $grade) {
+            $totalFinalGrade += $grade;
+            $finalSubjectCount++;
+        }
+
+        $overallFinalAverage = $finalSubjectCount > 0 ? round($totalFinalGrade / $finalSubjectCount) : null;
+
+        // Create debug data
+        $debugData = [];
+        if ($debug) {
+            $debugData = [
+                'student' => [
+                    'id' => $student->id,
+                    'name' => $student->first_name . ' ' . $student->last_name,
+                    'student_id' => $student->student_id
+                ],
+                'section' => [
+                    'id' => $section->id,
+                    'name' => $section->name,
+                    'grade_level' => $section->grade_level
+                ],
+                'quarterly_grades' => $allQuartersGrades,
+                'quarterly_averages' => $quarterlyAverages,
+                'final_grades' => $finalGrades,
+                'overall_final_average' => $overallFinalAverage
+            ];
+        }
+
+        // Log debug data
+        Log::info('All Quarters Grade Slip - Complete data', [
+            'student_id' => $student->id,
+            'student_name' => $student->first_name . ' ' . $student->last_name,
+            'section_id' => $section->id,
+            'section_name' => $section->name,
+            'quarterly_averages' => $quarterlyAverages,
+            'final_grades_count' => count($finalGrades),
+            'overall_final_average' => $overallFinalAverage
+        ]);
+
+        return view('teacher.reports.grade_slip_all_quarters', [
+            'student' => $student,
+            'section' => $section,
+            'quarter' => 'all',
+            'subjects' => $subjects->reject(function($subject) {
+                return $subject->mapeh_component;
+            }),
+            'allQuartersGrades' => $allQuartersGrades,
+            'allQuartersApprovals' => $allQuartersApprovals,
+            'mapehSubjects' => $mapehSubjects,
+            'mapehComponents' => $mapehComponents,
+            'mapehParentMap' => $mapehParentMap,
+            'schoolYear' => $schoolYear,
+            'quarterlyAverages' => $quarterlyAverages,
+            'finalGrades' => $finalGrades,
+            'finalComponentGrades' => $finalComponentGrades,
+            'overallFinalAverage' => $overallFinalAverage,
             'currentTime' => $currentTime,
             'debug' => $debug,
             'debugData' => $debugData,

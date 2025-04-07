@@ -110,6 +110,11 @@ class Subject extends Model
             return false;
         }
 
+        // If the subject name or code contains MAPEH, it's a MAPEH subject
+        if (stripos($this->name, 'MAPEH') !== false || (isset($this->code) && stripos($this->code, 'MAPEH') !== false)) {
+            return true;
+        }
+
         $components = $this->components;
 
         if ($components->count() !== 4) {
@@ -127,6 +132,30 @@ class Subject extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Check if this is a MAPEH component subject
+     */
+    public function getMapehComponentAttribute(): bool
+    {
+        // If this is not a component, it can't be a MAPEH component
+        if (!$this->is_component) {
+            return false;
+        }
+
+        // If this subject doesn't have a parent, it can't be a MAPEH component
+        if (!$this->parent_subject_id) {
+            return false;
+        }
+
+        // Check if the parent subject is a MAPEH subject
+        $parent = $this->parentSubject;
+        if (!$parent) {
+            return false;
+        }
+
+        return $parent->getIsMAPEHAttribute();
     }
 
     /**

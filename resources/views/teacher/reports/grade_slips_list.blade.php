@@ -10,7 +10,7 @@
                     <i class="fas fa-arrow-left"></i> Back to Grade Slips
                 </a>
             </div>
-            <p class="text-muted">{{ $quarterName }} | School Year: {{ $schoolYear }}</p>
+            <p class="text-muted">{{ $quarterName }} | School Year: {{ $schoolYear }}{{ isset($isAllQuarters) && $isAllQuarters ? ' | Showing All Quarters' : '' }}</p>
             <p class="small text-muted">Using {{ $transmutationTableNames[$transmutationTable] }}</p>
         </div>
     </div>
@@ -21,9 +21,15 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Student List</h5>
                     <div>
-                        <button class="btn btn-primary" onclick="window.print()">
-                            <i class="fas fa-print me-2"></i> Print All Grade Slips
-                        </button>
+                        @if(isset($isAllQuarters) && $isAllQuarters)
+                            <button class="btn btn-primary" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i> Print All Students (All Quarters)
+                            </button>
+                        @else
+                            <button class="btn btn-primary" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i> Print All Students ({{ $quarterName }})
+                            </button>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -53,24 +59,45 @@
                                             <td>{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</td>
                                             <td>{{ $student->gender }}</td>
                                             <td>
-                                                @php
-                                                    $subjectCount = 0;
-                                                    if (isset($studentGrades[$student->id])) {
-                                                        $subjectCount = count($studentGrades[$student->id]);
-                                                    }
-                                                @endphp
-                                                <span class="badge bg-{{ $subjectCount > 0 ? 'success' : 'warning' }} bg-opacity-10 text-{{ $subjectCount > 0 ? 'success' : 'warning' }} px-2 py-1">
-                                                    {{ $subjectCount }} / {{ $subjects->count() }}
-                                                </span>
+                                                @if(isset($isAllQuarters) && $isAllQuarters)
+                                                    <span class="badge bg-success bg-opacity-10 text-success px-2 py-1">
+                                                        All Quarters
+                                                    </span>
+                                                @else
+                                                    @php
+                                                        $subjectCount = 0;
+                                                        if (isset($studentGrades[$student->id])) {
+                                                            $subjectCount = count($studentGrades[$student->id]);
+                                                        }
+                                                    @endphp
+                                                    <span class="badge bg-{{ $subjectCount > 0 ? 'success' : 'warning' }} bg-opacity-10 text-{{ $subjectCount > 0 ? 'success' : 'warning' }} px-2 py-1">
+                                                        {{ $subjectCount }} / {{ $subjects->count() }}
+                                                    </span>
+                                                @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('teacher.reports.grade-slip-preview', [
-                                                    'student_id' => $student->id,
-                                                    'section_id' => $section->id,
-                                                    'quarter' => $quarter
-                                                ]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
-                                                    <i class="fas fa-eye me-1"></i> Preview
-                                                </a>
+                                                <div class="btn-group">
+                                                    @if(isset($isAllQuarters) && $isAllQuarters)
+                                                        <a href="{{ route('teacher.reports.grade-slip-preview', [
+                                                            'student_id' => $student->id,
+                                                            'section_id' => $section->id,
+                                                            'quarter' => $quarter,
+                                                            'all_quarters' => true,
+                                                            'transmutation_table' => $transmutationTable
+                                                        ]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                            <i class="fas fa-eye me-1"></i> View All Quarters
+                                                        </a>
+                                                    @else
+                                                        <a href="{{ route('teacher.reports.grade-slip-preview', [
+                                                            'student_id' => $student->id,
+                                                            'section_id' => $section->id,
+                                                            'quarter' => $quarter,
+                                                            'transmutation_table' => $transmutationTable
+                                                        ]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                            <i class="fas fa-eye me-1"></i> Preview
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach

@@ -1483,10 +1483,43 @@
         }
     @endphp
 
-    <!-- Just keep the Close button -->
+    <!-- Close button container -->
     <div style="margin: 10px 0; text-align: left;" class="close-button-container">
-        <button class="btn-print" onclick="window.close();" style="padding: 12px 20px; background-color: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease; min-height: 44px; min-width: 120px; display: inline-block; text-align: center;">Close</button>
+        <button class="btn-print" onclick="closeReport();" style="padding: 12px 20px; background-color: #5f6163; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s ease; min-height: 44px; min-width: 120px; display: inline-block; text-align: center;">Close</button>
     </div>
+
+    <script>
+        function closeReport() {
+            console.log('Closing report...');
+            // Try multiple methods to close the window
+            try {
+                // Method 1: Try window.close() if opened by JavaScript
+                if (window.opener) {
+                    window.close();
+                    return;
+                }
+
+                // Method 2: Check if we're in an iframe
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage('close-iframe', '*');
+                    return;
+                }
+
+                // Method 3: Go back in history if possible
+                if (window.history.length > 1) {
+                    window.history.back();
+                    return;
+                }
+
+                // Method 4: Fallback to redirect
+                window.location.href = '{{ route("teacher.reports.class-record") }}';
+            } catch (e) {
+                console.error('Error closing window:', e);
+                // Final fallback
+                window.location.href = '{{ route("teacher.reports.class-record") }}';
+            }
+        }
+    </script>
 
     <div class="container">
         @php

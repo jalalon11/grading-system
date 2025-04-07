@@ -3,6 +3,22 @@
 @section('styles')
 <style>
     /* Custom styles for grade approvals page */
+    /* MAPEH Dropdown Styles */
+    .dropdown-menu {
+        min-width: 200px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .dropdown-header {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+
+    .dropdown-item:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
     .nav-tabs .nav-link {
         font-weight: 500;
         color: #495057;
@@ -53,10 +69,28 @@
         position: relative;
     }
 
+    /* Button styles */
+    .approval-actions .btn {
+        min-width: 130px;
+        margin-bottom: 5px;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 767.98px) {
         .approval-cards .col {
             margin-bottom: 1rem;
+        }
+
+        .approval-actions {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .approval-actions .btn {
+            margin-bottom: 8px;
+            width: 100%;
         }
     }
 </style>
@@ -186,16 +220,16 @@
                                                     $approvalKey = $assignment->section_id . '-' . $assignment->subject_id . '-' . $quarterKey;
                                                     $approval = $approvals[$approvalKey] ?? null;
                                                     $isApproved = $approval ? $approval->is_approved : false;
-                                                    $lastUpdated = $approval ? $approval->updated_at->format('M d, Y h:i A') : 'Never';
+                                                    $lastUpdated = $approval ? $approval->updated_at->setTimezone('Asia/Manila')->format('M d, Y h:i A') : 'Never';
                                                 @endphp
                                                 <li class="list-group-item approval-item {{ $isApproved ? 'approved' : 'hidden' }}">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div class="subject-info">
+                                                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                                                        <div class="subject-info mb-2 mb-md-0">
                                                             <h6 class="mb-0 subject-name">{{ $assignment->subject_name }}</h6>
                                                             <small class="text-muted">Last updated: {{ $lastUpdated }}</small>
                                                         </div>
-                                                        <div class="d-flex">
-                                                            <form action="{{ route('teacher.grade-approvals.update') }}" method="POST" class="me-2">
+                                                        <div class="d-flex flex-wrap gap-2 approval-actions">
+                                                            <form action="{{ route('teacher.grade-approvals.update') }}" method="POST">
                                                                 @csrf
                                                                 <input type="hidden" name="section_id" value="{{ $assignment->section_id }}">
                                                                 <input type="hidden" name="subject_id" value="{{ $assignment->subject_id }}">
@@ -203,24 +237,45 @@
 
                                                                 @if($isApproved)
                                                                     <input type="hidden" name="is_approved" value="0">
-                                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
-                                                                        <i class="fas fa-eye-slash"></i>
+                                                                    <button type="submit" class="btn btn-outline-secondary">
+                                                                        <i class="fas fa-eye-slash me-1"></i> Hide Grades
                                                                     </button>
                                                                 @else
                                                                     <input type="hidden" name="is_approved" value="1">
-                                                                    <button type="submit" class="btn btn-sm btn-outline-success">
-                                                                        <i class="fas fa-check"></i>
+                                                                    <button type="submit" class="btn btn-outline-success">
+                                                                        <i class="fas fa-check me-1"></i> Approve Grades
                                                                     </button>
                                                                 @endif
                                                             </form>
 
-                                                            <a href="{{ route('teacher.grades.index', ['section_id' => $assignment->section_id, 'subject_id' => $assignment->subject_id, 'term' => $quarterKey]) }}"
-                                                               class="btn btn-sm btn-outline-primary">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
+                                                            @php
+                                                                // Check if this is a MAPEH subject
+                                                                $subject = \App\Models\Subject::with('components')->find($assignment->subject_id);
+                                                                $isMAPEH = $subject && $subject->getIsMAPEHAttribute();
+                                                            @endphp
+
+                                                            @if($isMAPEH)
+                                                                <div class="dropdown">
+                                                                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="mapehDropdown{{ $assignment->subject_id }}{{ $quarterKey }}"
+                                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                                        <i class="fas fa-edit me-1"></i> Edit Grades
+                                                                    </button>
+                                                                    <ul class="dropdown-menu" aria-labelledby="mapehDropdown{{ $assignment->subject_id }}{{ $quarterKey }}">
+                                                                        <li><h6 class="dropdown-header">Select Component</h6></li>
+                                                                        @foreach($subject->components as $component)
+                                                                            <li><a class="dropdown-item" href="{{ route('teacher.reports.generate-class-record-get', ['section_id' => $assignment->section_id, 'subject_id' => $component->id, 'quarter' => $quarterKey]) }}">{{ $component->name }}</a></li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            @else
+                                                                <a href="{{ route('teacher.reports.generate-class-record-get', ['section_id' => $assignment->section_id, 'subject_id' => $assignment->subject_id, 'quarter' => $quarterKey]) }}"
+                                                                   class="btn btn-outline-primary">
+                                                                    <i class="fas fa-edit me-1"></i> Edit Grades
+                                                                </a>
+                                                            @endif
                                                         </div>
                                                     </div>
-                                                    <div class="mt-2">
+                                                    <div class="mt-2 d-flex justify-content-between align-items-center">
                                                         <span class="badge {{ $isApproved ? 'bg-success' : 'bg-secondary' }}">
                                                             {{ $isApproved ? 'Approved' : 'Hidden' }}
                                                         </span>
