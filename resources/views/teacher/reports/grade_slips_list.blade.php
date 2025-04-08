@@ -65,9 +65,22 @@
                                                     </span>
                                                 @else
                                                     @php
+                                                        // Initialize subject count
                                                         $subjectCount = 0;
+
+                                                        // Get the list of MAPEH component subject IDs
+                                                        $mapehComponentIds = isset($mapehComponents) ? $mapehComponents->pluck('id')->toArray() : [];
+
+                                                        // Count subjects with grades, excluding MAPEH components
                                                         if (isset($studentGrades[$student->id])) {
-                                                            $subjectCount = count($studentGrades[$student->id]);
+                                                            // This is the structure used in generateGradeSlips
+                                                            foreach($studentGrades[$student->id] as $subjectId => $grade) {
+                                                                $isMapehComponent = in_array($subjectId, $mapehComponentIds);
+
+                                                                if (!$isMapehComponent) {
+                                                                    $subjectCount++;
+                                                                }
+                                                            }
                                                         }
                                                     @endphp
                                                     <span class="badge bg-{{ $subjectCount > 0 ? 'success' : 'warning' }} bg-opacity-10 text-{{ $subjectCount > 0 ? 'success' : 'warning' }} px-2 py-1">

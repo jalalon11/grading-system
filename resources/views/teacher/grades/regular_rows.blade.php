@@ -90,7 +90,7 @@
                title="View Details">
                 <i class="fas fa-eye"></i>
             </a>
-            <a href="{{ route('teacher.grades.create', [
+            {{-- <a href="{{ route('teacher.grades.create', [
                     'student_id' => $student->id, 
                     'subject_id' => $selectedSubject->id, 
                     'term' => $selectedTerm
@@ -98,13 +98,13 @@
                class="btn btn-sm btn-outline-success" 
                title="Add Grade">
                 <i class="fas fa-plus"></i>
-            </a>
-            <button type="button" 
+            </a> --}}
+            {{-- <button type="button" 
                     class="btn btn-sm btn-outline-info"
                     onclick="printStudentReport({{ $student->id }})"
                     title="Print Report">
                 <i class="fas fa-file-alt"></i>
-            </button>
+            </button> --}}
         </div>
     </td>
 </tr> 
