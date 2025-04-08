@@ -521,14 +521,29 @@ class ReportController extends Controller
             return $subject->is_mapeh;
         });
 
-        $mapehComponents = $subjects->filter(function($subject) {
+        // Get all MAPEH components (both from the section and from the database)
+        $mapehComponents = collect();
+
+        // First, get components from the section subjects
+        $sectionComponents = $subjects->filter(function($subject) {
             return $subject->mapeh_component;
         });
 
-        // Log MAPEH subjects and components
+        // Then, for each MAPEH subject, get its components from the database
+        foreach ($mapehSubjects as $mapehSubject) {
+            $components = $mapehSubject->components;
+            if ($components->count() > 0) {
+                $mapehComponents = $mapehComponents->merge($components);
+            }
+        }
+
+        // Combine and ensure uniqueness
+        $mapehComponents = $mapehComponents->merge($sectionComponents)->unique('id');
+
+        // Log basic MAPEH information
         Log::info('Grade Slips - MAPEH subjects and components', [
-            'mapeh_subjects' => $mapehSubjects->pluck('name', 'id')->toArray(),
-            'mapeh_components' => $mapehComponents->pluck('name', 'id')->toArray(),
+            'mapeh_subjects_count' => $mapehSubjects->count(),
+            'mapeh_components_count' => $mapehComponents->count()
         ]);
 
         // Create a map of MAPEH components to their parent subject
@@ -826,17 +841,29 @@ class ReportController extends Controller
             return $subject->getIsMAPEHAttribute();
         });
 
-        // Get all MAPEH component subjects (including those not in the section)
-        $allComponents = \App\Models\Subject::where('is_component', true)
-            ->whereIn('parent_subject_id', $mapehSubjects->pluck('id'))
-            ->get();
+        // Get all MAPEH components (both from the section and from the database)
+        $mapehComponents = collect();
 
-        // Combine section components with all components
+        // First, get components from the section subjects
         $sectionComponents = $subjects->filter(function($subject) {
             return $subject->mapeh_component;
         });
 
-        $mapehComponents = $sectionComponents->merge($allComponents)->unique('id');
+        // Then, for each MAPEH subject, get its components from the database
+        foreach ($mapehSubjects as $mapehSubject) {
+            $components = $mapehSubject->components;
+            if ($components->count() > 0) {
+                $mapehComponents = $mapehComponents->merge($components);
+            }
+        }
+
+        // Also get components from parent_subject_id relationship
+        $allComponents = \App\Models\Subject::where('is_component', true)
+            ->whereIn('parent_subject_id', $mapehSubjects->pluck('id'))
+            ->get();
+
+        // Combine all sources and ensure uniqueness
+        $mapehComponents = $mapehComponents->merge($sectionComponents)->merge($allComponents)->unique('id');
 
         // Create a map of MAPEH components to their parent subject
         $mapehParentMap = [];
@@ -882,6 +909,8 @@ class ReportController extends Controller
         $studentGrades = [];
 
         // First, process MAPEH components directly to ensure we have their grades
+        // but store them in a temporary array, not directly in studentGrades
+        $componentGrades = [];
         foreach ($subjects as $subject) {
             if ($subject->mapeh_component) {
                 // Get the component's grade configuration
@@ -905,8 +934,8 @@ class ReportController extends Controller
                 );
 
                 if ($componentGrade) {
-                    // Store the component grade directly in studentGrades
-                    $studentGrades[$subject->id] = $componentGrade;
+                    // Store the component grade in a temporary array, not directly in studentGrades
+                    $componentGrades[$subject->id] = $componentGrade;
                 }
             }
         }
@@ -923,7 +952,7 @@ class ReportController extends Controller
 
             if ($isMAPEH) {
                 // Handle MAPEH subject (get component grades and calculate average)
-                $componentGrades = [];
+                $mapehComponentGrades = [];
                 $totalWeightedGrade = 0;
                 $totalWeight = 0;
                 $componentCount = 0;
@@ -936,11 +965,11 @@ class ReportController extends Controller
                 // Process each component
                 foreach ($components as $component) {
                     // Check if we already have the component grade
-                    if (isset($studentGrades[$component->id])) {
-                        $componentGrade = $studentGrades[$component->id];
+                    if (isset($componentGrades[$component->id])) {
+                        $componentGrade = $componentGrades[$component->id];
 
                         // Store the component grade in the MAPEH component_grades array
-                        $componentGrades[$component->id] = $componentGrade;
+                        $mapehComponentGrades[$component->id] = $componentGrade;
 
                         // Add to weighted average calculation
                         $componentWeight = $component->component_weight ?? 25; // Default to 25% if not set
@@ -991,7 +1020,7 @@ class ReportController extends Controller
                     $studentGrades[$subject->id] = (object) [
                         'quarterly_grade' => $mapehGrade,
                         'transmuted_grade' => GradeHelper::getTransmutedGrade($mapehGrade, $transmutationTable),
-                        'component_grades' => $componentGrades,
+                        'component_grades' => $mapehComponentGrades,
                         'remarks' => $mapehGrade >= 75 ? 'Passed' : 'Failed'
                     ];
                 }

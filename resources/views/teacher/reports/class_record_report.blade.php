@@ -1785,6 +1785,7 @@
                                         'percentage' => $assessmentPercentage
                                     ];
                                 }
+
                             }
 
                             // Calculate total max score for written works
@@ -1985,9 +1986,15 @@
                                 }
                             }
 
-                            if ($assessmentCount > 0) {
-                                // Calculate PS (Percentage Score) - average of all percentages
-                                $wwPS = $totalPercentage / $assessmentCount;
+                            // Calculate total max score for written works
+                            $writtenWorksMaxTotal = 0;
+                            foreach($writtenWorks->take(7) as $work) {
+                                $writtenWorksMaxTotal += $work->max_score;
+                            }
+
+                            if ($writtenWorksMaxTotal > 0 && $studentWWTotal > 0) {
+                                // Calculate PS (Percentage Score) - total score divided by total max score
+                                $wwPS = ($studentWWTotal / $writtenWorksMaxTotal) * 100;
 
                                 // Calculate WS (Weighted Score) - apply the weight percentage
                                 $wwWS = ($wwPS / 100) * $gradeConfig->written_work_percentage;
@@ -2030,25 +2037,16 @@
                             $ptPS = '';
                             $ptWS = '';
 
-                            // Calculate average percentage instead of total/max
-                            $ptAssessmentCount = 0;
-                            $ptTotalPercentage = 0;
-
+                            // Calculate total max score for performance tasks
+                            $performanceTasksMaxTotal = 0;
                             foreach($performanceTasks->take(8) as $task) {
-                                $grade = $studentPerfTasks->first(function($item) use ($task) {
-                                    return $item->assessment_name == $task->assessment_name;
-                                });
-
-                                if ($grade) {
-                                    $ptAssessmentCount++;
-                                    $ptTotalPercentage += ($grade->score / $task->max_score) * 100;
-                                }
+                                $performanceTasksMaxTotal += $task->max_score;
                             }
 
-                            if ($ptAssessmentCount > 0) {
-                                // Average of percentages
-                                $ptPS = $ptTotalPercentage / $ptAssessmentCount;
-                                // Weighted Score
+                            if ($performanceTasksMaxTotal > 0 && $studentPTTotal > 0) {
+                                // Calculate PS (Percentage Score) - total score divided by total max score
+                                $ptPS = ($studentPTTotal / $performanceTasksMaxTotal) * 100;
+                                // Calculate WS (Weighted Score) - apply the weight percentage
                                 $ptWS = ($ptPS / 100) * $gradeConfig->performance_task_percentage;
                             }
                         @endphp

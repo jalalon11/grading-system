@@ -1098,16 +1098,27 @@
                                                         $performanceTasks = collect($subjectGrade['performance_tasks']);
                                                         $quarterlyAssessment = $subjectGrade['quarterly_assessment'];
 
-                                                        $writtenWorksAvg = $writtenWorks->count() > 0 ?
-                                                            $writtenWorks->average(function($grade) {
-                                                                return ($grade->score / $grade->max_score) * 100;
-                                                            }) : 0;
+                                                        // Calculate written works using total score / total max score method
+                                                        $writtenWorksTotal = 0;
+                                                        $writtenWorksMaxTotal = 0;
+                                                        foreach($writtenWorks as $grade) {
+                                                            $writtenWorksTotal += $grade->score;
+                                                            $writtenWorksMaxTotal += $grade->max_score;
+                                                        }
+                                                        $writtenWorksAvg = $writtenWorksMaxTotal > 0 ?
+                                                            ($writtenWorksTotal / $writtenWorksMaxTotal) * 100 : 0;
 
-                                                        $performanceTasksAvg = $performanceTasks->count() > 0 ?
-                                                            $performanceTasks->average(function($grade) {
-                                                                return ($grade->score / $grade->max_score) * 100;
-                                                            }) : 0;
+                                                        // Calculate performance tasks using total score / total max score method
+                                                        $performanceTasksTotal = 0;
+                                                        $performanceTasksMaxTotal = 0;
+                                                        foreach($performanceTasks as $grade) {
+                                                            $performanceTasksTotal += $grade->score;
+                                                            $performanceTasksMaxTotal += $grade->max_score;
+                                                        }
+                                                        $performanceTasksAvg = $performanceTasksMaxTotal > 0 ?
+                                                            ($performanceTasksTotal / $performanceTasksMaxTotal) * 100 : 0;
 
+                                                        // Calculate quarterly assessment using total score / total max score method
                                                         $quarterlyScore = $quarterlyAssessment ?
                                                             ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100 : 0;
 

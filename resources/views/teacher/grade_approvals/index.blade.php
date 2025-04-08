@@ -8,6 +8,8 @@
         min-width: 200px;
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         border: 1px solid rgba(0, 0, 0, 0.1);
+        z-index: 1050; /* Ensure dropdown appears above other elements */
+        position: absolute; /* Ensure proper positioning */
     }
 
     .dropdown-header {
@@ -17,6 +19,58 @@
 
     .dropdown-item:hover {
         background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    /* Fix for dropdown positioning */
+    .dropdown {
+        position: relative;
+    }
+
+    /* Ensure dropdown is visible */
+    .dropdown-menu.show {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        z-index: 9999 !important;
+    }
+
+    /* Custom styles for MAPEH modal */
+    .modal-dialog-centered {
+        display: flex;
+        align-items: center;
+        min-height: calc(100% - 1rem);
+    }
+
+    .list-group-item-action {
+        transition: background-color 0.2s;
+        padding: 12px 16px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+    }
+
+    .list-group-item-action:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+
+    /* Ensure modals appear above everything else */
+    .modal {
+        z-index: 1060 !important;
+    }
+
+    .modal-backdrop {
+        z-index: 1050 !important;
+    }
+
+    /* Style the modal header */
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .modal-title {
+        color: #0d6efd;
+        font-weight: 600;
     }
 
     .nav-tabs .nav-link {
@@ -255,17 +309,38 @@
                                                             @endphp
 
                                                             @if($isMAPEH)
-                                                                <div class="dropdown">
-                                                                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="mapehDropdown{{ $assignment->subject_id }}{{ $quarterKey }}"
-                                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                                        <i class="fas fa-edit me-1"></i> Edit Grades
-                                                                    </button>
-                                                                    <ul class="dropdown-menu" aria-labelledby="mapehDropdown{{ $assignment->subject_id }}{{ $quarterKey }}">
-                                                                        <li><h6 class="dropdown-header">Select Component</h6></li>
-                                                                        @foreach($subject->components as $component)
-                                                                            <li><a class="dropdown-item" href="{{ route('teacher.reports.generate-class-record-get', ['section_id' => $assignment->section_id, 'subject_id' => $component->id, 'quarter' => $quarterKey]) }}">{{ $component->name }}</a></li>
-                                                                        @endforeach
-                                                                    </ul>
+                                                                <!-- Button trigger modal -->
+                                                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mapehModal{{ $assignment->subject_id }}{{ $quarterKey }}">
+                                                                    <i class="fas fa-edit me-1"></i> Edit Grades
+                                                                </button>
+
+                                                                <!-- Modal for MAPEH components -->
+                                                                <div class="modal fade" id="mapehModal{{ $assignment->subject_id }}{{ $quarterKey }}" tabindex="-1" aria-labelledby="mapehModalLabel{{ $assignment->subject_id }}{{ $quarterKey }}" aria-hidden="true">
+                                                                    <div class="modal-dialog modal-dialog-centered">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title" id="mapehModalLabel{{ $assignment->subject_id }}{{ $quarterKey }}">Select MAPEH Component</h5>
+                                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                            </div>
+                                                                            <div class="modal-body">
+                                                                                <div class="list-group">
+                                                                                    @if($subject->components->count() > 0)
+                                                                                        @foreach($subject->components as $component)
+                                                                                            <a href="{{ route('teacher.reports.generate-class-record-get', ['section_id' => $assignment->section_id, 'subject_id' => $component->id, 'quarter' => $quarterKey]) }}"
+                                                                                               class="list-group-item list-group-item-action">
+                                                                                                {{ $component->name }}
+                                                                                            </a>
+                                                                                        @endforeach
+                                                                                    @else
+                                                                                        <div class="list-group-item text-muted">No components found</div>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="modal-footer">
+                                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             @else
                                                                 <a href="{{ route('teacher.reports.generate-class-record-get', ['section_id' => $assignment->section_id, 'subject_id' => $assignment->subject_id, 'quarter' => $quarterKey]) }}"
@@ -298,11 +373,95 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('Grade approvals page loaded');
+
+        // Ensure Bootstrap modals are properly initialized
+        if (typeof bootstrap !== 'undefined') {
+            // Initialize all modals on the page
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modalEl => {
+                try {
+                    // Store the modal instance for later use
+                    modalEl._bsModal = new bootstrap.Modal(modalEl, {
+                        backdrop: true,
+                        keyboard: true,
+                        focus: true
+                    });
+                    console.log('Modal initialized:', modalEl.id);
+
+                    // Add event listeners for modal events
+                    modalEl.addEventListener('shown.bs.modal', function() {
+                        console.log('Modal shown:', this.id);
+                    });
+
+                    modalEl.addEventListener('hidden.bs.modal', function() {
+                        console.log('Modal hidden:', this.id);
+                    });
+
+                } catch (err) {
+                    console.error('Error initializing modal:', modalEl.id, err);
+                }
+            });
+
+            // Add click handlers to all modal trigger buttons
+            document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('data-bs-target');
+                    console.log('Modal button clicked for target:', targetId);
+
+                    // Ensure the click event works properly
+                    const modalEl = document.querySelector(targetId);
+                    if (modalEl && modalEl._bsModal) {
+                        e.preventDefault();
+                        modalEl._bsModal.show();
+                    }
+                });
+            });
+        } else {
+            console.error('Bootstrap is not available. Modals may not work properly.');
+
+            // Fallback for when Bootstrap is not available
+            document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-bs-target');
+                    const modalEl = document.querySelector(targetId);
+
+                    if (modalEl) {
+                        modalEl.style.display = 'block';
+                        document.body.classList.add('modal-open');
+
+                        // Create a backdrop element
+                        const backdrop = document.createElement('div');
+                        backdrop.className = 'modal-backdrop fade show';
+                        document.body.appendChild(backdrop);
+                    }
+                });
+            });
+
+            // Add close handlers for the fallback
+            document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    const modalEl = this.closest('.modal');
+                    if (modalEl) {
+                        modalEl.style.display = 'none';
+                        document.body.classList.remove('modal-open');
+
+                        // Remove backdrop
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.parentNode.removeChild(backdrop);
+                        }
+                    }
+                });
+            });
+        }
+
         // Search functionality
         const searchInput = document.getElementById('searchInput');
 
         function applySearch() {
-            const searchTerm = searchInput.value.toLowerCase();
+            const searchTerm = searchInput && searchInput.value ? searchInput.value.toLowerCase() : '';
             const subjectItems = document.querySelectorAll('.subject-list .approval-item');
 
             subjectItems.forEach(item => {
@@ -366,8 +525,10 @@
         }
 
         // Event listeners
-        searchInput.addEventListener('keyup', applySearch);
-        searchInput.addEventListener('input', applySearch);
+        if (searchInput) {
+            searchInput.addEventListener('keyup', applySearch);
+            searchInput.addEventListener('input', applySearch);
+        }
 
         filterButtons.forEach(button => {
             button.addEventListener('click', function() {

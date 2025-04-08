@@ -16,4 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-}); 
+});
+
+// Subject API routes
+Route::get('/subjects/{id}/components', [\App\Http\Controllers\Api\SubjectController::class, 'getComponents']);
