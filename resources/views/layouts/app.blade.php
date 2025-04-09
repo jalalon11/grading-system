@@ -287,41 +287,65 @@
         }
 
         /* Override login card hover animation */
-        body.login-page .login-card {
+        body.login-page .login-card, 
+        body.register-page .register-card {
             transform: none !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04) !important;
             transition: none !important;
         }
 
-        body.login-page .login-card:hover {
+        body.login-page .login-card:hover,
+        body.register-page .register-card:hover {
             transform: none !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04) !important;
         }
 
         /* Keep hover effect for input fields */
-        body.login-page .form-control {
+        body.login-page .form-control,
+        body.register-page .form-control {
             transition: all 0.2s ease !important;
         }
 
         /* Fix sign in button animation */
-        body.login-page .btn-login::before {
+        body.login-page .btn-login::before,
+        body.register-page .btn-register::before {
             animation: none !important;
             display: none !important;
         }
 
-        body.login-page .btn-login:hover::before {
+        body.login-page .btn-login:hover::before,
+        body.register-page .btn-register:hover::before {
             animation: none !important;
             display: none !important;
         }
 
         /* Fix floating animation on login logo */
-        body.login-page .school-logo {
+        body.login-page .school-logo,
+        body.register-page .school-logo {
             animation: none !important;
         }
 
-        body.login-page .school-logo::after {
+        body.login-page .school-logo::after,
+        body.register-page .school-logo::after {
             animation: none !important;
             display: none !important;
+        }
+
+        /* Add specific styles for register page */
+        body.register-page {
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow-x: hidden;
+        }
+
+        body.register-page #content,
+        body.register-page main,
+        body.register-page .container,
+        body.register-page .row,
+        body.register-page .col-12 {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
         }
 
         .wrapper {
@@ -781,7 +805,7 @@
         }
     </style>
 </head>
-<body class="{{ !Request::is('login') && !Request::is('register') && Auth::check() ? 'sidebar-open' : 'sidebar-collapsed' }} {{ Request::is('login') ? 'login-page' : '' }} no-transition">
+<body class="{{ !Request::is('login') && !Request::is('register') && Auth::check() ? 'sidebar-open' : 'sidebar-collapsed' }} {{ Request::is('login') ? 'login-page' : '' }} {{ Request::is('register') ? 'register-page' : '' }} no-transition">
     <div class="wrapper">
         <!-- Sidebar  -->
         @auth
@@ -904,7 +928,7 @@
 
         <!-- Page Content  -->
         <div id="content">
-            @if(!Request::is('login'))
+            @if(!Request::is('login') && !Request::is('register'))
             <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
                 <div class="container-fluid">
                     @auth
@@ -932,12 +956,6 @@
                                 @if (Route::has('login'))
                                     <li class="nav-item">
                                         <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                                    </li>
-                                @endif
-
-                                @if (Route::has('register'))
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
                                     </li>
                                 @endif
                             @else
@@ -992,7 +1010,7 @@
             </nav>
             @endif
 
-            <main class="py-4 {{ Request::is('login') ? 'p-0' : '' }}">
+            <main class="py-4 {{ Request::is('login') || Request::is('register') ? 'p-0' : '' }}">
                 @yield('content')
             </main>
         </div>
