@@ -52,7 +52,7 @@
                                 <div class="card-header bg-white">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <h6 class="mb-0">
-                                            <i class="fas fa-clipboard-list me-2"></i> 
+                                            <i class="fas fa-clipboard-list me-2"></i>
                                             Student Attendance ({{ count($students) }} students)
                                         </h6>
                                         <div>
@@ -92,7 +92,7 @@
                                                         <td>
                                                             <div class="d-flex align-items-center">
                                                                 <div class="avatar-container me-2">
-                                                                    <span class="avatar rounded-circle d-flex align-items-center justify-content-center" 
+                                                                    <span class="avatar rounded-circle d-flex align-items-center justify-content-center"
                                                                           style="width: 35px; height: 35px; background-color: #e0f2ff; color: #0d6efd;">
                                                                         {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
                                                                     </span>
@@ -110,55 +110,63 @@
                                                         <td>
                                                             <div class="attendance-options d-flex">
                                                                 <div class="form-check form-check-inline">
-                                                                    <input class="form-check-input status-radio" 
-                                                                           type="radio" 
-                                                                           name="attendance[{{ $student->id }}]" 
-                                                                           id="present_{{ $student->id }}" 
-                                                                           value="present" 
+                                                                    <input class="form-check-input status-radio"
+                                                                           type="radio"
+                                                                           name="attendance[{{ $student->id }}]"
+                                                                           id="present_{{ $student->id }}"
+                                                                           value="present"
                                                                            {{ $attendanceData[$student->id] == 'present' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="present_{{ $student->id }}">
                                                                         <span class="status-badge status-present"></span> Present
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check form-check-inline">
-                                                                    <input class="form-check-input status-radio" 
-                                                                           type="radio" 
-                                                                           name="attendance[{{ $student->id }}]" 
-                                                                           id="late_{{ $student->id }}" 
-                                                                           value="late" 
+                                                                    <input class="form-check-input status-radio"
+                                                                           type="radio"
+                                                                           name="attendance[{{ $student->id }}]"
+                                                                           id="late_{{ $student->id }}"
+                                                                           value="late"
                                                                            {{ $attendanceData[$student->id] == 'late' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="late_{{ $student->id }}">
                                                                         <span class="status-badge status-late"></span> Late
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check form-check-inline">
-                                                                    <input class="form-check-input status-radio" 
-                                                                           type="radio" 
-                                                                           name="attendance[{{ $student->id }}]" 
-                                                                           id="absent_{{ $student->id }}" 
-                                                                           value="absent" 
+                                                                    <input class="form-check-input status-radio"
+                                                                           type="radio"
+                                                                           name="attendance[{{ $student->id }}]"
+                                                                           id="absent_{{ $student->id }}"
+                                                                           value="absent"
                                                                            {{ $attendanceData[$student->id] == 'absent' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="absent_{{ $student->id }}">
                                                                         <span class="status-badge status-absent"></span> Absent
                                                                     </label>
                                                                 </div>
                                                                 <div class="form-check form-check-inline">
-                                                                    <input class="form-check-input status-radio" 
-                                                                           type="radio" 
-                                                                           name="attendance[{{ $student->id }}]" 
-                                                                           id="excused_{{ $student->id }}" 
-                                                                           value="excused" 
+                                                                    <input class="form-check-input status-radio excused-radio"
+                                                                           type="radio"
+                                                                           name="attendance[{{ $student->id }}]"
+                                                                           id="excused_{{ $student->id }}"
+                                                                           value="excused"
+                                                                           data-student-id="{{ $student->id }}"
                                                                            {{ $attendanceData[$student->id] == 'excused' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="excused_{{ $student->id }}">
                                                                         <span class="status-badge status-excused"></span> Excused
                                                                     </label>
                                                                 </div>
+                                                                <div class="excused-reason-container mt-2 {{ $attendanceData[$student->id] == 'excused' ? '' : 'd-none' }}" id="excused_reason_container_{{ $student->id }}">
+                                                                    <input type="text" class="form-control form-control-sm"
+                                                                           name="remarks[{{ $student->id }}]"
+                                                                           id="remarks_{{ $student->id }}"
+                                                                           placeholder="Enter reason for excuse"
+                                                                           value="{{ $attendanceRemarks[$student->id] ?? '' }}">
+                                                                </div>
                                                                 <div class="form-check form-check-inline">
-                                                                    <input class="form-check-input status-radio" 
-                                                                           type="radio" 
-                                                                           name="attendance[{{ $student->id }}]" 
-                                                                           id="half_day_{{ $student->id }}" 
-                                                                           value="half_day" 
+                                                                    <input class="form-check-input status-radio"
+                                                                           type="radio"
+                                                                           name="attendance[{{ $student->id }}]"
+                                                                           id="half_day_{{ $student->id }}"
+                                                                           value="half_day"
                                                                            {{ $attendanceData[$student->id] == 'half_day' ? 'checked' : '' }}>
                                                                     <label class="form-check-label" for="half_day_{{ $student->id }}">
                                                                         <span class="status-badge status-half_day"></span> Half Day
@@ -236,32 +244,32 @@
     .status-absent { background-color: #dc3545; }
     .status-excused { background-color: #6c757d; }
     .status-half_day { background-color: #17a2b8; }
-    
-    .attendance-table th, 
+
+    .attendance-table th,
     .attendance-table td {
         vertical-align: middle;
     }
-    
+
     .form-check-input[type="radio"]:checked[value="present"] {
         background-color: #28a745;
         border-color: #28a745;
     }
-    
+
     .form-check-input[type="radio"]:checked[value="late"] {
         background-color: #ffc107;
         border-color: #ffc107;
     }
-    
+
     .form-check-input[type="radio"]:checked[value="absent"] {
         background-color: #dc3545;
         border-color: #dc3545;
     }
-    
+
     .form-check-input[type="radio"]:checked[value="excused"] {
         background-color: #6c757d;
         border-color: #6c757d;
     }
-    
+
     .form-check-input[type="radio"]:checked[value="half_day"] {
         background-color: #17a2b8;
         border-color: #17a2b8;
@@ -277,51 +285,84 @@
             document.querySelectorAll('input[value="present"]').forEach(radio => {
                 radio.checked = true;
             });
+            // Hide all excused reason fields
+            document.querySelectorAll('.excused-reason-container').forEach(container => {
+                container.classList.add('d-none');
+            });
             updateAttendanceSummary();
         });
-        
+
         // Mark all late
         document.getElementById('markAllLate').addEventListener('click', function() {
             document.querySelectorAll('input[value="late"]').forEach(radio => {
                 radio.checked = true;
             });
+            // Hide all excused reason fields
+            document.querySelectorAll('.excused-reason-container').forEach(container => {
+                container.classList.add('d-none');
+            });
             updateAttendanceSummary();
         });
-        
+
         // Mark all half day
         document.getElementById('markAllHalfDay').addEventListener('click', function() {
             document.querySelectorAll('input[value="half_day"]').forEach(radio => {
                 radio.checked = true;
             });
+            // Hide all excused reason fields
+            document.querySelectorAll('.excused-reason-container').forEach(container => {
+                container.classList.add('d-none');
+            });
             updateAttendanceSummary();
         });
-        
+
         // Mark all absent
         document.getElementById('markAllAbsent').addEventListener('click', function() {
             document.querySelectorAll('input[value="absent"]').forEach(radio => {
                 radio.checked = true;
             });
+            // Hide all excused reason fields
+            document.querySelectorAll('.excused-reason-container').forEach(container => {
+                container.classList.add('d-none');
+            });
             updateAttendanceSummary();
         });
-        
+
         // Mark all excused
         document.getElementById('markAllExcused').addEventListener('click', function() {
             document.querySelectorAll('input[value="excused"]').forEach(radio => {
                 radio.checked = true;
             });
+            // Show all excused reason fields
+            document.querySelectorAll('.excused-reason-container').forEach(container => {
+                container.classList.remove('d-none');
+            });
             updateAttendanceSummary();
         });
-        
+
         // Track changes to attendance status
         document.querySelectorAll('.status-radio').forEach(radio => {
             radio.addEventListener('change', function() {
                 updateAttendanceSummary();
+
+                // Handle excused reason field visibility
+                if (radio.classList.contains('excused-radio') && radio.checked) {
+                    const studentId = radio.getAttribute('data-student-id');
+                    const reasonContainer = document.getElementById(`excused_reason_container_${studentId}`);
+                    reasonContainer.classList.remove('d-none');
+                } else if (!radio.classList.contains('excused-radio') && radio.checked) {
+                    const studentId = radio.name.match(/\[(\d+)\]/)[1];
+                    const reasonContainer = document.getElementById(`excused_reason_container_${studentId}`);
+                    if (reasonContainer) {
+                        reasonContainer.classList.add('d-none');
+                    }
+                }
             });
         });
-        
+
         // Update attendance summary when page loads
         updateAttendanceSummary();
-        
+
         // Function to update attendance summary
         function updateAttendanceSummary() {
             let present = document.querySelectorAll('input[value="present"]:checked').length;
@@ -330,11 +371,11 @@
             let excused = document.querySelectorAll('input[value="excused"]:checked').length;
             let halfDay = document.querySelectorAll('input[value="half_day"]:checked').length;
             let total = document.querySelectorAll('.status-radio[name^="attendance"]').length / 5; // Updated for 5 options
-            
+
             // You can add code here to display a summary if you want
             console.log(`Present: ${present}, Late: ${late}, Absent: ${absent}, Excused: ${excused}, Half Day: ${halfDay}, Total: ${total}`);
         }
     });
 </script>
 @endpush
-@endsection 
+@endsection

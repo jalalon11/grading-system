@@ -20,3 +20,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Subject API routes
 Route::get('/subjects/{id}/components', [\App\Http\Controllers\Api\SubjectController::class, 'getComponents']);
+
+// Teacher API routes
+Route::prefix('teacher')->group(function () {
+    // Grade API routes
+    Route::get('/grades/get-assessment-max-score', [\App\Http\Controllers\Teacher\GradeController::class, 'getAssessmentMaxScore']);
+});

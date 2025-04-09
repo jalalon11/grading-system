@@ -10,9 +10,17 @@
                         <h5 class="mb-0">
                             <i class="fas fa-calendar-check text-white me-2"></i> Attendance Records
                         </h5>
-                        <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light">
-                            <i class="fas fa-plus-circle me-1"></i> Record New Attendance
-                        </a>
+                        <div>
+                            <a href="{{ route('teacher.attendances.weekly-summary') }}" class="btn btn-light me-2">
+                                <i class="fas fa-calendar-week me-1"></i> Weekly Summary
+                            </a>
+                            <a href="{{ route('teacher.attendances.monthly-summary') }}" class="btn btn-light me-2">
+                                <i class="fas fa-calendar-alt me-1"></i> Monthly Summary
+                            </a>
+                            <a href="{{ route('teacher.attendances.create') }}" class="btn btn-light">
+                                <i class="fas fa-plus-circle me-1"></i> Record New Attendance
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -29,6 +37,284 @@
                             <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
+                    @endif
+
+                    <!-- Weekly Summary Card (if available) -->
+                    @if(isset($currentWeekSummary) && count($currentWeekSummary['dates']) > 0)
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-calendar-week text-primary me-2"></i>
+                                    Weekly Attendance Summary ({{ now()->startOfWeek()->format('M d') }} - {{ now()->endOfWeek()->format('M d') }})
+                                </h5>
+                                <a href="{{ route('teacher.attendances.weekly-summary') }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-bar me-1"></i> View Detailed Report
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-success rounded-circle p-2 me-2">
+                                                    <i class="fas fa-check"></i>
+                                                </span>
+                                                <h6 class="mb-0">Present</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentWeekSummary['total_stats']['present'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-warning rounded-circle p-2 me-2">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <h6 class="mb-0">Late</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentWeekSummary['total_stats']['late'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-info rounded-circle p-2 me-2">
+                                                    <i class="fas fa-adjust"></i>
+                                                </span>
+                                                <h6 class="mb-0">Half Day</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentWeekSummary['total_stats']['half_day'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-danger rounded-circle p-2 me-2">
+                                                    <i class="fas fa-times"></i>
+                                                </span>
+                                                <h6 class="mb-0">Absent</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentWeekSummary['total_stats']['absent'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-secondary rounded-circle p-2 me-2">
+                                                    <i class="fas fa-file-medical"></i>
+                                                </span>
+                                                <h6 class="mb-0">Excused</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentWeekSummary['total_stats']['excused'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-primary rounded-circle p-2 me-2">
+                                                    <i class="fas fa-calendar-check"></i>
+                                                </span>
+                                                <h6 class="mb-0">Ratio</h6>
+                                            </div>
+                                            <h3 class="mb-0">
+                                                @php
+                                                    $presentCount = $currentWeekSummary['total_stats']['present'];
+                                                    $lateCount = $currentWeekSummary['total_stats']['late'];
+                                                    $halfDayCount = $currentWeekSummary['total_stats']['half_day'];
+                                                    $totalDays = $currentWeekSummary['total_stats']['total_days'] * $currentWeekSummary['total_stats']['total_students'];
+
+                                                    $numerator = '';
+                                                    if ($presentCount > 0 || $lateCount > 0) {
+                                                        $numerator = $presentCount + $lateCount;
+                                                    }
+
+                                                    if ($halfDayCount > 0) {
+                                                        if (!empty($numerator)) {
+                                                            $numerator .= '+Half';
+                                                        } else {
+                                                            $numerator = 'Half';
+                                                        }
+                                                    }
+
+                                                    if (empty($numerator)) {
+                                                        $numerator = '0';
+                                                    }
+
+                                                    echo $numerator . '/' . $totalDays;
+                                                @endphp
+                                            </h3>
+                                            <small class="text-muted">present/total</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-primary rounded-circle p-2 me-2">
+                                                    <i class="fas fa-percentage"></i>
+                                                </span>
+                                                <h6 class="mb-0">Rate</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentWeekSummary['total_stats']['attendance_rate'] }}%</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Monthly Summary Card (if available) -->
+                    @if(isset($currentMonthSummary) && count($currentMonthSummary['dates']) > 0)
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                    Monthly Attendance Summary: {{ $currentMonthSummary['month_name'] }}
+                                </h5>
+                                <a href="{{ route('teacher.attendances.monthly-summary', ['month' => $currentMonthSummary['year_month']]) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-chart-bar me-1"></i> View Detailed Report
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-success rounded-circle p-2 me-2">
+                                                    <i class="fas fa-check"></i>
+                                                </span>
+                                                <h6 class="mb-0">Present</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentMonthSummary['total_stats']['present'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-warning rounded-circle p-2 me-2">
+                                                    <i class="fas fa-clock"></i>
+                                                </span>
+                                                <h6 class="mb-0">Late</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentMonthSummary['total_stats']['late'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-info rounded-circle p-2 me-2">
+                                                    <i class="fas fa-adjust"></i>
+                                                </span>
+                                                <h6 class="mb-0">Half Day</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentMonthSummary['total_stats']['half_day'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-danger rounded-circle p-2 me-2">
+                                                    <i class="fas fa-times"></i>
+                                                </span>
+                                                <h6 class="mb-0">Absent</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentMonthSummary['total_stats']['absent'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-secondary rounded-circle p-2 me-2">
+                                                    <i class="fas fa-file-medical"></i>
+                                                </span>
+                                                <h6 class="mb-0">Excused</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentMonthSummary['total_stats']['excused'] }}</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-primary rounded-circle p-2 me-2">
+                                                    <i class="fas fa-calendar-check"></i>
+                                                </span>
+                                                <h6 class="mb-0">Ratio</h6>
+                                            </div>
+                                            <h3 class="mb-0">
+                                                @php
+                                                    $presentCount = $currentMonthSummary['total_stats']['present'];
+                                                    $lateCount = $currentMonthSummary['total_stats']['late'];
+                                                    $halfDayCount = $currentMonthSummary['total_stats']['half_day'];
+                                                    $totalDays = $currentMonthSummary['total_stats']['total_days'] * $currentMonthSummary['total_stats']['total_students'];
+
+                                                    $numerator = '';
+                                                    if ($presentCount > 0 || $lateCount > 0) {
+                                                        $numerator = $presentCount + $lateCount;
+                                                    }
+
+                                                    if ($halfDayCount > 0) {
+                                                        if (!empty($numerator)) {
+                                                            $numerator .= '+Half';
+                                                        } else {
+                                                            $numerator = 'Half';
+                                                        }
+                                                    }
+
+                                                    if (empty($numerator)) {
+                                                        $numerator = '0';
+                                                    }
+
+                                                    echo $numerator . '/' . $totalDays;
+                                                @endphp
+                                            </h3>
+                                            <small class="text-muted">present/total</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body p-3 text-center">
+                                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                                <span class="badge bg-primary rounded-circle p-2 me-2">
+                                                    <i class="fas fa-percentage"></i>
+                                                </span>
+                                                <h6 class="mb-0">Rate</h6>
+                                            </div>
+                                            <h3 class="mb-0">{{ $currentMonthSummary['total_stats']['attendance_rate'] }}%</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     @endif
 
                     <!-- Filter Form -->
@@ -81,7 +367,7 @@
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-primary text-white py-3">
                             <h5 class="mb-0">
-                                <i class="fas fa-chart-bar me-2"></i> 
+                                <i class="fas fa-chart-bar me-2"></i>
                                 Monthly Attendance Summary: {{ \Carbon\Carbon::createFromFormat('Y-m', request('month'))->format('F Y') }}
                             </h5>
                         </div>
@@ -94,7 +380,7 @@
                                     $totalExcused = 0;
                                     $totalHalfDay = 0;
                                     $totalStudents = 0;
-                                    
+
                                     foreach ($attendances as $dateGroup) {
                                         foreach ($dateGroup as $attendance) {
                                             $totalPresent += $attendance['present_count'];
@@ -104,12 +390,12 @@
                                             $totalHalfDay += $attendance['half_day_count'];
                                         }
                                     }
-                                    
+
                                     $totalStudents = $totalPresent + $totalLate + $totalAbsent + $totalExcused + $totalHalfDay;
-                                    $attendanceRate = $totalStudents > 0 ? 
+                                    $attendanceRate = $totalStudents > 0 ?
                                         round((($totalPresent + $totalLate + ($totalHalfDay * 0.5)) / $totalStudents) * 100, 1) : 0;
                                 @endphp
-                                
+
                                 <!-- Overall Attendance Rate -->
                                 <div class="col-md-6">
                                     <div class="card h-100 border-0 shadow-sm">
@@ -122,8 +408,8 @@
                                                     </div>
                                                     <svg width="150" height="150" viewBox="0 0 36 36">
                                                         <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f2f2f2" stroke-width="2.5"></circle>
-                                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#0d6efd" stroke-width="2.5" 
-                                                                stroke-dasharray="{{ $attendanceRate * 0.01 * 100 }} 100" 
+                                                        <circle cx="18" cy="18" r="15.9" fill="none" stroke="#0d6efd" stroke-width="2.5"
+                                                                stroke-dasharray="{{ $attendanceRate * 0.01 * 100 }} 100"
                                                                 stroke-dashoffset="25" class="progress-circle"></circle>
                                                     </svg>
                                                 </div>
@@ -134,7 +420,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Status Breakdown -->
                                 <div class="col-md-6">
                                     <div class="card h-100 border-0 shadow-sm">
@@ -147,7 +433,7 @@
                                                         <span class="fw-medium">{{ $totalPresent }}</span>
                                                     </div>
                                                     <div class="progress" style="height: 8px;">
-                                                        <div class="progress-bar bg-success" role="progressbar" 
+                                                        <div class="progress-bar bg-success" role="progressbar"
                                                             style="width: {{ $totalStudents > 0 ? ($totalPresent / $totalStudents) * 100 : 0 }}%"></div>
                                                     </div>
                                                 </div>
@@ -157,7 +443,7 @@
                                                         <span class="fw-medium">{{ $totalLate }}</span>
                                                     </div>
                                                     <div class="progress" style="height: 8px;">
-                                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                                        <div class="progress-bar bg-warning" role="progressbar"
                                                             style="width: {{ $totalStudents > 0 ? ($totalLate / $totalStudents) * 100 : 0 }}%"></div>
                                                     </div>
                                                 </div>
@@ -167,7 +453,7 @@
                                                         <span class="fw-medium">{{ $totalHalfDay }}</span>
                                                     </div>
                                                     <div class="progress" style="height: 8px;">
-                                                        <div class="progress-bar bg-info" role="progressbar" 
+                                                        <div class="progress-bar bg-info" role="progressbar"
                                                             style="width: {{ $totalStudents > 0 ? ($totalHalfDay / $totalStudents) * 100 : 0 }}%"></div>
                                                     </div>
                                                 </div>
@@ -177,7 +463,7 @@
                                                         <span class="fw-medium">{{ $totalAbsent }}</span>
                                                     </div>
                                                     <div class="progress" style="height: 8px;">
-                                                        <div class="progress-bar bg-danger" role="progressbar" 
+                                                        <div class="progress-bar bg-danger" role="progressbar"
                                                             style="width: {{ $totalStudents > 0 ? ($totalAbsent / $totalStudents) * 100 : 0 }}%"></div>
                                                     </div>
                                                 </div>
@@ -187,7 +473,7 @@
                                                         <span class="fw-medium">{{ $totalExcused }}</span>
                                                     </div>
                                                     <div class="progress" style="height: 8px;">
-                                                        <div class="progress-bar bg-secondary" role="progressbar" 
+                                                        <div class="progress-bar bg-secondary" role="progressbar"
                                                             style="width: {{ $totalStudents > 0 ? ($totalExcused / $totalStudents) * 100 : 0 }}%"></div>
                                                     </div>
                                                 </div>
@@ -221,7 +507,7 @@
                                     @foreach ($dateGroup as $sectionId => $attendance)
                                         @php
                                             $totalStudents = $attendance['present_count'] + $attendance['late_count'] + $attendance['absent_count'] + $attendance['excused_count'] + $attendance['half_day_count'];
-                                            $attendanceRate = $totalStudents > 0 ? 
+                                            $attendanceRate = $totalStudents > 0 ?
                                                 round((($attendance['present_count'] + $attendance['late_count'] + ($attendance['half_day_count'] * 0.5)) / $totalStudents) * 100, 1) : 0;
                                         @endphp
                                         <tr>
@@ -244,10 +530,10 @@
                                             </td>
                                             <td class="text-center">
                                                 <div class="progress" style="height: 8px;">
-                                                    <div class="progress-bar bg-primary" role="progressbar" 
-                                                        style="width: {{ $attendanceRate }}%;" 
-                                                        aria-valuenow="{{ $attendanceRate }}" 
-                                                        aria-valuemin="0" 
+                                                    <div class="progress-bar bg-primary" role="progressbar"
+                                                        style="width: {{ $attendanceRate }}%;"
+                                                        aria-valuenow="{{ $attendanceRate }}"
+                                                        aria-valuemin="0"
                                                         aria-valuemax="100">
                                                     </div>
                                                 </div>
@@ -255,15 +541,15 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <a href="{{ route('teacher.attendances.show', ['attendance' => $sectionId, 'date' => $date]) }}" 
-                                                       class="btn btn-sm btn-outline-info" 
-                                                       data-bs-toggle="tooltip" 
+                                                    <a href="{{ route('teacher.attendances.show', ['attendance' => $sectionId, 'date' => $date]) }}"
+                                                       class="btn btn-sm btn-outline-info"
+                                                       data-bs-toggle="tooltip"
                                                        title="View Details">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a href="{{ route('teacher.attendances.edit', ['attendance' => $sectionId, 'date' => $date]) }}" 
+                                                    <a href="{{ route('teacher.attendances.edit', ['attendance' => $sectionId, 'date' => $date]) }}"
                                                        class="btn btn-sm btn-outline-primary"
-                                                       data-bs-toggle="tooltip" 
+                                                       data-bs-toggle="tooltip"
                                                        title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
@@ -312,4 +598,4 @@
     }
 </style>
 @endpush
-@endsection 
+@endsection

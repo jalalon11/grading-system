@@ -37,8 +37,8 @@
                                     </div>
                                     <h5 class="card-title fw-bold">Grade Slips</h5>
                                     <p class="card-text text-muted flex-grow-1">Generate grade slips for students in your advisory sections.</p>
-                                    <a href="{{ route('teacher.reports.grade-slips') }}" class="btn btn-warning mt-3">
-                                        <i class="fas fa-arrow-right me-2"></i>Generate Grade Slips
+                                    <a href="{{ route('teacher.reports.grade-slips') }}" class="btn btn-warning text-white mt-3">
+                                        <i class="fas fa-arrow-right me-2 text-white"></i>Generate Grade Slips
                                     </a>
                                 </div>
                             </div>

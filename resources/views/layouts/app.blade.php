@@ -25,6 +25,9 @@
     <!-- jQuery for sidebar toggle -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 
@@ -40,6 +43,9 @@
         body {
             font-family: 'Nunito', sans-serif;
             background-color: #f8f9fa;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
         /* Dropdown styling */
@@ -235,13 +241,14 @@
 
         /* Main content positioning */
         #content {
-            width: 100%;
+            width: calc(100% - 260px);
             min-height: 100vh;
-            transition: margin-left 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
-            margin-left: 0;
+            transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+            margin-left: 260px;
             position: relative;
             padding-top: 60px; /* Match navbar height */
-            will-change: margin-left;
+            will-change: margin-left, width;
+            flex: 1;
         }
 
         /* Remove padding on login page */
@@ -322,13 +329,18 @@
             width: 100%;
             align-items: stretch;
             overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            max-width: 100vw;
         }
 
         body.sidebar-open #content {
+            width: calc(100% - 260px);
             margin-left: 260px;
         }
 
         body.sidebar-collapsed #content {
+            width: calc(100% - 70px);
             margin-left: 70px;
         }
 
@@ -360,10 +372,12 @@
             }
 
             #content {
+                width: calc(100% - 260px);
                 margin-left: 260px;
             }
 
             body.sidebar-collapsed #content {
+                width: calc(100% - 70px);
                 margin-left: 70px;
             }
 
@@ -391,15 +405,17 @@
 
             #content {
                 margin-left: 0 !important;
-                width: 100%;
+                width: 100% !important;
             }
 
             body.sidebar-open #content {
-                margin-left: 0;
+                margin-left: 0 !important;
+                width: 100% !important;
             }
 
             body.sidebar-collapsed #content {
-                margin-left: 0;
+                margin-left: 0 !important;
+                width: 100% !important;
             }
 
             /* Show sidebar header contents on mobile */
@@ -1041,6 +1057,9 @@
                 $('#sidebar').toggleClass('active');
                 $('body').toggleClass('sidebar-collapsed sidebar-open');
                 $('.sidebar-overlay').toggleClass('active');
+
+                // Force browser reflow to ensure proper transition
+                $('#content')[0].offsetHeight;
 
                 // Always use the fa-bars icon (remove icon rotation)
                 if ($('body').hasClass('sidebar-collapsed')) {
