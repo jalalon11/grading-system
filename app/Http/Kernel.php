@@ -54,5 +54,6 @@ class Kernel extends HttpKernel
         'check.role' => \App\Http\Middleware\CheckRole::class,
         'no.teacher.admin' => \App\Http\Middleware\NoTeacherAdminMiddleware::class,
         'check.school.status' => \App\Http\Middleware\CheckSchoolStatus::class,
+        'registration.key' => \App\Http\Middleware\RegistrationKeyMiddleware::class,
     ];
 } 

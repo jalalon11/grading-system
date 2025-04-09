@@ -166,6 +166,16 @@
                             </div>
                             <i class="fas fa-chevron-right ms-auto"></i>
                         </a>
+                        <a href="{{ route('admin.registration-keys') }}" class="list-group-item list-group-item-action py-3 px-4 d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-center me-3 bg-warning bg-opacity-10 rounded-circle" style="width: 45px; height: 45px;">
+                                <i class="fas fa-key text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Manage Registration Keys</h6>
+                                <p class="text-muted small mb-0">Generate and reset registration access keys</p>
+                            </div>
+                            <i class="fas fa-chevron-right ms-auto"></i>
+                        </a>
                     </div>
                 </div>
             </div>
