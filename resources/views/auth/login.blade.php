@@ -317,11 +317,6 @@
                             <div class="mb-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label for="password" class="form-label fw-medium mb-0">Password</label>
-                                    @if (Route::has('password.request'))
-                                        <a class="forgot-password" href="{{ route('password.request') }}">
-                                            Forgot Password?
-                                        </a>
-                                    @endif
                                 </div>
                                 <div class="input-group">
                                     <span class="input-group-text">
