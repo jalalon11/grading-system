@@ -1284,87 +1284,151 @@ $age = $birthDate->diff($today)->y;
         <!-- Attendance Summary Section -->
         <div class="col-p-4">
             <div class="profile-container p-4">
-                <h3 class="section-title">Attendance Summary</h3>
-
-                <!-- Attendance Overview -->
-                <div class="mb-4">
-                    <h5 class="text-muted mb-3">Overall Attendance Rate</h5>
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="flex-grow-1 me-3">
-                            <div class="progress">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ isset($attendancePercentage) ? $attendancePercentage : 0 }}%" aria-valuenow="{{ isset($attendancePercentage) ? $attendancePercentage : 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        <div class="fw-bold">{{ isset($attendancePercentage) ? $attendancePercentage : 0 }}%</div>
-                    </div>
-                    <div class="text-muted small">
-                        <span class="text-success">{{ isset($attendanceSummary) ? ($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) : 0 }}</span> present out of {{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }} school days
-                    </div>
+                <div class="section-title d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">Attendance Summary</h3>
+                    <a href="{{ route('teacher.attendances.index') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-calendar-check me-1"></i> View All Records
+                    </a>
                 </div>
 
-                <!-- Attendance Stats -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="stat-card present">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="fas fa-check-circle fa-2x text-success"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['present'] : 0 }}</h4>
-                                    <div class="text-muted small">Present</div>
+                <!-- Attendance Overview Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="mb-1">Overall Attendance</h5>
+                                <div class="text-muted small">
+                                    <span class="text-success">{{ isset($attendanceSummary) ? ($attendanceSummary['present'] + $attendanceSummary['late'] + ($attendanceSummary['half_day'] * 0.5)) : 0 }}</span> present out of {{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }} school days
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card late">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="fas fa-clock fa-2x text-warning"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['late'] : 0 }}</h4>
-                                    <div class="text-muted small">Late</div>
-                                </div>
+                            <div class="attendance-ratio-badge">
+                                <span class="badge bg-primary rounded-pill px-3 py-2">
+                                    @php
+                                        $presentCount = isset($attendanceSummary) ? $attendanceSummary['present'] : 0;
+                                        $lateCount = isset($attendanceSummary) ? $attendanceSummary['late'] : 0;
+                                        $halfDayCount = isset($attendanceSummary) ? $attendanceSummary['half_day'] : 0;
+                                        $totalDays = isset($attendanceSummary) ? $attendanceSummary['total'] : 0;
+
+                                        $numerator = '';
+                                        if ($presentCount > 0 || $lateCount > 0) {
+                                            $numerator = $presentCount + $lateCount;
+                                        }
+
+                                        if ($halfDayCount > 0) {
+                                            if (!empty($numerator)) {
+                                                $numerator .= '+Half';
+                                            } else {
+                                                $numerator = 'Half';
+                                            }
+                                        }
+
+                                        if (empty($numerator)) {
+                                            $numerator = '0';
+                                        }
+
+                                        echo $numerator . '/' . $totalDays;
+                                    @endphp
+                                </span>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card half-day">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="fas fa-adjust fa-2x text-info"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['half_day'] : 0 }}</h4>
-                                    <div class="text-muted small">Half Day</div>
-                                </div>
+
+                        <!-- Attendance Progress Bar -->
+                        <div class="attendance-progress mb-4">
+                            <div class="progress" style="height: 10px; border-radius: 5px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width: {{ isset($attendanceSummary) && $attendanceSummary['total'] > 0 ? ($attendanceSummary['present'] / $attendanceSummary['total'] * 100) : 0 }}%"
+                                     aria-valuenow="{{ isset($attendanceSummary) ? $attendanceSummary['present'] : 0 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }}"></div>
+                                <div class="progress-bar bg-warning" role="progressbar"
+                                     style="width: {{ isset($attendanceSummary) && $attendanceSummary['total'] > 0 ? ($attendanceSummary['late'] / $attendanceSummary['total'] * 100) : 0 }}%"
+                                     aria-valuenow="{{ isset($attendanceSummary) ? $attendanceSummary['late'] : 0 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }}"></div>
+                                <div class="progress-bar bg-info" role="progressbar"
+                                     style="width: {{ isset($attendanceSummary) && $attendanceSummary['total'] > 0 ? ($attendanceSummary['half_day'] / $attendanceSummary['total'] * 100) : 0 }}%"
+                                     aria-valuenow="{{ isset($attendanceSummary) ? $attendanceSummary['half_day'] : 0 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }}"></div>
+                                <div class="progress-bar bg-danger" role="progressbar"
+                                     style="width: {{ isset($attendanceSummary) && $attendanceSummary['total'] > 0 ? ($attendanceSummary['absent'] / $attendanceSummary['total'] * 100) : 0 }}%"
+                                     aria-valuenow="{{ isset($attendanceSummary) ? $attendanceSummary['absent'] : 0 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }}"></div>
+                                <div class="progress-bar bg-secondary" role="progressbar"
+                                     style="width: {{ isset($attendanceSummary) && $attendanceSummary['total'] > 0 ? ($attendanceSummary['excused'] / $attendanceSummary['total'] * 100) : 0 }}%"
+                                     aria-valuenow="{{ isset($attendanceSummary) ? $attendanceSummary['excused'] : 0 }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="{{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }}"></div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card absent">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="fas fa-times-circle fa-2x text-danger"></i>
-                                </div>
-                                <div>
-                                    <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['absent'] : 0 }}</h4>
-                                    <div class="text-muted small">Absent</div>
+
+                        <!-- Attendance Stats -->
+                        <div class="row g-3">
+                            <div class="col-md-4 col-6">
+                                <div class="attendance-stat-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-present me-2"></span>
+                                        <div>
+                                            <div class="fw-medium">{{ isset($attendanceSummary) ? $attendanceSummary['present'] : 0 }}</div>
+                                            <div class="text-muted small">Present</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="stat-card excused">
-                            <div class="d-flex align-items-center">
-                                <div class="me-3">
-                                    <i class="fas fa-file-alt fa-2x text-secondary"></i>
+                            <div class="col-md-4 col-6">
+                                <div class="attendance-stat-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-late me-2"></span>
+                                        <div>
+                                            <div class="fw-medium">{{ isset($attendanceSummary) ? $attendanceSummary['late'] : 0 }}</div>
+                                            <div class="text-muted small">Late</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="mb-0">{{ isset($attendanceSummary) ? $attendanceSummary['excused'] : 0 }}</h4>
-                                    <div class="text-muted small">Excused</div>
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <div class="attendance-stat-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-half-day me-2"></span>
+                                        <div>
+                                            <div class="fw-medium">{{ isset($attendanceSummary) ? $attendanceSummary['half_day'] : 0 }}</div>
+                                            <div class="text-muted small">Half Day</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <div class="attendance-stat-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-absent me-2"></span>
+                                        <div>
+                                            <div class="fw-medium">{{ isset($attendanceSummary) ? $attendanceSummary['absent'] : 0 }}</div>
+                                            <div class="text-muted small">Absent</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <div class="attendance-stat-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-excused me-2"></span>
+                                        <div>
+                                            <div class="fw-medium">{{ isset($attendanceSummary) ? $attendanceSummary['excused'] : 0 }}</div>
+                                            <div class="text-muted small">Excused</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-6">
+                                <div class="attendance-stat-item">
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge bg-primary me-2"></span>
+                                        <div>
+                                            <div class="fw-medium">{{ isset($attendanceSummary) ? $attendanceSummary['total'] : 0 }}</div>
+                                            <div class="text-muted small">Total Days</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1688,4 +1752,53 @@ $age = $birthDate->diff($today)->y;
 </script>
 @endpush
 
+@push('styles')
+<style>
+    /* Attendance Status Badges */
+    .status-badge {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
 
+    .status-present {
+        background-color: #28a745;
+    }
+
+    .status-absent {
+        background-color: #dc3545;
+    }
+
+    .status-late {
+        background-color: #ffc107;
+    }
+
+    .status-excused {
+        background-color: #6c757d;
+    }
+
+    .status-half-day {
+        background-color: #17a2b8;
+    }
+
+    /* Attendance Stat Item */
+    .attendance-stat-item {
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        transition: all 0.2s;
+    }
+
+    .attendance-stat-item:hover {
+        background-color: #e9ecef;
+        transform: translateY(-2px);
+    }
+
+    /* Attendance Ratio Badge */
+    .attendance-ratio-badge .badge {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+</style>
+@endpush

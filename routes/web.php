@@ -129,6 +129,8 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         })->name('certificates.preview');
 
         Route::resource('attendances', AttendanceController::class);
+        Route::get('attendance/weekly-summary', [AttendanceController::class, 'weeklySummary'])->name('attendances.weekly-summary');
+        Route::get('attendance/monthly-summary', [AttendanceController::class, 'monthlySummary'])->name('attendances.monthly-summary');
 
         // API endpoint to get students by section ID
         Route::get('/sections/{section}/students', function($section) {
@@ -187,9 +189,10 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
 
         // Add bulk update route
         Route::post('/grades/bulk-update', [GradeController::class, 'bulkUpdate'])->name('grades.bulk-update');
-        // Add edit assessment route
+        // Add edit assessment routes
         Route::post('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment');
         Route::get('/reports/edit-assessment', [GradeController::class, 'editAssessment'])->name('reports.edit-assessment-get');
+        Route::post('/grades/update-assessment', [GradeController::class, 'updateAssessment'])->name('grades.update-assessment');
 
         // Grade Approval Routes
         Route::get('/grade-approvals', [GradeApprovalController::class, 'index'])->name('grade-approvals.index');

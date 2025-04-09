@@ -26,14 +26,14 @@
 
                     <form method="POST" action="{{ route('teacher.attendances.store') }}" id="attendanceForm">
                         @csrf
-                        
+
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="section_id" class="form-label fw-medium">
                                         <i class="fas fa-users text-secondary me-1"></i> Section <span class="text-danger">*</span>
                                     </label>
-                                    <select class="form-select form-select-lg @error('section_id') is-invalid @enderror" 
+                                    <select class="form-select form-select-lg @error('section_id') is-invalid @enderror"
                                         id="section_id" name="section_id" required>
                                         <option value="">Select Section</option>
                                         @foreach($sections as $section)
@@ -49,13 +49,13 @@
                                     @enderror
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label for="date" class="form-label fw-medium">
                                         <i class="fas fa-calendar-alt text-secondary me-1"></i> Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-lg @error('date') is-invalid @enderror" 
+                                    <input type="date" class="form-control form-control-lg @error('date') is-invalid @enderror"
                                         id="date" name="date" value="{{ old('date', now()->format('Y-m-d')) }}" required>
                                     @error('date')
                                         <span class="invalid-feedback" role="alert">
@@ -65,7 +65,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div id="students-container" class="mb-4">
                             <div class="text-center py-5">
                                 <div class="mb-3">
@@ -75,7 +75,7 @@
                                 <p class="text-muted small">Student list will appear here after selecting a section</p>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-end mt-4">
                             <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" disabled>
                                 <i class="fas fa-save me-1"></i> Save Attendance
@@ -102,42 +102,42 @@
     .status-absent { background-color: #dc3545; }
     .status-excused { background-color: #6c757d; }
     .status-half_day { background-color: #17a2b8; }
-    
-    .attendance-table th, 
+
+    .attendance-table th,
     .attendance-table td {
         vertical-align: middle;
     }
-    
+
     .form-check-input:checked[value="present"] {
         background-color: #28a745;
         border-color: #28a745;
     }
-    
+
     .form-check-input:checked[value="late"] {
         background-color: #ffc107;
         border-color: #ffc107;
     }
-    
+
     .form-check-input:checked[value="absent"] {
         background-color: #dc3545;
         border-color: #dc3545;
     }
-    
+
     .form-check-input:checked[value="excused"] {
         background-color: #6c757d;
         border-color: #6c757d;
     }
-    
+
     .form-check-input:checked[value="half_day"] {
         background-color: #17a2b8;
         border-color: #17a2b8;
     }
-    
+
     .student-table-container {
         max-height: 600px;
         overflow-y: auto;
     }
-    
+
     /* Loading animation */
     .loading-container {
         display: flex;
@@ -146,7 +146,7 @@
         justify-content: center;
         padding: 2rem;
     }
-    
+
     .loading-spinner {
         width: 40px;
         height: 40px;
@@ -156,7 +156,7 @@
         animation: spin 1s linear infinite;
         margin-bottom: 1rem;
     }
-    
+
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
@@ -169,11 +169,11 @@
         const sectionSelect = document.getElementById('section_id');
         const studentsContainer = document.getElementById('students-container');
         const submitBtn = document.getElementById('submitBtn');
-        
+
         sectionSelect.addEventListener('change', function() {
             const sectionId = this.value;
             submitBtn.disabled = true;
-            
+
             if (!sectionId) {
                 studentsContainer.innerHTML = `
                     <div class="text-center py-5">
@@ -186,7 +186,7 @@
                 `;
                 return;
             }
-            
+
             // Show loading indicator
             studentsContainer.innerHTML = `
                 <div class="loading-container">
@@ -194,7 +194,7 @@
                     <p>Loading students...</p>
                 </div>
             `;
-            
+
             fetch(`/teacher/sections/${sectionId}/students`)
                 .then(response => response.json())
                 .then(data => {
@@ -214,15 +214,15 @@
                         `;
                         return;
                     }
-                    
+
                     submitBtn.disabled = false;
-                    
+
                     let html = `
                         <div class="card bg-light">
                             <div class="card-header bg-light">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0">
-                                        <i class="fas fa-clipboard-list me-1"></i> 
+                                        <i class="fas fa-clipboard-list me-1"></i>
                                         Student Attendance (${data.students.length} students)
                                     </h6>
                                     <div>
@@ -244,7 +244,7 @@
                                         </thead>
                                         <tbody>
                     `;
-                    
+
                     data.students.forEach(student => {
                         html += `
                             <tr>
@@ -268,46 +268,53 @@
                                 <td>
                                     <div class="attendance-options">
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" 
-                                                name="attendance[${student.id}]" 
-                                                id="present_${student.id}" 
-                                                value="present" 
+                                            <input class="form-check-input" type="radio"
+                                                name="attendance[${student.id}]"
+                                                id="present_${student.id}"
+                                                value="present"
                                                 checked>
                                             <label class="form-check-label" for="present_${student.id}">
                                                 <span class="status-badge status-present"></span>Present
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" 
-                                                name="attendance[${student.id}]" 
-                                                id="late_${student.id}" 
+                                            <input class="form-check-input" type="radio"
+                                                name="attendance[${student.id}]"
+                                                id="late_${student.id}"
                                                 value="late">
                                             <label class="form-check-label" for="late_${student.id}">
                                                 <span class="status-badge status-late"></span>Late
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" 
-                                                name="attendance[${student.id}]" 
-                                                id="absent_${student.id}" 
+                                            <input class="form-check-input" type="radio"
+                                                name="attendance[${student.id}]"
+                                                id="absent_${student.id}"
                                                 value="absent">
                                             <label class="form-check-label" for="absent_${student.id}">
                                                 <span class="status-badge status-absent"></span>Absent
                                             </label>
                                         </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" 
-                                                name="attendance[${student.id}]" 
-                                                id="excused_${student.id}" 
-                                                value="excused">
+                                            <input class="form-check-input excused-radio" type="radio"
+                                                name="attendance[${student.id}]"
+                                                id="excused_${student.id}"
+                                                value="excused"
+                                                data-student-id="${student.id}">
                                             <label class="form-check-label" for="excused_${student.id}">
                                                 <span class="status-badge status-excused"></span>Excused
                                             </label>
                                         </div>
+                                        <div class="excused-reason-container mt-2 d-none" id="excused_reason_container_${student.id}">
+                                            <input type="text" class="form-control form-control-sm"
+                                                name="remarks[${student.id}]"
+                                                id="remarks_${student.id}"
+                                                placeholder="Enter reason for excuse">
+                                        </div>
                                         <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="radio" 
-                                                name="attendance[${student.id}]" 
-                                                id="half_day_${student.id}" 
+                                            <input class="form-check-input" type="radio"
+                                                name="attendance[${student.id}]"
+                                                id="half_day_${student.id}"
                                                 value="half_day">
                                             <label class="form-check-label" for="half_day_${student.id}">
                                                 <span class="status-badge status-half_day"></span>Half Day
@@ -318,7 +325,7 @@
                             </tr>
                         `;
                     });
-                    
+
                     html += `
                                         </tbody>
                                     </table>
@@ -345,13 +352,43 @@
                             </div>
                         </div>
                     `;
-                    
+
                     studentsContainer.innerHTML = html;
-                    
+
                     // Add event listener to "Mark All Present" button
                     document.getElementById('markAllPresent').addEventListener('click', function() {
                         document.querySelectorAll('input[value="present"]').forEach(radio => {
                             radio.checked = true;
+                        });
+                        // Hide all excused reason fields
+                        document.querySelectorAll('.excused-reason-container').forEach(container => {
+                            container.classList.add('d-none');
+                        });
+                    });
+
+                    // Add event listeners to excused radio buttons
+                    document.querySelectorAll('.excused-radio').forEach(radio => {
+                        radio.addEventListener('change', function() {
+                            const studentId = this.getAttribute('data-student-id');
+                            const reasonContainer = document.getElementById(`excused_reason_container_${studentId}`);
+
+                            if (this.checked) {
+                                reasonContainer.classList.remove('d-none');
+                            } else {
+                                reasonContainer.classList.add('d-none');
+                            }
+                        });
+                    });
+
+                    // Add event listeners to all other radio buttons to hide reason field
+                    document.querySelectorAll('input[type="radio"]:not(.excused-radio)').forEach(radio => {
+                        radio.addEventListener('change', function() {
+                            const studentId = this.name.match(/\[(\d+)\]/)[1];
+                            const reasonContainer = document.getElementById(`excused_reason_container_${studentId}`);
+
+                            if (reasonContainer) {
+                                reasonContainer.classList.add('d-none');
+                            }
                         });
                     });
                 })
@@ -373,17 +410,17 @@
                     `;
                 });
         });
-        
+
         // Trigger change if section is already selected (e.g., when coming back from validation error)
         if (sectionSelect.value) {
             sectionSelect.dispatchEvent(new Event('change'));
         }
-        
+
         // Form validation
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             const section = document.getElementById('section_id').value;
             const date = document.getElementById('date').value;
-            
+
             if (!section || !date) {
                 e.preventDefault();
                 alert('Please select both a section and date before submitting.');
@@ -391,5 +428,5 @@
         });
     });
 </script>
-@endpush@endsection 
+@endpush@endsection
 

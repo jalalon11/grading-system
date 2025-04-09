@@ -142,8 +142,22 @@
                             <i class="fas fa-clipboard-check fa-2x text-warning"></i>
                         </div>
                     </div>
+                   <!-- <div class="attendance-summary d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center">
+                            <span class="status-badge status-present me-1"></span>
+                            <small>{{ $todayStats['present'] ?? 0 }} Present</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-badge status-absent me-1"></span>
+                            <small>{{ $todayStats['absent'] ?? 0 }} Absent</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="status-badge status-late me-1"></span>
+                            <small>{{ $todayStats['late'] ?? 0 }} Late</small>
+                        </div>
+                    </div> -->
                     <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $stats['todayAttendance'] > 0 ? '100%' : '0%' }}" aria-valuenow="{{ $stats['todayAttendance'] > 0 ? '100' : '0' }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-4">
@@ -152,8 +166,8 @@
                             <i class="{{ $stats['todayAttendance'] > 0 ? 'fas fa-check-circle' : 'fas fa-exclamation-circle' }} me-1"></i>
                             {{ $stats['todayAttendance'] > 0 ? 'Recorded' : 'Not Recorded' }}
                         </span>
-                        <a href="{{ route('teacher.attendances.index') }}" class="btn btn-sm btn-outline-warning rounded-pill">
-                            <i class="fas fa-external-link-alt me-1"></i> View Records
+                        <a href="{{ route('teacher.attendances.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                            <i class="fas fa-calendar-check me-1"></i> Attendance
                         </a>
                     </div>
                 </div>
@@ -164,36 +178,8 @@
     <!-- Analytics Section -->
     <div class="row mb-4">
         <!-- Attendance Trends -->
-        <div class="col-lg-8 mb-4 mb-lg-0">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i> Attendance Trends</h5>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-outline-secondary active attendance-period-btn" data-period="week">Week</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary attendance-period-btn" data-period="month">Month</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary attendance-period-btn" data-period="semester">Semester</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="attendance-chart-container chart-container" style="height: 300px;">
-                        <canvas id="attendanceChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grade Distribution -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0"><i class="fas fa-chart-pie text-success me-2"></i> Grade Distribution</h5>
-                </div>
-                <div class="card-body">
-                    <div class="grade-chart-container chart-container d-flex justify-content-center align-items-center" style="height: 300px;">
-                        <canvas id="gradeDistributionChart"></canvas>
-                    </div>
-                </div>
-            </div>
+        <div class="col-lg-12">
+            @include('teacher.dashboard.attendance-charts')
         </div>
     </div>
 
@@ -399,7 +385,7 @@
                                         <th class="ps-4">Section</th>
                                         <th>Grade Level</th>
                                         <th>Students</th>
-                                        <th class="text-end pe-4">Action</th>
+                                        {{-- <th class="text-end pe-4">Action</th> --}}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -412,11 +398,11 @@
                                                 {{ $section->students->count() }} students
                                             </span>
                                         </td>
-                                        <td class="text-end pe-4">
+                                        {{-- <td class="text-end pe-4">
                                             <a href="{{ route('teacher-admin.sections.show', $section->id) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-eye me-1"></i> View
                                             </a>
-                                        </td>
+                                        </td> --}}
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -455,7 +441,7 @@
                                         <th class="ps-4">Subject</th>
                                         <th>Code</th>
                                         <th>Grade Level</th>
-                                        <th class="text-end pe-4">Action</th>
+                                        {{-- <th class="text-end pe-4">Action</th> --}}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -469,12 +455,12 @@
                                         <tr>
                                             <td class="ps-4 fw-bold">{{ $subject->name ?? 'N/A' }}</td>
                                             <td><code>{{ $subject->code ?? 'N/A' }}</code></td>
-                                            <td>{{ $gradeLevel ?? 'N/A' }}</td>
-                                            <td class="text-end pe-4">
+                                            <td class="badge bg-success rounded-pill text-white">{{ $gradeLevel ?? 'N/A' }}</td>
+                                            {{-- <td class="text-end pe-4">
                                                 <a href="{{ route('teacher-admin.subjects.show', $subject->id) }}" class="btn btn-sm btn-outline-success">
                                                     <i class="fas fa-eye me-1"></i> View
                                                 </a>
-                                            </td>
+                                            </td> --}}
                                         </tr>
                                         @endforeach
                                     @endforeach
@@ -513,226 +499,104 @@
 
         // Function to initialize charts
         function initCharts() {
-            // Set chart defaults
+            // Define colors for charts
             const fontColor = '#666';
             const gridColor = 'rgba(0, 0, 0, 0.1)';
 
-            Chart.defaults.color = fontColor;
-            Chart.defaults.scale.grid.color = gridColor;
+            // Create a simple test chart
+            const testChartCtx = document.getElementById('testChart');
+            if (testChartCtx) {
+                // Sample data
+                const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+                const presentData = [5, 4, 3, 5, 4];
+                const lateData = [0, 1, 0, 0, 1];
+                const absentData = [0, 0, 2, 0, 0];
 
-            // Destroy existing charts if they exist
-            if (attendanceChart) attendanceChart.destroy();
-            if (gradeChart) gradeChart.destroy();
-
-            // Initialize Attendance Chart
-            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
-            attendanceChart = new Chart(attendanceCtx, {
-                type: 'bar',
-                data: {
-                    labels: [
-                        @foreach($last7Days as $day)
-                            '{{ $day['date'] }}',
-                        @endforeach
-                    ],
-                    datasets: [
-                        {
-                            label: 'Present',
-                            data: [
-                                @foreach($attendanceTrends as $trend)
-                                    {{ $trend['present'] }},
-                                @endforeach
-                            ],
-                            backgroundColor: '#28a745',
-                            borderColor: '#28a745',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Late',
-                            data: [
-                                @foreach($attendanceTrends as $trend)
-                                    {{ $trend['late'] }},
-                                @endforeach
-                            ],
-                            backgroundColor: '#ffc107',
-                            borderColor: '#ffc107',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Half Day',
-                            data: [
-                                @foreach($attendanceTrends as $trend)
-                                    {{ $trend['half_day'] ?? 0 }},
-                                @endforeach
-                            ],
-                            backgroundColor: '#17a2b8',
-                            borderColor: '#17a2b8',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Absent',
-                            data: [
-                                @foreach($attendanceTrends as $trend)
-                                    {{ $trend['absent'] }},
-                                @endforeach
-                            ],
-                            backgroundColor: '#dc3545',
-                            borderColor: '#dc3545',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Excused',
-                            data: [
-                                @foreach($attendanceTrends as $trend)
-                                    {{ $trend['excused'] ?? 0 }},
-                                @endforeach
-                            ],
-                            backgroundColor: '#6c757d',
-                            borderColor: '#6c757d',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                color: fontColor
+                // Create the chart
+                new Chart(testChartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Present',
+                                data: presentData,
+                                backgroundColor: '#28a745',
+                                borderColor: '#28a745',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Late',
+                                data: lateData,
+                                backgroundColor: '#ffc107',
+                                borderColor: '#ffc107',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Absent',
+                                data: absentData,
+                                backgroundColor: '#dc3545',
+                                borderColor: '#dc3545',
+                                borderWidth: 1
                             }
-                        },
-                        tooltip: {
-                            backgroundColor: isDarkMode ? '#2d2d2d' : 'rgba(0, 0, 0, 0.7)',
-                            titleColor: isDarkMode ? '#e4e6eb' : '#fff',
-                            bodyColor: isDarkMode ? '#e4e6eb' : '#fff',
-                            borderColor: isDarkMode ? '#3a3b3c' : 'rgba(0, 0, 0, 0.1)',
-                            borderWidth: 1
-                        }
+                        ]
                     },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: fontColor
-                            },
-                            grid: {
-                                color: gridColor
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
                             }
                         },
-                        y: {
-                            ticks: {
-                                color: fontColor
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: fontColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
                             },
-                            grid: {
-                                color: gridColor
+                            y: {
+                                ticks: {
+                                    color: fontColor
+                                },
+                                grid: {
+                                    color: gridColor
+                                }
                             }
                         }
                     }
-                }
-            });
-
-            // Initialize Grade Distribution Chart
-            const gradeCtx = document.getElementById('gradeDistributionChart').getContext('2d');
-            gradeChart = new Chart(gradeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['A (90-100)', 'B (80-89)', 'C (70-79)', 'D (60-69)', 'F (Below 60)'],
-                    datasets: [{
-                        data: [
-                            {{ $gradeDistributionPercentage['A'] ?? 0 }},
-                            {{ $gradeDistributionPercentage['B'] ?? 0 }},
-                            {{ $gradeDistributionPercentage['C'] ?? 0 }},
-                            {{ $gradeDistributionPercentage['D'] ?? 0 }},
-                            {{ $gradeDistributionPercentage['F'] ?? 0 }}
-                        ],
-                        backgroundColor: [
-                            '#28a745',
-                            '#17a2b8',
-                            '#ffc107',
-                            '#fd7e14',
-                            '#dc3545'
-                        ],
-                        borderWidth: 1,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: fontColor,
-                                padding: 15,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                            titleColor: '#fff',
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(0, 0, 0, 0.1)',
-                            borderWidth: 1
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
+                });
+            }
         }
 
         // Initialize charts
         initCharts();
 
-
-
         // Handle attendance period buttons
-        document.querySelectorAll('.attendance-period-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                // Remove active class from all buttons
-                document.querySelectorAll('.attendance-period-btn').forEach(btn => {
-                    btn.classList.remove('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            const weeklyViewBtn = document.getElementById('weeklyViewBtn');
+            const monthlyViewBtn = document.getElementById('monthlyViewBtn');
+            const weeklyAttendanceView = document.getElementById('weeklyAttendanceView');
+            const monthlyAttendanceView = document.getElementById('monthlyAttendanceView');
+
+            if (weeklyViewBtn && monthlyViewBtn) {
+                weeklyViewBtn.addEventListener('click', function() {
+                    weeklyViewBtn.classList.add('active');
+                    monthlyViewBtn.classList.remove('active');
+                    weeklyAttendanceView.style.display = 'block';
+                    monthlyAttendanceView.style.display = 'none';
                 });
 
-                // Add active class to clicked button
-                this.classList.add('active');
-
-                // Get selected period
-                const period = this.dataset.period;
-
-                // Get selected section ID (if any)
-                const sectionSelect = document.getElementById('performanceMetricSection');
-                const sectionId = sectionSelect ? sectionSelect.value : null;
-
-                // Fetch attendance data by period via AJAX
-                fetch(`${attendanceDataUrl}?period=${period}${sectionId ? '&section_id='+sectionId : ''}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Update chart with real data
-                        attendanceChart.data.labels = data.labels;
-                        attendanceChart.data.datasets[0].data = data.present;
-                        attendanceChart.data.datasets[1].data = data.late;
-                        attendanceChart.data.datasets[2].data = data.half_day;
-                        attendanceChart.data.datasets[3].data = data.absent;
-                        attendanceChart.data.datasets[4].data = data.excused;
-
-                        // Determine the max value for y-axis
-                        const allValues = [...data.present, ...data.late, ...data.half_day, ...data.absent, ...data.excused];
-                        const maxValue = Math.max(...allValues, 1); // Minimum of 1
-
-                        // Update y-axis max value and step size
-                        const stepSize = maxValue <= 10 ? 1 : Math.ceil(maxValue / 10);
-                        attendanceChart.options.scales.y.ticks.stepSize = stepSize;
-
-                        attendanceChart.update();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching attendance data:', error);
-                        // Fallback to initial data if fetch fails
-                    });
-            });
+                monthlyViewBtn.addEventListener('click', function() {
+                    monthlyViewBtn.classList.add('active');
+                    weeklyViewBtn.classList.remove('active');
+                    monthlyAttendanceView.style.display = 'block';
+                    weeklyAttendanceView.style.display = 'none';
+                });
+            }
         });
 
         // Add event listener for section select change to update performance metrics

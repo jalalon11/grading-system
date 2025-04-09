@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Section;
 use App\Models\Student;
+use App\Services\AttendanceSummaryService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,25 +15,38 @@ use Illuminate\Support\Facades\DB;
 class AttendanceController extends Controller
 {
     /**
+     * The attendance summary service instance.
+     */
+    protected $attendanceSummaryService;
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(AttendanceSummaryService $attendanceSummaryService)
+    {
+        $this->attendanceSummaryService = $attendanceSummaryService;
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
         $sections = Section::where('adviser_id', Auth::id())->get();
-        
+
         $query = Attendance::query()
             ->join('students', 'attendances.student_id', '=', 'students.id')
             ->join('sections', 'students.section_id', '=', 'sections.id')
             ->where('sections.adviser_id', Auth::id());
-        
+
         if ($request->filled('section_id')) {
             $query->where('students.section_id', $request->section_id);
         }
-        
+
         if ($request->filled('date')) {
             $query->where('attendances.date', $request->date);
         }
-        
+
         // Filter by month if month parameter is provided (format: YYYY-MM)
         if ($request->filled('month')) {
             $monthYear = explode('-', $request->month);
@@ -42,21 +57,21 @@ class AttendanceController extends Controller
                       ->whereMonth('attendances.date', $month);
             }
         }
-        
+
         $attendanceRecords = $query->select('attendances.*', DB::raw("CONCAT(students.first_name, ' ', students.last_name) as name"), 'students.section_id')
             ->orderBy('attendances.date', 'desc')
             ->get();
-        
+
         // Group attendance by date and section
         $attendances = [];
         foreach ($attendanceRecords as $record) {
             $date = $record->date->format('Y-m-d'); // Convert Carbon date to string
             $sectionId = $record->section_id;
-            
+
             if (!isset($attendances[$date])) {
                 $attendances[$date] = [];
             }
-            
+
             if (!isset($attendances[$date][$sectionId])) {
                 $sectionName = $sections->firstWhere('id', $sectionId)->name ?? 'Unknown';
                 $attendances[$date][$sectionId] = [
@@ -68,7 +83,7 @@ class AttendanceController extends Controller
                     'half_day_count' => 0
                 ];
             }
-            
+
             if ($record->status === 'present') {
                 $attendances[$date][$sectionId]['present_count']++;
             } elseif ($record->status === 'late') {
@@ -81,15 +96,48 @@ class AttendanceController extends Controller
                 $attendances[$date][$sectionId]['absent_count']++;
             }
         }
-        
+
         // Get unique months from records for the month filter dropdown
         $availableMonths = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
             ->where('sections.adviser_id', Auth::id())
             ->select(DB::raw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month_value, DATE_FORMAT(date, "%M %Y") as month_name'))
             ->orderBy('month_value', 'desc')
             ->get();
-            
-        return view('teacher.attendances.index', compact('attendances', 'sections', 'availableMonths'));
+
+        // Get current month and week summary data
+        $currentMonthSummary = null;
+        $currentWeekSummary = null;
+
+        // Only calculate summaries if there are attendance records
+        if (count($attendances) > 0) {
+            $sectionId = $request->filled('section_id') ? $request->section_id : null;
+            $monthParam = $request->filled('month') ? $request->month : Carbon::now()->format('Y-m');
+
+            // Get monthly summary if month filter is applied
+            if ($request->filled('month')) {
+                $currentMonthSummary = $this->attendanceSummaryService->getMonthlySummary(
+                    Auth::id(),
+                    $monthParam,
+                    $sectionId
+                );
+            }
+
+            // Get weekly summary if we're viewing the current month or no month filter
+            if (!$request->filled('month') || $monthParam === Carbon::now()->format('Y-m')) {
+                $currentWeekSummary = $this->attendanceSummaryService->getWeeklySummary(
+                    Auth::id(),
+                    $sectionId
+                );
+            }
+        }
+
+        return view('teacher.attendances.index', compact(
+            'attendances',
+            'sections',
+            'availableMonths',
+            'currentMonthSummary',
+            'currentWeekSummary'
+        ));
     }
 
     /**
@@ -111,25 +159,28 @@ class AttendanceController extends Controller
             'date' => 'required|date',
             'attendance' => 'required|array',
             'attendance.*' => 'required|in:present,absent,late,excused,half_day',
+            'remarks' => 'nullable|array',
+            'remarks.*' => 'nullable|string|max:255',
         ]);
-        
+
         // Check if the section belongs to this teacher
         $section = Section::where('id', $validated['section_id'])
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
-        
+
         // Check if attendance for this date and section already exists
         $existingAttendance = Attendance::where('section_id', $validated['section_id'])
                                         ->where('date', $validated['date'])
+                                        ->where('teacher_id', Auth::id())
                                         ->exists();
-        
+
         if ($existingAttendance) {
             return redirect()->back()->with('error', 'Attendance for this date and section already exists. Please edit the existing record.');
         }
-        
+
         // Begin transaction
         DB::beginTransaction();
-        
+
         try {
             // Create individual attendance records for each student
             foreach ($validated['attendance'] as $studentId => $status) {
@@ -137,15 +188,21 @@ class AttendanceController extends Controller
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
                                   ->firstOrFail();
-                
+
                 // Get the student's subject ID (assuming they only have one subject in this section)
                 $subject = $section->subjects->first();
                 $subjectId = $subject ? $subject->id : null;
-                
+
                 if (!$subjectId) {
                     throw new \Exception('No subject found for this section');
                 }
-                
+
+                // Get remarks if status is excused
+                $remarks = null;
+                if ($status === 'excused' && isset($validated['remarks'][$studentId])) {
+                    $remarks = $validated['remarks'][$studentId];
+                }
+
                 // Create individual attendance record
                 Attendance::create([
                     'student_id' => $studentId,
@@ -154,10 +211,10 @@ class AttendanceController extends Controller
                     'subject_id' => $subjectId,
                     'date' => $validated['date'],
                     'status' => $status,
-                    'remarks' => null
+                    'remarks' => $remarks
                 ]);
             }
-            
+
             DB::commit();
             return redirect()->route('teacher.attendances.index')
                              ->with('success', 'Attendance recorded successfully.');
@@ -174,29 +231,30 @@ class AttendanceController extends Controller
     public function show(Request $request, string $id)
     {
         $date = $request->query('date');
-        
+
         if (!$date) {
             return redirect()->route('teacher.attendances.index')
                              ->with('error', 'Date parameter is required.');
         }
-        
+
         $section = Section::where('id', $id)
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
-        
+
         $students = Student::where('section_id', $id)->get();
-        
-        // Get attendance data for all students in this section on this date
+
+        // Get attendance data for all students in this section on this date for this teacher
         $attendanceRecords = Attendance::where('section_id', $id)
                                       ->where('date', $date)
+                                      ->where('teacher_id', Auth::id())
                                       ->get();
-        
+
         // Map attendance data by student ID
         $attendanceData = [];
         foreach ($students as $student) {
             $attendanceData[$student->id] = 'absent'; // Default to absent
         }
-        
+
         $presentCount = 0;
         $lateCount = 0;
         $excusedCount = 0;
@@ -213,10 +271,10 @@ class AttendanceController extends Controller
                 $halfDayCount++;
             }
         }
-        
+
         $absentCount = count($students) - ($presentCount + $lateCount + $excusedCount + $halfDayCount);
-        
-        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount', 'halfDayCount'));
+
+        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'attendanceRemarks', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount', 'halfDayCount'));
     }
 
     /**
@@ -225,34 +283,38 @@ class AttendanceController extends Controller
     public function edit(Request $request, string $id)
     {
         $date = $request->query('date');
-        
+
         if (!$date) {
             return redirect()->route('teacher.attendances.index')
                              ->with('error', 'Date parameter is required.');
         }
-        
+
         $section = Section::where('id', $id)
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
-        
+
         $students = Student::where('section_id', $id)->get();
-        
-        // Get attendance data for all students in this section on this date
+
+        // Get attendance data for all students in this section on this date for this teacher
         $attendanceRecords = Attendance::where('section_id', $id)
                                       ->where('date', $date)
+                                      ->where('teacher_id', Auth::id())
                                       ->get();
-        
+
         // Map attendance data by student ID
         $attendanceData = [];
+        $attendanceRemarks = [];
         foreach ($students as $student) {
             $attendanceData[$student->id] = 'absent'; // Default to absent
+            $attendanceRemarks[$student->id] = null;
         }
-        
+
         foreach ($attendanceRecords as $record) {
             $attendanceData[$record->student_id] = $record->status;
+            $attendanceRemarks[$record->student_id] = $record->remarks;
         }
-        
-        return view('teacher.attendances.edit', compact('section', 'students', 'attendanceData', 'date'));
+
+        return view('teacher.attendances.edit', compact('section', 'students', 'attendanceData', 'attendanceRemarks', 'date'));
     }
 
     /**
@@ -265,37 +327,46 @@ class AttendanceController extends Controller
             'date' => 'required|date',
             'attendance' => 'required|array',
             'attendance.*' => 'required|in:present,absent,late,excused,half_day',
+            'remarks' => 'nullable|array',
+            'remarks.*' => 'nullable|string|max:255',
         ]);
-        
+
         // Check if the section belongs to this teacher
         $section = Section::where('id', $validated['section_id'])
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
-        
+
         // Begin transaction
         DB::beginTransaction();
-        
+
         try {
-            // Delete existing attendance records for this section and date
+            // Delete existing attendance records for this section and date and teacher
             Attendance::where('section_id', $validated['section_id'])
                       ->where('date', $validated['date'])
+                      ->where('teacher_id', Auth::id())
                       ->delete();
-            
+
             // Get a subject for the section
             $subject = $section->subjects->first();
             $subjectId = $subject ? $subject->id : null;
-            
+
             if (!$subjectId) {
                 throw new \Exception('No subject found for this section');
             }
-            
+
             // Create new attendance records for each student
             foreach ($validated['attendance'] as $studentId => $status) {
                 // Verify student belongs to the section
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
                                   ->firstOrFail();
-                
+
+                // Get remarks if status is excused
+                $remarks = null;
+                if ($status === 'excused' && isset($validated['remarks'][$studentId])) {
+                    $remarks = $validated['remarks'][$studentId];
+                }
+
                 // Create the attendance record
                 Attendance::create([
                     'student_id' => $studentId,
@@ -304,10 +375,10 @@ class AttendanceController extends Controller
                     'subject_id' => $subjectId,
                     'date' => $validated['date'],
                     'status' => $status,
-                    'remarks' => null
+                    'remarks' => $remarks
                 ]);
             }
-            
+
             DB::commit();
             return redirect()->route('teacher.attendances.index')
                              ->with('success', 'Attendance updated successfully.');
@@ -326,5 +397,52 @@ class AttendanceController extends Controller
         // Not implemented for attendance
         return redirect()->route('teacher.attendances.index')
                          ->with('error', 'Attendance deletion is not supported.');
+    }
+
+    /**
+     * Display weekly attendance summary
+     */
+    public function weeklySummary(Request $request)
+    {
+        $sectionId = $request->filled('section_id') ? $request->section_id : null;
+
+        // Get sections where the teacher is the adviser
+        $sections = Section::where('adviser_id', Auth::id())->get();
+
+        // Get weekly attendance summary
+        $summary = $this->attendanceSummaryService->getWeeklySummary(
+            Auth::id(),
+            $sectionId
+        );
+
+        return view('teacher.attendances.weekly_summary', compact('summary', 'sections', 'sectionId'));
+    }
+
+    /**
+     * Display monthly attendance summary
+     */
+    public function monthlySummary(Request $request)
+    {
+        $sectionId = $request->filled('section_id') ? $request->section_id : null;
+        $yearMonth = $request->filled('month') ? $request->month : Carbon::now()->format('Y-m');
+
+        // Get sections where the teacher is the adviser
+        $sections = Section::where('adviser_id', Auth::id())->get();
+
+        // Get available months for the dropdown
+        $availableMonths = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id())
+            ->select(DB::raw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month_value, DATE_FORMAT(date, "%M %Y") as month_name'))
+            ->orderBy('month_value', 'desc')
+            ->get();
+
+        // Get monthly attendance summary
+        $summary = $this->attendanceSummaryService->getMonthlySummary(
+            Auth::id(),
+            $yearMonth,
+            $sectionId
+        );
+
+        return view('teacher.attendances.monthly_summary', compact('summary', 'sections', 'sectionId', 'yearMonth', 'availableMonths'));
     }
 }

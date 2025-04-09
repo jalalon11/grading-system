@@ -8,7 +8,7 @@
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-clipboard-check text-primary me-2"></i> 
+                            <i class="fas fa-clipboard-check text-primary me-2"></i>
                             Attendance Details
                         </h5>
                         <div>
@@ -59,7 +59,7 @@
                                                         <div class="progress-bar bg-success" style="width: {{ count($students) > 0 ? ($presentCount / count($students) * 100) : 0 }}%"></div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="attendance-stat-item mb-3 p-3 rounded bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <span class="text-muted">Late</span>
@@ -69,7 +69,7 @@
                                                         <div class="progress-bar bg-warning" style="width: {{ count($students) > 0 ? ($lateCount / count($students) * 100) : 0 }}%"></div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="attendance-stat-item mb-3 p-3 rounded bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <span class="text-muted">Half Day</span>
@@ -79,7 +79,7 @@
                                                         <div class="progress-bar bg-info" style="width: {{ count($students) > 0 ? ($halfDayCount / count($students) * 100) : 0 }}%"></div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="attendance-stat-item p-3 rounded bg-light">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <span class="text-muted">Absent</span>
@@ -89,7 +89,7 @@
                                                         <div class="progress-bar bg-danger" style="width: {{ count($students) > 0 ? ($absentCount / count($students) * 100) : 0 }}%"></div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div class="attendance-stat-item p-3 rounded bg-light mt-3">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <span class="text-muted">Excused</span>
@@ -105,7 +105,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-lg-5">
                             <div class="card h-100">
                                 <div class="card-header bg-light">
@@ -144,11 +144,11 @@
                                                 <div class="attendance-rate-progress flex-grow-1">
                                                     <div class="progress" style="height: 10px;">
                                                         @if(count($students) > 0)
-                                                            <div class="progress-bar bg-success" role="progressbar" 
+                                                            <div class="progress-bar bg-success" role="progressbar"
                                                                  style="width: {{ ($presentCount / count($students) * 100) }}%"></div>
-                                                            <div class="progress-bar bg-warning" role="progressbar" 
+                                                            <div class="progress-bar bg-warning" role="progressbar"
                                                                  style="width: {{ ($lateCount / count($students) * 100) }}%"></div>
-                                                            <div class="progress-bar bg-info" role="progressbar" 
+                                                            <div class="progress-bar bg-info" role="progressbar"
                                                                  style="width: {{ ($halfDayCount / count($students) * 100) }}%"></div>
                                                         @else
                                                             <div class="progress-bar" role="progressbar" style="width: 0%"></div>
@@ -183,7 +183,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         @if(count($students) > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
@@ -202,7 +202,7 @@
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-container me-2">
-                                                            <span class="avatar rounded-circle d-flex align-items-center justify-content-center" 
+                                                            <span class="avatar rounded-circle d-flex align-items-center justify-content-center"
                                                                   style="width: 35px; height: 35px; background-color: #e0f2ff; color: #0d6efd;">
                                                                 {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
                                                             </span>
@@ -234,6 +234,11 @@
                                                         <span class="badge bg-secondary">
                                                             <i class="fas fa-file-alt me-1"></i> Excused
                                                         </span>
+                                                        @if(!empty($attendanceRemarks[$student->id]))
+                                                            <div class="small text-muted mt-1">
+                                                                <strong>Reason:</strong> {{ $attendanceRemarks[$student->id] }}
+                                                            </div>
+                                                        @endif
                                                     @else
                                                         <span class="badge bg-danger">
                                                             <i class="fas fa-times-circle me-1"></i> Absent
@@ -268,14 +273,14 @@
         height: 8px;
         border-radius: 50%;
     }
-    
+
     .detail-label {
         margin-bottom: 2px;
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    
+
     .detail-value {
         font-size: 1rem;
     }
@@ -334,4 +339,4 @@
     });
 </script>
 @endpush
-@endsection 
+@endsection

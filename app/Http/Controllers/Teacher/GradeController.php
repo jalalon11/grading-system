@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Assessment;
 use App\Models\Grade;
 use App\Models\GradeSummary;
 use App\Models\Section;
@@ -635,21 +634,92 @@ class GradeController extends Controller
                 ]);
             }
 
-            // Verify that this is a MAPEH assessment from the setup
-            if ($isMAPEH && (!session('is_mapeh') || empty(session('selected_components')) || empty(session('component_max_score')))) {
-                Log::warning('Missing MAPEH session data', [
-                    'is_mapeh' => session('is_mapeh', false),
-                    'selected_components' => session('selected_components', []),
-                    'component_max_score' => session('component_max_score', [])
-                ]);
+            // Define assessment limits
+            $assessmentLimits = [
+                'written_work' => 7,
+                'performance_task' => 8,
+                'quarterly' => 1
+            ];
 
-                // Redirect back to setup if MAPEH data is missing
-                return redirect()->route('teacher.grades.assessment-setup', [
-                    'subject_id' => $request->subject_id,
-                    'term' => $request->term,
-                    'grade_type' => $request->grade_type,
-                    'section_id' => $request->section_id
-                ])->with('error', 'MAPEH component data is missing. Please set up your assessment again.');
+            // Check assessment count limits - this prevents backdoor access to batch grade entry
+            if ($isMAPEH) {
+                // Verify that this is a MAPEH assessment from the setup
+                if (!session('is_mapeh') || empty(session('selected_components')) || empty(session('component_max_score'))) {
+                    Log::warning('Missing MAPEH session data', [
+                        'is_mapeh' => session('is_mapeh', false),
+                        'selected_components' => session('selected_components', []),
+                        'component_max_score' => session('component_max_score', [])
+                    ]);
+
+                    // Redirect back to setup if MAPEH data is missing
+                    return redirect()->route('teacher.grades.assessment-setup', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term,
+                        'grade_type' => $request->grade_type,
+                        'section_id' => $request->section_id
+                    ])->with('error', 'MAPEH component data is missing. Please set up your assessment again.');
+                }
+
+                // Check component assessment counts to prevent backdoor access
+                foreach (session('selected_components', []) as $componentId) {
+                    $componentCount = Grade::where('subject_id', $componentId)
+                        ->where('term', $request->term)
+                        ->where('grade_type', $request->grade_type)
+                        ->distinct('assessment_name')
+                        ->count('assessment_name');
+
+                    if (isset($assessmentLimits[$request->grade_type]) && $componentCount >= $assessmentLimits[$request->grade_type]) {
+                        $component = Subject::find($componentId);
+                        $gradeTypes = [
+                            'written_work' => 'Written Work',
+                            'performance_task' => 'Performance Task',
+                            'quarterly' => 'Quarterly Assessment'
+                        ];
+
+                        Log::warning('Attempted to bypass assessment limit', [
+                            'teacher_id' => $teacher,
+                            'subject_id' => $request->subject_id,
+                            'component_id' => $componentId,
+                            'component_name' => $component->name,
+                            'grade_type' => $request->grade_type,
+                            'current_count' => $componentCount,
+                            'max_allowed' => $assessmentLimits[$request->grade_type]
+                        ]);
+
+                        return redirect()->route('teacher.grades.index', [
+                            'subject_id' => $request->subject_id,
+                            'term' => $request->term
+                        ])->with('error', "Maximum number of {$assessmentLimits[$request->grade_type]} assessments for {$gradeTypes[$request->grade_type]} has been reached for {$component->name}. Cannot create more assessments.");
+                    }
+                }
+            } else {
+                // Check regular subject assessment count to prevent backdoor access
+                $assessmentCount = Grade::where('subject_id', $request->subject_id)
+                    ->where('term', $request->term)
+                    ->where('grade_type', $request->grade_type)
+                    ->distinct('assessment_name')
+                    ->count('assessment_name');
+
+                if (isset($assessmentLimits[$request->grade_type]) && $assessmentCount >= $assessmentLimits[$request->grade_type]) {
+                    $gradeTypes = [
+                        'written_work' => 'Written Work',
+                        'performance_task' => 'Performance Task',
+                        'quarterly' => 'Quarterly Assessment'
+                    ];
+
+                    Log::warning('Attempted to bypass assessment limit', [
+                        'teacher_id' => $teacher,
+                        'subject_id' => $request->subject_id,
+                        'grade_type' => $request->grade_type,
+                        'current_count' => $assessmentCount,
+                        'max_allowed' => $assessmentLimits[$request->grade_type]
+                    ]);
+
+                    return redirect()->route('teacher.grades.index', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term
+                    ])->with('error', "Maximum number of {$assessmentLimits[$request->grade_type]} assessments for {$gradeTypes[$request->grade_type]} has been reached. Cannot create more assessments.");
+                }
             }
 
             Log::info('Assessment info', [
@@ -852,6 +922,77 @@ class GradeController extends Controller
                 'assessment_name' => $request->assessment_name,
                 'is_mapeh' => $isMAPEH
             ]);
+
+            // Define assessment limits
+            $assessmentLimits = [
+                'written_work' => 7,
+                'performance_task' => 8,
+                'quarterly' => 1
+            ];
+
+            // Double-check assessment count limits to prevent backdoor access
+            if ($isMAPEH) {
+                // Check component assessment counts
+                foreach ($request->component_ids as $componentId) {
+                    $componentCount = Grade::where('subject_id', $componentId)
+                        ->where('term', $request->term)
+                        ->where('grade_type', $request->grade_type)
+                        ->distinct('assessment_name')
+                        ->count('assessment_name');
+
+                    if (isset($assessmentLimits[$request->grade_type]) && $componentCount >= $assessmentLimits[$request->grade_type]) {
+                        $component = Subject::find($componentId);
+                        $gradeTypes = [
+                            'written_work' => 'Written Work',
+                            'performance_task' => 'Performance Task',
+                            'quarterly' => 'Quarterly Assessment'
+                        ];
+
+                        Log::warning('Attempted to bypass assessment limit in batch store', [
+                            'teacher_id' => $teacher,
+                            'subject_id' => $request->subject_id,
+                            'component_id' => $componentId,
+                            'component_name' => $component->name,
+                            'grade_type' => $request->grade_type,
+                            'current_count' => $componentCount,
+                            'max_allowed' => $assessmentLimits[$request->grade_type]
+                        ]);
+
+                        return redirect()->route('teacher.grades.index', [
+                            'subject_id' => $request->subject_id,
+                            'term' => $request->term
+                        ])->with('error', "Security violation: Maximum number of {$assessmentLimits[$request->grade_type]} assessments for {$gradeTypes[$request->grade_type]} has been reached for {$component->name}.");
+                    }
+                }
+            } else {
+                // Check regular subject assessment count
+                $assessmentCount = Grade::where('subject_id', $request->subject_id)
+                    ->where('term', $request->term)
+                    ->where('grade_type', $request->grade_type)
+                    ->distinct('assessment_name')
+                    ->count('assessment_name');
+
+                if (isset($assessmentLimits[$request->grade_type]) && $assessmentCount >= $assessmentLimits[$request->grade_type]) {
+                    $gradeTypes = [
+                        'written_work' => 'Written Work',
+                        'performance_task' => 'Performance Task',
+                        'quarterly' => 'Quarterly Assessment'
+                    ];
+
+                    Log::warning('Attempted to bypass assessment limit in batch store', [
+                        'teacher_id' => $teacher,
+                        'subject_id' => $request->subject_id,
+                        'grade_type' => $request->grade_type,
+                        'current_count' => $assessmentCount,
+                        'max_allowed' => $assessmentLimits[$request->grade_type]
+                    ]);
+
+                    return redirect()->route('teacher.grades.index', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term
+                    ])->with('error', "Security violation: Maximum number of {$assessmentLimits[$request->grade_type]} assessments for {$gradeTypes[$request->grade_type]} has been reached.");
+                }
+            }
 
             // Check if the teacher teaches this subject in this section
             $subjectExists = DB::table('section_subject')
@@ -1179,18 +1320,93 @@ class GradeController extends Controller
         $term = $request->term;
         $gradeType = $request->grade_type;
 
+        // Check assessment count limits
+        $assessmentCount = Grade::where('subject_id', $request->subject_id)
+            ->where('term', $request->term)
+            ->where('grade_type', $request->grade_type)
+            ->distinct('assessment_name')
+            ->count('assessment_name');
+
+        // Define assessment limits
+        $assessmentLimits = [
+            'written_work' => 7,
+            'performance_task' => 8,
+            'quarterly' => 1
+        ];
+
         $gradeTypes = [
             'written_work' => 'Written Work',
             'performance_task' => 'Performance Task',
             'quarterly' => 'Quarterly Assessment'
         ];
 
+        // We'll check the limit but not prevent access to the setup page
+        // Just pass the assessment count and limits to the view
+
+        // For MAPEH subjects, check component assessment counts
+        $isMAPEH = false;
+        $componentAssessmentCounts = [];
+
+        if (isset($subject->components) && $subject->components->count() > 0) {
+            $componentNames = $subject->components->pluck('name')->map(fn($name) => strtolower($name))->toArray();
+            $requiredComponents = ['music', 'arts', 'physical education', 'health'];
+
+            $matchedComponents = 0;
+            foreach ($requiredComponents as $component) {
+                if (in_array($component, $componentNames) ||
+                    in_array(strtolower(substr($component, 0, 5)), $componentNames)) {
+                    $matchedComponents++;
+                }
+            }
+
+            $isMAPEH = $matchedComponents == 4;
+
+            if ($isMAPEH) {
+                foreach ($subject->components as $component) {
+                    $componentCount = Grade::where('subject_id', $component->id)
+                        ->where('term', $request->term)
+                        ->where('grade_type', $request->grade_type)
+                        ->distinct('assessment_name')
+                        ->count('assessment_name');
+
+                    $componentAssessmentCounts[$component->id] = $componentCount;
+                }
+            }
+        }
+
+        // Get existing assessment names for indicators
+        $existingAssessments = Grade::where('subject_id', $request->subject_id)
+            ->where('term', $request->term)
+            ->where('grade_type', $request->grade_type)
+            ->distinct('assessment_name')
+            ->pluck('assessment_name')
+            ->toArray();
+
+        // Get existing component assessment names
+        $componentExistingAssessments = [];
+        if ($isMAPEH) {
+            foreach ($subject->components as $component) {
+                $componentExistingAssessments[$component->id] = Grade::where('subject_id', $component->id)
+                    ->where('term', $request->term)
+                    ->where('grade_type', $request->grade_type)
+                    ->distinct('assessment_name')
+                    ->pluck('assessment_name')
+                    ->toArray();
+            }
+        }
+
         return view('teacher.grades.assessment-setup', compact(
             'subject',
             'section',
             'term',
             'gradeType',
-            'gradeTypes'
+            'gradeTypes',
+            'assessmentCount',
+            'assessmentLimits',
+            'existingAssessments',
+            'isMAPEH',
+            'componentAssessmentCounts',
+            'componentExistingAssessments'
         ));
     }
 
@@ -1221,6 +1437,50 @@ class GradeController extends Controller
                 'component_max_score.*.min' => 'Maximum score must be at least 1 for each component.'
             ]);
 
+            // Define assessment limits
+            $assessmentLimits = [
+                'written_work' => 7,
+                'performance_task' => 8,
+                'quarterly' => 1
+            ];
+
+            // Check component assessment counts
+            foreach ($request->selected_components as $componentId) {
+                $componentCount = Grade::where('subject_id', $componentId)
+                    ->where('term', $request->term)
+                    ->where('grade_type', $request->grade_type)
+                    ->distinct('assessment_name')
+                    ->count('assessment_name');
+
+                if (isset($assessmentLimits[$request->grade_type]) && $componentCount >= $assessmentLimits[$request->grade_type]) {
+                    $component = Subject::find($componentId);
+                    $gradeTypes = [
+                        'written_work' => 'Written Work',
+                        'performance_task' => 'Performance Task',
+                        'quarterly' => 'Quarterly Assessment'
+                    ];
+
+                    // Log the attempt but don't prevent access to setup page
+                    Log::warning('Maximum assessment limit reached', [
+                        'teacher_id' => Auth::id(),
+                        'subject_id' => $request->subject_id,
+                        'component_id' => $componentId,
+                        'component_name' => $component->name,
+                        'grade_type' => $request->grade_type,
+                        'current_count' => $componentCount,
+                        'max_allowed' => $assessmentLimits[$request->grade_type]
+                    ]);
+
+                    // Redirect back to the assessment setup page with an error message
+                    return redirect()->route('teacher.grades.assessment-setup', [
+                        'subject_id' => $request->subject_id,
+                        'term' => $request->term,
+                        'grade_type' => $request->grade_type,
+                        'section_id' => $request->section_id
+                    ])->with('error', "Cannot proceed to grade entry: Maximum number of {$assessmentLimits[$request->grade_type]} assessments for {$gradeTypes[$request->grade_type]} has been reached for {$component->name}.");
+                }
+            }
+
             // Log the selected components and max scores for debugging
             Log::info('MAPEH assessment setup', [
                 'teacher_id' => Auth::id(),
@@ -1238,6 +1498,45 @@ class GradeController extends Controller
                 'max_score' => 'required|numeric|min:1',
                 'section_id' => 'required|exists:sections,id',
             ]);
+
+            // Define assessment limits
+            $assessmentLimits = [
+                'written_work' => 7,
+                'performance_task' => 8,
+                'quarterly' => 1
+            ];
+
+            // Check assessment count
+            $assessmentCount = Grade::where('subject_id', $request->subject_id)
+                ->where('term', $request->term)
+                ->where('grade_type', $request->grade_type)
+                ->distinct('assessment_name')
+                ->count('assessment_name');
+
+            if (isset($assessmentLimits[$request->grade_type]) && $assessmentCount >= $assessmentLimits[$request->grade_type]) {
+                $gradeTypes = [
+                    'written_work' => 'Written Work',
+                    'performance_task' => 'Performance Task',
+                    'quarterly' => 'Quarterly Assessment'
+                ];
+
+                // Log the attempt but don't prevent access to setup page
+                Log::warning('Maximum assessment limit reached', [
+                    'teacher_id' => Auth::id(),
+                    'subject_id' => $request->subject_id,
+                    'grade_type' => $request->grade_type,
+                    'current_count' => $assessmentCount,
+                    'max_allowed' => $assessmentLimits[$request->grade_type]
+                ]);
+
+                // Redirect back to the assessment setup page with an error message
+                return redirect()->route('teacher.grades.assessment-setup', [
+                    'subject_id' => $request->subject_id,
+                    'term' => $request->term,
+                    'grade_type' => $request->grade_type,
+                    'section_id' => $request->section_id
+                ])->with('error', "Cannot proceed to grade entry: Maximum number of {$assessmentLimits[$request->grade_type]} assessments for {$gradeTypes[$request->grade_type]} has been reached.");
+            }
         }
 
         $teacherId = Auth::id();
@@ -1846,6 +2145,9 @@ class GradeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+    /**
+     * Edit a student's assessment score
+     */
     public function editAssessment(Request $request)
     {
         // Log the request method for debugging
@@ -2069,6 +2371,473 @@ class GradeController extends Controller
                 'success' => false,
                 'message' => 'Error updating assessment score: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Update assessment details (name and max score)
+     */
+    public function updateAssessment(Request $request)
+    {
+        // Log the request for debugging
+        Log::info('Assessment update request', [
+            'request_data' => $request->all(),
+            'max_score' => $request->max_score,
+            'max_score_type' => gettype($request->max_score),
+            'has_ajax' => $request->ajax()
+        ]);
+
+        // Check if it's an AJAX request
+        $isAjax = $request->ajax();
+
+        try {
+            // Force numeric conversion for max_score 
+            $maxScore = is_numeric($request->max_score) ? 
+                (float)$request->max_score : 
+                (is_string($request->max_score) ? (float)$request->max_score : 100);
+
+            // Override request with parsed max_score
+            $request->merge(['max_score' => $maxScore]);
+
+            $validated = $request->validate([
+                'subject_id' => 'required|integer|exists:subjects,id',
+                'term' => 'required|string|in:Q1,Q2,Q3,Q4',
+                'grade_type' => 'required|string|in:written_work,performance_task,quarterly',
+                'old_assessment_name' => 'required|string',
+                'assessment_name' => 'required|string|max:255',
+                'max_score' => 'required|numeric|min:0.1',
+                'is_mapeh' => 'sometimes|boolean',
+                'component_id' => 'sometimes|nullable',
+            ]);
+
+            DB::beginTransaction();
+
+            $teacherId = Auth::id();
+            Log::info('Teacher ID for assessment update', ['teacher_id' => $teacherId]);
+
+            // Check if the teacher is authorized to access this subject
+            $authorized = DB::table('section_subject')
+                ->where('teacher_id', $teacherId)
+                ->where('subject_id', $request->subject_id)
+                ->exists();
+
+            // If not found in section_subject, check if teacher is an adviser
+            if (!$authorized) {
+                $authorized = Section::whereHas('subjects', function($query) use ($request) {
+                    $query->where('subjects.id', $request->subject_id);
+                })->where('adviser_id', $teacherId)->exists();
+            }
+
+            if (!$authorized) {
+                Log::alert('Unauthorized assessment update attempt', [
+                    'teacher_id' => $teacherId,
+                    'subject_id' => $request->subject_id
+                ]);
+
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You are not authorized to update assessments for this subject.'
+                    ], 403);
+                }
+                
+                return redirect()->back()->with('error', 'You are not authorized to update assessments for this subject.');
+            }
+
+            // Determine which subject ID to use (main subject or component)
+            $subjectId = $request->subject_id; // Default to main subject ID
+
+            // For MAPEH subjects, check component ID
+            if ($request->is_mapeh && !empty($request->component_id)) {
+                $componentId = $request->component_id;
+                $componentExists = \App\Models\Subject::where('id', $componentId)->exists();
+                
+                if ($componentExists) {
+                    $subjectId = $componentId;
+                }
+            }
+
+            // Find all grades with this assessment name
+            $grades = Grade::where([
+                'subject_id' => $subjectId,
+                'term' => $request->term,
+                'grade_type' => $request->grade_type,
+                'assessment_name' => $request->old_assessment_name
+            ])->get();
+
+            Log::info('Found grades for update', ['count' => $grades->count()]);
+
+            // If no grades found, create a new assessment
+            if ($grades->isEmpty()) {
+                $studentIds = DB::table('student_section')
+                    ->join('section_subject', 'student_section.section_id', '=', 'section_subject.section_id')
+                    ->where('section_subject.subject_id', $subjectId)
+                    ->pluck('student_section.student_id');
+                
+                if ($studentIds->isEmpty()) {
+                    Log::warning('No students found for this subject', [
+                        'subject_id' => $subjectId
+                    ]);
+                    
+                    if ($isAjax) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'No students found for this subject. Please add students before creating assessments.'
+                        ], 404);
+                    }
+                    
+                    return redirect()->back()->with('error', 'No students found for this subject. Please add students before creating assessments.');
+                }
+                
+                // Create a template grade for the first student
+                $firstStudentId = $studentIds->first();
+                
+                $grade = new Grade();
+                $grade->student_id = $firstStudentId;
+                $grade->subject_id = $subjectId;
+                $grade->term = $request->term;
+                $grade->grade_type = $request->grade_type;
+                $grade->assessment_name = $request->assessment_name;
+                $grade->score = 0; // Default score
+                $grade->max_score = $request->max_score;
+                $grade->save();
+                
+                DB::commit();
+                
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Assessment created successfully.',
+                        'is_new' => true
+                    ]);
+                }
+                
+                return redirect()->back()->with('success', 'Assessment created successfully.');
+            }
+
+            // Update all grades using direct SQL for better performance
+            $updatedCount = 0;
+            $batchUpdates = [];
+            
+            foreach ($grades as $grade) {
+                // Use direct database update for better performance
+                $updated = DB::table('grades')
+                    ->where('id', $grade->id)
+                    ->update([
+                        'assessment_name' => $request->assessment_name,
+                        'max_score' => $request->max_score
+                    ]);
+                
+                if ($updated) {
+                    $updatedCount++;
+                }
+            }
+
+            // Recalculate grade summaries for all affected students
+            $studentIds = $grades->pluck('student_id')->unique();
+            $updatedSummaries = 0;
+            $summaryErrors = [];
+
+            foreach ($studentIds as $studentId) {
+                try {
+                    $summary = $this->recalculateGradeSummary($studentId, $subjectId, $request->term);
+                    if ($summary) {
+                        $updatedSummaries++;
+                    } else {
+                        $summaryErrors[] = "Failed to update summary for student ID: {$studentId}";
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error updating grade summary for student', [
+                        'student_id' => $studentId,
+                        'subject_id' => $subjectId,
+                        'term' => $request->term,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    $summaryErrors[] = "Error updating summary for student ID {$studentId}: " . $e->getMessage();
+                }
+            }
+
+            // Log the results
+            Log::info('Assessment update completed', [
+                'updated_grades' => $updatedCount,
+                'updated_summaries' => $updatedSummaries,
+                'summary_errors' => $summaryErrors
+            ]);
+
+            // Only commit if there were no summary errors
+            if (empty($summaryErrors)) {
+                DB::commit();
+                $successMessage = 'Assessment updated successfully. Updated ' . $updatedCount . ' grade entries for ' . count($studentIds) . ' students.';
+                
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Assessment updated successfully.',
+                        'affected_grades' => $updatedCount,
+                        'affected_students' => count($studentIds)
+                    ]);
+                }
+                
+                return redirect()->back()->with('success', $successMessage);
+            } else {
+                // If there were errors updating summaries, we still commit the grade changes
+                // but let the user know about the summary update issues
+                DB::commit();
+                
+                $warningMessage = 'Assessment information was updated, but there were issues updating some grade summaries. Please contact the system administrator.';
+                
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => true,
+                        'warning' => true,
+                        'message' => 'Assessment updated with warnings.',
+                        'warning_message' => $warningMessage,
+                        'affected_grades' => $updatedCount,
+                        'affected_students' => count($studentIds)
+                    ]);
+                }
+                
+                return redirect()->back()
+                    ->with('success', 'Assessment updated successfully.')
+                    ->with('warning', $warningMessage);
+            }
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Assessment update validation failed', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all()
+            ]);
+            
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating assessment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+                'subject_id' => $subjectId ?? 'not set'
+            ]);
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating assessment: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'Error updating assessment: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Recalculate a student's grade summary for a subject and term
+     */
+    private function recalculateGradeSummary($studentId, $subjectId, $term)
+    {
+        // Get the subject's grading configurations
+        $gradeConfig = GradeConfiguration::where('subject_id', $subjectId)->firstOrFail();
+        
+        // Get the student's section ID
+        $sectionId = DB::table('student_section')
+            ->where('student_id', $studentId)
+            ->value('section_id');
+            
+        if (!$sectionId) {
+            Log::error('Unable to recalculate grade summary: Student section not found', [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'term' => $term
+            ]);
+            return false;
+        }
+
+        // Get the grade summary or create a new one
+        $gradeSummary = GradeSummary::firstOrNew([
+            'student_id' => $studentId,
+            'subject_id' => $subjectId,
+            'quarter' => $term,
+        ]);
+        
+        // Set the section_id
+        $gradeSummary->section_id = $sectionId;
+
+        // 1. Written Works
+        $writtenWorks = Grade::where([
+            'student_id' => $studentId,
+            'subject_id' => $subjectId,
+            'term' => $term,
+            'grade_type' => 'written_work'
+        ])->get();
+
+        $wwPercentage = 0;
+        if ($writtenWorks->count() > 0) {
+            $wwTotalScore = 0;
+            $wwTotalMaxScore = 0;
+            foreach ($writtenWorks as $ww) {
+                $wwTotalScore += $ww->score;
+                $wwTotalMaxScore += $ww->max_score;
+            }
+            $wwPercentage = $wwTotalMaxScore > 0 ? ($wwTotalScore / $wwTotalMaxScore) * 100 : 0;
+        }
+        $wwWeighted = ($wwPercentage / 100) * $gradeConfig->written_work_percentage;
+
+        // 2. Performance Tasks
+        $performanceTasks = Grade::where([
+            'student_id' => $studentId,
+            'subject_id' => $subjectId,
+            'term' => $term,
+            'grade_type' => 'performance_task'
+        ])->get();
+
+        $ptPercentage = 0;
+        if ($performanceTasks->count() > 0) {
+            $ptTotalScore = 0;
+            $ptTotalMaxScore = 0;
+            foreach ($performanceTasks as $pt) {
+                $ptTotalScore += $pt->score;
+                $ptTotalMaxScore += $pt->max_score;
+            }
+            $ptPercentage = $ptTotalMaxScore > 0 ? ($ptTotalScore / $ptTotalMaxScore) * 100 : 0;
+        }
+        $ptWeighted = ($ptPercentage / 100) * $gradeConfig->performance_task_percentage;
+
+        // 3. Quarterly Assessment
+        $quarterlyAssessment = Grade::where([
+            'student_id' => $studentId,
+            'subject_id' => $subjectId,
+            'term' => $term,
+        ])->where(function($query) {
+            $query->where('grade_type', 'quarterly')
+                  ->orWhere('grade_type', 'quarterly_assessment')
+                  ->orWhere('grade_type', 'quarterly_exam');
+        })->first();
+
+        $qaPercentage = 0;
+        if ($quarterlyAssessment) {
+            $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
+        }
+        $qaWeighted = ($qaPercentage / 100) * $gradeConfig->quarterly_assessment_percentage;
+
+        // Update the grade summary
+        $gradeSummary->written_work_ps = $wwPercentage;
+        $gradeSummary->written_work_ws = $wwWeighted;
+        $gradeSummary->performance_task_ps = $ptPercentage;
+        $gradeSummary->performance_task_ws = $ptWeighted;
+        $gradeSummary->quarterly_assessment_ps = $qaPercentage;
+        $gradeSummary->quarterly_assessment_ws = $qaWeighted;
+
+        // Calculate final grades
+        $initialGrade = $wwWeighted + $ptWeighted + $qaWeighted;
+        $gradeSummary->initial_grade = $initialGrade;
+
+        // Transmute the grade according to DepEd rules
+        $quarterlyGrade = $this->transmutationTable1($initialGrade);
+        $gradeSummary->quarterly_grade = $quarterlyGrade;
+        $gradeSummary->remarks = $quarterlyGrade >= 75 ? 'Passed' : 'Failed';
+
+        // Save with specific debug logging
+        try {
+            $result = $gradeSummary->save();
+            Log::info('Grade summary saved', [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId, 
+                'term' => $term,
+                'section_id' => $sectionId,
+                'result' => $result
+            ]);
+            return $gradeSummary;
+        } catch (\Exception $e) {
+            Log::error('Failed to save grade summary', [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'term' => $term,
+                'section_id' => $sectionId,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Get the maximum score for an assessment
+     */
+    public function getAssessmentMaxScore(Request $request)
+    {
+        // Log the request for debugging
+        Log::info('Getting assessment max score', [
+            'params' => $request->all()
+        ]);
+
+        try {
+            // SUPER SIMPLE APPROACH: Just get the max score directly
+            $maxScore = DB::table('grades')
+                ->where('subject_id', $request->subject_id)
+                ->where('term', $request->term)
+                ->where('grade_type', $request->grade_type)
+                ->where('assessment_name', $request->assessment_name)
+                ->value('max_score');
+
+            if ($maxScore !== null) {
+                Log::info('Max score found directly', ['max_score' => $maxScore]);
+                return response()->json([
+                    'success' => true,
+                    'max_score' => (int)$maxScore
+                ]);
+            }
+
+            // If that fails, try a more general approach
+            $maxScore = DB::table('grades')
+                ->where('term', $request->term)
+                ->where('grade_type', $request->grade_type)
+                ->where('assessment_name', $request->assessment_name)
+                ->value('max_score');
+
+            if ($maxScore !== null) {
+                Log::info('Max score found with general query', ['max_score' => $maxScore]);
+                return response()->json([
+                    'success' => true,
+                    'max_score' => (int)$maxScore
+                ]);
+            }
+
+            // If we get here, no assessment was found
+            Log::warning('Assessment not found by any method', [
+                'subject_id' => $request->subject_id,
+                'term' => $request->term,
+                'grade_type' => $request->grade_type,
+                'assessment_name' => $request->assessment_name
+            ]);
+
+            // Return a default value instead of an error
+            return response()->json([
+                'success' => true,
+                'max_score' => 100
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching assessment max score', [
+                'error' => $e->getMessage()
+            ]);
+
+            // Return a default value instead of an error
+            return response()->json([
+                'success' => true,
+                'max_score' => 100
+            ]);
         }
     }
 

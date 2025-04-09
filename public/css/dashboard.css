@@ -239,15 +239,29 @@
     .chart-container {
         height: 200px;
     }
-    
+
     .student-performance-table th,
     .student-performance-table td {
         padding: 0.5rem;
     }
-    
+
     .avatar {
         width: 32px;
         height: 32px;
         font-size: 0.8rem;
+    }
+
+    /* Ensure content doesn't overflow on mobile */
+    .container-fluid {
+        max-width: 100%;
+        padding-left: 15px;
+        padding-right: 15px;
+        overflow-x: hidden;
+    }
+
+    /* Prevent cards from overflowing */
+    .card {
+        max-width: 100%;
+        overflow: hidden;
     }
 }
