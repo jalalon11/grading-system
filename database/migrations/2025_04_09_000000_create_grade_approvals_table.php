@@ -11,19 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('grade_approvals', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('teacher_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('section_id')->constrained()->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
-            $table->string('quarter');
-            $table->boolean('is_approved')->default(false);
-            $table->text('notes')->nullable();
-            $table->timestamps();
-            
-            // Unique constraint to ensure one approval record per teacher-section-subject-quarter
-            $table->unique(['teacher_id', 'section_id', 'subject_id', 'quarter'], 'unique_grade_approval');
-        });
+        if (!Schema::hasTable('grade_approvals')) {
+            Schema::create('grade_approvals', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('teacher_id')->constrained('users')->onDelete('cascade');
+                $table->foreignId('section_id')->constrained()->onDelete('cascade');
+                $table->foreignId('subject_id')->constrained()->onDelete('cascade');
+                $table->string('quarter');
+                $table->boolean('is_approved')->default(false);
+                $table->text('notes')->nullable();
+                $table->timestamps();
+                
+                // Unique constraint to ensure one approval record per teacher-section-subject-quarter
+                $table->unique(['teacher_id', 'section_id', 'subject_id', 'quarter'], 'unique_grade_approval');
+            });
+        }
     }
 
     /**
