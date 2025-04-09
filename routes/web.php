@@ -33,8 +33,15 @@ Route::get('login', [\App\Http\Controllers\Auth\LoginController::class, 'showLog
 Route::post('login', [\App\Http\Controllers\Auth\LoginController::class, 'login']);
 Route::post('logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 
-// Register routes (only accessible directly via URL)
-Route::get('register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+// Register routes (only accessible directly via URL and with a valid key)
+Route::get('register/key', [\App\Http\Controllers\RegistrationKeyController::class, 'showKeyForm'])->name('register.key');
+Route::post('register/verify-key', [\App\Http\Controllers\RegistrationKeyController::class, 'verifyKey'])->name('register.verify-key');
+Route::post('register/verify-key-ajax', [\App\Http\Controllers\RegistrationKeyController::class, 'verifyKeyAjax'])->name('register.verify-key-ajax');
+Route::get('register/initialize', [\App\Http\Controllers\RegistrationKeyController::class, 'initialize'])->name('register.initialize');
+
+Route::get('register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])
+    ->middleware('registration.key')
+    ->name('register');
 Route::post('register', [\App\Http\Controllers\Auth\RegisterController::class, 'register']);
 
 // Password reset routes
@@ -73,6 +80,13 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
 
         // API Routes
         Route::get('/api/schools/{school}/teachers', [TeacherAdminController::class, 'getTeachers']);
+
+        // Admin routes for registration key management
+        Route::post('/reset-master-key', [\App\Http\Controllers\RegistrationKeyController::class, 'resetMasterKey'])->name('reset-master-key');
+        Route::post('/generate-one-time-key', [\App\Http\Controllers\RegistrationKeyController::class, 'generateOneTimeKey'])->name('generate-one-time-key');
+        Route::get('/registration-keys', function() {
+            return view('admin.registration_keys');
+        })->name('registration-keys');
     });
 
     // Teacher Routes

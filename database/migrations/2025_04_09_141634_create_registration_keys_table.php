@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subjects', function (Blueprint $table) {
+        Schema::create('registration_keys', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('code');
-            $table->text('description')->nullable();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade')->comment('Subject Teacher');
-            $table->foreignId('section_id')->constrained()->onDelete('cascade');
+            $table->string('key_hash');
+            $table->boolean('is_master')->default(false); // Master key never expires
+            $table->boolean('is_used')->default(false);
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subjects');
+        Schema::dropIfExists('registration_keys');
     }
 };
