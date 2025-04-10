@@ -247,24 +247,22 @@ class SchoolController extends Controller
         if ($request->hasFile('logo')) {
             // Delete the old logo if it exists
             if ($school->logo_path) {
-                $disk = config('filesystems.default', 'public');
+                // Use the configured filesystem disk
+                $disk = config('filesystems.disk'); // Get the default disk ('r2' in cloud)
                 
                 try {
-                    if ($disk === 's3') {
-                        // For S3, we stored the relative path
-                        Storage::disk($disk)->delete($school->logo_path);
-                    } else {
-                        // For local storage
-                        $oldPath = str_replace('storage/', '', $school->logo_path);
-                        Storage::disk('public')->delete($oldPath);
-                    }
-                    
-                    Log::info('Deleted old school logo', ['path' => $school->logo_path]);
+                    Storage::disk($disk)->delete($school->logo_path);
+                    Log::info('Deleted old school logo', [
+                        'path' => $school->logo_path,
+                        'disk' => $disk
+                    ]);
                 } catch (\Exception $e) {
                     Log::warning('Failed to delete old logo', [
                         'path' => $school->logo_path,
+                        'disk' => $disk,
                         'error' => $e->getMessage()
                     ]);
+                    // Optionally, log the error but don't stop the update process
                 }
             }
             
