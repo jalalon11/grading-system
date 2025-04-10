@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class School extends Model
 {
@@ -46,15 +47,12 @@ class School extends Model
             return null;
         }
 
-        $disk = config('filesystems.default', 'public');
-        
-        if ($disk === 's3') {
-            // For S3/Laravel Cloud storage
-            return config('filesystems.disks.s3.url') . '/' . $this->logo_path;
+        try {
+            return Storage::disk('r2')->url($this->logo_path);
+        } catch (\Exception $e) {
+            \Log::error('Error getting logo URL: ' . $e->getMessage());
+            return null;
         }
-        
-        // For local storage, just return the path relative to public directory
-        return '/' . $this->logo_path;
     }
 
     /**
