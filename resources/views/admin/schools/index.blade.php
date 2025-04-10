@@ -150,7 +150,7 @@
                                     <div class="d-flex align-items-center">
                                         <div class="flex-shrink-0 me-2">
                                             @if($school->logo_path)
-                                                <img src="{{ asset($school->logo_path) }}" alt="{{ $school->name }} Logo" class="rounded" style="width: 40px; height: 40px; object-fit: contain;">
+                                                <img src="{{ $school->logo_url }}" alt="{{ $school->name }} Logo" class="rounded" style="width: 40px; height: 40px; object-fit: contain;">
                                             @else
                                                 <div class="bg-success bg-opacity-10 rounded-circle p-2">
                                                     <i class="fas fa-school text-success"></i>
