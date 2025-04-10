@@ -15,7 +15,7 @@
                         <div class="d-flex flex-column flex-md-row align-items-center mb-3 mb-md-0">
                             @if(Auth::user()->school && Auth::user()->school->logo_path)
                             <div class="me-md-3 mb-3 mb-md-0 text-center">
-                                <img src="{{ asset(Auth::user()->school->logo_path) }}" alt="{{ Auth::user()->school->name }} Logo" class="rounded" style="max-height: 60px;">
+                                <img src="{{ Auth::user()->school->logo_url }}" alt="{{ Auth::user()->school->name }} Logo" class="rounded" style="max-height: 60px;">
                             </div>
                             @else
                             <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-md-3 mb-3 mb-md-0 mx-auto">

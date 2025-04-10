@@ -47,7 +47,7 @@
                 <div class="card-body">
                     @if($school->logo_path)
                     <div class="text-center mb-4">
-                        <img src="{{ asset($school->logo_path) }}" alt="{{ $school->name }} Logo" class="img-fluid" style="max-height: 150px;">
+                        <img src="{{ $school->logo_url }}" alt="{{ $school->name }} Logo" class="img-fluid" style="max-height: 150px;">
                     </div>
                     @endif
                     <div class="mb-3 pb-3 border-bottom">

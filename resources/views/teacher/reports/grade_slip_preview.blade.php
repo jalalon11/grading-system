@@ -28,7 +28,7 @@
         <div class="header">
             <div class="row align-items-center mb-2">
                 <div class="col-2 text-start">
-                    <img src="{{ asset($section->school->logo_path) }}" alt="School Logo" class="img-fluid school-logo">
+                    <img src="{{ $section->school->logo_url }}" alt="School Logo" class="img-fluid school-logo">
                 </div>
                 <div class="col-8 text-center">
                     <h6 class="mb-0 small text-muted">Department of Education - {{ $region }}</h6>

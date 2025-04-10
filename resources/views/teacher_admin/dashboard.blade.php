@@ -46,7 +46,10 @@
                         <div class="d-flex flex-column flex-md-row align-items-center mb-3 mb-md-0">
                             @if($school->logo_path)
                             <div class="me-md-3 mb-3 mb-md-0 text-center">
-                                <img src="{{ asset($school->logo_path) }}" alt="{{ $school->name }} Logo" class="rounded" style="max-height: 60px;">
+                                <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path($school->logo_path))) }}" 
+                                     alt="{{ $school->name }} Logo" 
+                                     class="rounded" 
+                                     style="max-height: 60px;">
                             </div>
                             @else
                             <div class="avatar bg-white bg-opacity-25 rounded-circle p-3 me-md-3 mb-3 mb-md-0 mx-auto">

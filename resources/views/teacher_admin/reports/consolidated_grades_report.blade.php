@@ -69,7 +69,7 @@ if (!function_exists('getTransmutedGrade')) {
         <div class="header-row">
             <div class="logo-left">
                 @if(isset($section) && $section->school && $section->school->logo_path)
-                    <img src="{{ asset($section->school->logo_path) }}" alt="School Logo">
+                    <img src="{{ $section->school->logo_url }}" alt="School Logo">
                 @else
                     <div style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-school fa-3x"></i>
