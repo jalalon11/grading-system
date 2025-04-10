@@ -216,7 +216,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             @endif
-            
+
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-info text-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
@@ -573,7 +573,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             @endif
-            
+
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-center">
@@ -802,10 +802,52 @@
 
             // Form validation
             mapehForm.addEventListener('submit', function(event) {
+                // Check if the form is already being submitted
+                if (this.dataset.submitting === 'true') {
+                    console.log('Form already being submitted, preventing duplicate submission');
+                    event.preventDefault();
+                    return false;
+                }
+
                 if (!isQuarterlyAssessment && document.querySelectorAll('.component-checkbox:checked').length === 0) {
                     event.preventDefault();
                     alert('Please select at least one MAPEH component for this assessment.');
+                    return false;
                 }
+
+                // Mark the form as being submitted and disable the submit button
+                this.dataset.submitting = 'true';
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+                submitBtn.disabled = true;
+
+                return true;
+            });
+        }
+
+        // Add protection for regular subject form
+        const formAction = "{{ route('teacher.grades.store-assessment-setup') }}";
+        const regularForm = document.querySelector(`form[action="${formAction}"]`);
+        if (regularForm && !regularForm.id.includes('mapeh')) {
+            regularForm.addEventListener('submit', function(event) {
+                // Check if the form is already being submitted
+                if (this.dataset.submitting === 'true') {
+                    console.log('Regular form already being submitted, preventing duplicate submission');
+                    event.preventDefault();
+                    return false;
+                }
+
+                // Mark the form as being submitted and disable the submit button
+                this.dataset.submitting = 'true';
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn && !submitBtn.disabled) {
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+                    submitBtn.disabled = true;
+                }
+
+                return true;
             });
         }
 
@@ -865,6 +907,13 @@
 
         // Form validation for the edit form
         editForm.addEventListener('submit', function(event) {
+            // Check if the form is already being submitted
+            if (this.dataset.submitting === 'true') {
+                console.log('Edit form already being submitted, preventing duplicate submission');
+                event.preventDefault();
+                return false;
+            }
+
             const assessmentName = document.getElementById('edit_assessment_name').value.trim();
             const maxScore = document.getElementById('edit_max_score').value;
 
@@ -878,6 +927,15 @@
                 event.preventDefault();
                 alert('Please enter a valid maximum score (greater than 0).');
                 return false;
+            }
+
+            // Mark the form as being submitted and disable the submit button
+            this.dataset.submitting = 'true';
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.disabled) {
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+                submitBtn.disabled = true;
             }
 
             // Form is valid, submission will proceed

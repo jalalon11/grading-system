@@ -38,16 +38,16 @@
                     <form method="POST" action="{{ route('teacher.grades.store-configure') }}" id="gradeConfigForm">
                         @csrf
                         <input type="hidden" name="subject_id" value="{{ $subject->id }}">
-                        
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i> The total of all percentages must equal 100%.
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="written_work_percentage" class="form-label">Written Works Percentage</label>
                             <div class="input-group">
-                                <input type="number" class="form-control @error('written_work_percentage') is-invalid @enderror" 
-                                    id="written_work_percentage" name="written_work_percentage" 
+                                <input type="number" class="form-control @error('written_work_percentage') is-invalid @enderror"
+                                    id="written_work_percentage" name="written_work_percentage"
                                     value="{{ old('written_work_percentage', $subject->gradeConfiguration->written_work_percentage ?? 30) }}"
                                     min="0" max="100" step="0.01" required>
                                 <span class="input-group-text">%</span>
@@ -61,12 +61,12 @@
                                 This includes quizzes, unit tests, and other written assessments.
                             </div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="performance_task_percentage" class="form-label">Performance Tasks Percentage</label>
                             <div class="input-group">
-                                <input type="number" class="form-control @error('performance_task_percentage') is-invalid @enderror" 
-                                    id="performance_task_percentage" name="performance_task_percentage" 
+                                <input type="number" class="form-control @error('performance_task_percentage') is-invalid @enderror"
+                                    id="performance_task_percentage" name="performance_task_percentage"
                                     value="{{ old('performance_task_percentage', $subject->gradeConfiguration->performance_task_percentage ?? 50) }}"
                                     min="0" max="100" step="0.01" required>
                                 <span class="input-group-text">%</span>
@@ -80,12 +80,12 @@
                                 This includes projects, presentations, lab work, and other practical assessments.
                             </div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <label for="quarterly_assessment_percentage" class="form-label">Quarterly Assessment Percentage</label>
                             <div class="input-group">
-                                <input type="number" class="form-control @error('quarterly_assessment_percentage') is-invalid @enderror" 
-                                    id="quarterly_assessment_percentage" name="quarterly_assessment_percentage" 
+                                <input type="number" class="form-control @error('quarterly_assessment_percentage') is-invalid @enderror"
+                                    id="quarterly_assessment_percentage" name="quarterly_assessment_percentage"
                                     value="{{ old('quarterly_assessment_percentage', $subject->gradeConfiguration->quarterly_assessment_percentage ?? 20) }}"
                                     min="0" max="100" step="0.01" required>
                                 <span class="input-group-text">%</span>
@@ -99,14 +99,14 @@
                                 This is the final exam or assessment for the quarter.
                             </div>
                         </div>
-                        
+
                         <div class="mb-4">
                             <div class="card bg-light">
                                 <div class="card-body">
-                                    <h6 class="card-title">Total: <span id="totalPercentage">{{ 
-                                        ($subject->gradeConfiguration->written_work_percentage ?? 30) + 
-                                        ($subject->gradeConfiguration->performance_task_percentage ?? 50) + 
-                                        ($subject->gradeConfiguration->quarterly_assessment_percentage ?? 20) 
+                                    <h6 class="card-title">Total: <span id="totalPercentage">{{
+                                        ($subject->gradeConfiguration->written_work_percentage ?? 30) +
+                                        ($subject->gradeConfiguration->performance_task_percentage ?? 50) +
+                                        ($subject->gradeConfiguration->quarterly_assessment_percentage ?? 20)
                                     }}%</span></h6>
                                     <div class="progress" style="height: 20px;">
                                         @php
@@ -114,17 +114,17 @@
                                             $ptWidth = $subject->gradeConfiguration->performance_task_percentage ?? 50;
                                             $qaWidth = $subject->gradeConfiguration->quarterly_assessment_percentage ?? 20;
                                         @endphp
-                                        <div class="progress-bar bg-primary" role="progressbar" 
+                                        <div class="progress-bar bg-primary" role="progressbar"
                                              aria-valuenow="{{ $wwWidth }}" aria-valuemin="0" aria-valuemax="100"
                                              style="width: {{ $wwWidth }}%">
                                             Written Works
                                         </div>
-                                        <div class="progress-bar bg-success" role="progressbar" 
+                                        <div class="progress-bar bg-success" role="progressbar"
                                              aria-valuenow="{{ $ptWidth }}" aria-valuemin="0" aria-valuemax="100"
                                              style="width: {{ $ptWidth }}%">
                                             Performance Tasks
                                         </div>
-                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                        <div class="progress-bar bg-warning" role="progressbar"
                                              aria-valuenow="{{ $qaWidth }}" aria-valuemin="0" aria-valuemax="100"
                                              style="width: {{ $qaWidth }}%">
                                             Quarterly
@@ -133,7 +133,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('teacher.grades.index', ['subject_id' => $subject->id]) }}" class="btn btn-outline-secondary">
                                 Cancel
@@ -156,26 +156,26 @@
         const performanceTaskInput = document.getElementById('performance_task_percentage');
         const quarterlyAssessmentInput = document.getElementById('quarterly_assessment_percentage');
         const totalPercentage = document.getElementById('totalPercentage');
-        
+
         const updateTotal = function() {
             const written = parseFloat(writtenWorkInput.value) || 0;
             const performance = parseFloat(performanceTaskInput.value) || 0;
             const quarterly = parseFloat(quarterlyAssessmentInput.value) || 0;
-            
+
             const total = written + performance + quarterly;
             totalPercentage.textContent = total.toFixed(2) + '%';
-            
+
             // Update progress bars
             const progressBars = document.querySelectorAll('.progress-bar');
             progressBars[0].style.width = written + '%';
             progressBars[0].setAttribute('aria-valuenow', written);
-            
+
             progressBars[1].style.width = performance + '%';
             progressBars[1].setAttribute('aria-valuenow', performance);
-            
+
             progressBars[2].style.width = quarterly + '%';
             progressBars[2].setAttribute('aria-valuenow', quarterly);
-            
+
             // Change color if not equal to 100%
             if (Math.round(total * 100) / 100 !== 100) {
                 totalPercentage.classList.add('text-danger');
@@ -185,25 +185,44 @@
                 totalPercentage.classList.remove('fw-bold');
             }
         };
-        
+
         writtenWorkInput.addEventListener('input', updateTotal);
         performanceTaskInput.addEventListener('input', updateTotal);
         quarterlyAssessmentInput.addEventListener('input', updateTotal);
-        
+
         // Validate form on submit
         document.getElementById('gradeConfigForm').addEventListener('submit', function(e) {
+            // Check if the form is already being submitted
+            if (this.dataset.submitting === 'true') {
+                console.log('Grade config form already being submitted, preventing duplicate submission');
+                e.preventDefault();
+                return false;
+            }
+
             const written = parseFloat(writtenWorkInput.value) || 0;
             const performance = parseFloat(performanceTaskInput.value) || 0;
             const quarterly = parseFloat(quarterlyAssessmentInput.value) || 0;
-            
+
             const total = written + performance + quarterly;
-            
+
             if (Math.round(total * 100) / 100 !== 100) {
                 e.preventDefault();
                 alert('The total of all percentages must equal 100%.');
+                return false;
             }
+
+            // Mark the form as being submitted and disable the submit button
+            this.dataset.submitting = 'true';
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.disabled) {
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+                submitBtn.disabled = true;
+            }
+
+            return true;
         });
     });
 </script>
 @endpush
-@endsection 
+@endsection
