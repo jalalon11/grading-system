@@ -119,35 +119,19 @@ class SchoolController extends Controller
             // Handle logo upload
             if ($request->hasFile('logo')) {
                 $logo = $request->file('logo');
-                $filename = 'school_logo_' . time() . '.' . $logo->getClientOriginalExtension();
-                
-                // Get configured storage disk (will be 's3' in Laravel Cloud, 'public' locally)
-                $disk = config('filesystems.default', 'public');
                 
                 try {
-                    // Store the file on the appropriate disk
-                    $path = $logo->store('school_logos', $disk);
+                    // Store the file in R2 storage
+                    $path = $logo->store('school_logos', 'r2');
+                    $schoolData['logo_path'] = $path;
                     
-                    if ($disk === 's3') {
-                        // For S3/Laravel Cloud storage
-                        $s3Url = config('filesystems.disks.s3.url');
-                        $schoolData['logo_path'] = $path; // Store relative path
-                    } else {
-                        // For local storage
-                        $schoolData['logo_path'] = 'storage/' . $path;
-                    }
-                    
-                    // Log successful upload
                     Log::info('School logo uploaded successfully', [
-                        'filename' => $filename,
                         'path' => $path,
-                        'disk' => $disk,
-                        'url' => $schoolData['logo_path']
+                        'disk' => 'r2'
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to upload school logo', [
-                        'error' => $e->getMessage(),
-                        'disk' => $disk
+                        'error' => $e->getMessage()
                     ]);
                     throw $e;
                 }
@@ -285,31 +269,19 @@ class SchoolController extends Controller
             }
             
             $logo = $request->file('logo');
-            $filename = 'school_logo_' . time() . '.' . $logo->getClientOriginalExtension();
             
             try {
-                // Store the file on the appropriate disk
-                $path = $logo->store('school_logos', $disk);
+                // Store the file in R2 storage
+                $path = $logo->store('school_logos', 'r2');
+                $updateData['logo_path'] = $path;
                 
-                if ($disk === 's3') {
-                    // For S3/Laravel Cloud storage
-                    $updateData['logo_path'] = $path; // Store relative path
-                } else {
-                    // For local storage
-                    $updateData['logo_path'] = 'storage/' . $path;
-                }
-                
-                // Log successful upload
                 Log::info('School logo uploaded successfully', [
-                    'filename' => $filename,
                     'path' => $path,
-                    'disk' => $disk,
-                    'url' => $updateData['logo_path']
+                    'disk' => 'r2'
                 ]);
             } catch (\Exception $e) {
                 Log::error('Failed to upload school logo', [
-                    'error' => $e->getMessage(),
-                    'disk' => $disk
+                    'error' => $e->getMessage()
                 ]);
                 throw $e;
             }
