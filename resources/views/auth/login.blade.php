@@ -2,7 +2,117 @@
 
 @push('styles')
 <style>
+    /* Announcement Modal Styling */
+    .announcement-modal .modal-content {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
 
+    .announcement-modal .modal-header {
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+        border-bottom: none;
+        padding: 1rem 1.5rem;
+    }
+
+    .announcement-modal .modal-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+        color: white;
+    }
+
+    .announcement-modal .modal-body {
+        padding: 1.5rem;
+        font-size: 1rem;
+        line-height: 1.6;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .announcement-modal .modal-footer {
+        border-top: 1px solid rgba(0,0,0,0.05);
+        background-color: #f8f9fa;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .announcement-content {
+        white-space: pre-line;
+    }
+
+    .announcement-content p {
+        margin-bottom: 1rem;
+    }
+
+    .announcement-content h4 {
+        margin-bottom: 1.25rem;
+        color: #1C2833;
+    }
+
+    .announcement-content h5 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        color: #2E4053;
+        font-weight: 600;
+    }
+
+    .announcement-content ul,
+    .announcement-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .announcement-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content strong {
+        font-weight: 600;
+    }
+
+    .announcement-content .d-flex {
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content .fas {
+        font-size: 0.9rem;
+    }
+
+    .announcement-content ul {
+        margin-top: 0.5rem;
+    }
+
+    /* Special styling for checkmark lists */
+    .announcement-content .ps-3 {
+        padding-left: 0.75rem !important;
+    }
+
+    .announcement-content .ps-3 i {
+        width: 16px;
+        text-align: center;
+    }
+
+    /* Link styling */
+    .announcement-content a {
+        color: #2E4053;
+        text-decoration: none;
+        word-break: break-word;
+        font-weight: 500;
+    }
+
+    .announcement-content a:hover {
+        text-decoration: underline;
+        color: #1C2833;
+    }
+
+    .announcement-modal .btn-close {
+        color: white;
+        opacity: 0.8;
+        filter: brightness(0) invert(1);
+    }
+
+    .announcement-modal .btn-close:hover {
+        opacity: 1;
+    }
 
     .login-container {
         min-height: 100vh;
@@ -102,7 +212,9 @@
         margin-bottom: 0.75rem;
         background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
+        color: transparent;
     }
 
     .auth-subtitle {
@@ -324,7 +436,7 @@
                                 </div>
                             </div>
                         @endif
-                        
+
                         @if(session('success'))
                             <div class="alert alert-success mb-4">
                                 <div class="d-flex align-items-center">
@@ -341,7 +453,7 @@
                                     <h1 class="auth-title">Welcome Back!</h1>
                                     <p class="auth-subtitle">Sign in to continue to your account</p>
                                 </div>
-                            
+
                                 <form method="POST" action="{{ route('login') }}" class="login-form" id="loginForm">
                                     @csrf
 
@@ -405,14 +517,14 @@
                                     </div>
                                 </form>
                             </div>
-                            
+
                             <!-- Register Tab -->
                             <div class="tab-pane fade" id="register-tab-pane" role="tabpanel" aria-labelledby="register-tab" tabindex="0">
                                 <div class="auth-header">
                                     <h1 class="auth-title">Create Account</h1>
                                     <p class="auth-subtitle">Join our platform today</p>
                                 </div>
-                                
+
                                 <!-- Registration Key Form -->
                                 <div class="key-form-container" id="keyFormContainer">
                                     <form id="registrationKeyForm" class="mb-0">
@@ -422,7 +534,7 @@
                                                 <span class="input-group-text">
                                                     <i class="fas fa-key"></i>
                                                 </span>
-                                                <input id="registration-key" type="text" class="form-control" 
+                                                <input id="registration-key" type="text" class="form-control"
                                                        placeholder="Enter your registration key" required>
                                                 <button class="btn btn-outline-primary" type="submit" id="verifyKeyBtn">
                                                     <i class="fas fa-check me-1"></i>Verify
@@ -432,7 +544,7 @@
                                         </div>
                                     </form>
                                 </div>
-                                
+
                                 <!-- Registration Form (initially hidden) -->
                                 <form method="POST" action="{{ route('register') }}" class="register-form d-none" id="registerForm">
                                     @csrf
@@ -444,9 +556,9 @@
                                             <span class="input-group-text">
                                                 <i class="fas fa-user"></i>
                                             </span>
-                                            <input id="register-name" type="text" 
+                                            <input id="register-name" type="text"
                                                 class="form-control @error('name') is-invalid @enderror"
-                                                name="name" value="{{ old('name') }}" 
+                                                name="name" value="{{ old('name') }}"
                                                 required autocomplete="name"
                                                 placeholder="Enter your full name">
                                         </div>
@@ -467,7 +579,7 @@
                                             <input id="register-email" type="email"
                                                 class="form-control @error('email') is-invalid @enderror"
                                                 name="email" value="{{ old('email') }}"
-                                                required autocomplete="email" 
+                                                required autocomplete="email"
                                                 placeholder="Enter your email address">
                                         </div>
                                         @error('email')
@@ -522,7 +634,7 @@
                         </div>
                     </div>
                     <div class="card-footer text-center">
-                        <span class="text-muted">&copy; {{ date('Y') }} Grading System by Vincent Jalalon</span>
+                        <span class="text-muted">&copy; {{ date('Y') }} Grading System by VSMART TUNE UP</span>
                     </div>
                 </div>
             </div>
@@ -537,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function() {
     @if(session('register_tab'))
     document.getElementById('register-tab').click();
     @endif
-    
+
     // Login form functionality
     const loginForm = document.getElementById('loginForm');
     const loginButton = loginForm.querySelector('button[type="submit"]');
@@ -592,7 +704,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if URL has key parameter
     const urlParams = new URLSearchParams(window.location.search);
     const keyParam = urlParams.get('key');
-    
+
     if (keyParam) {
         keyInput.value = keyParam;
         // Auto verify after short delay
@@ -635,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 // Key is invalid, show error
                 keyInput.classList.add('is-invalid');
-                
+
                 // Create error message if it doesn't exist
                 let errorMessage = document.getElementById('key-error-message');
                 if (!errorMessage) {
@@ -645,7 +757,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Invalid registration key. Please try again.';
                     keyInput.parentNode.after(errorMessage);
                 }
-                
+
                 verifyKeyBtn.disabled = false;
                 verifyKeyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
             }
@@ -656,13 +768,13 @@ document.addEventListener('DOMContentLoaded', function() {
             verifyKeyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
         });
     }
-    
+
     // For testing purposes, allow immediate verification with admin123
     // Remove this in production!
     keyInput.addEventListener('input', function() {
         if (keyInput.value === 'admin123') {
             keyInput.classList.remove('is-invalid');
-            
+
             // Remove error message if it exists
             const errorMessage = document.getElementById('key-error-message');
             if (errorMessage) {
@@ -671,6 +783,144 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+    // Fetch and display announcements
+    fetchAnnouncements();
+
+    function fetchAnnouncements() {
+        fetch('/api/announcements')
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    // Create announcement modal for each active announcement
+                    data.forEach((announcement, index) => {
+                        createAnnouncementModal(announcement, index);
+                    });
+
+                    // Show the first announcement modal automatically
+                    setTimeout(() => {
+                        const firstModal = document.getElementById('announcementModal0');
+                        if (firstModal) {
+                            const modal = new bootstrap.Modal(firstModal);
+                            modal.show();
+                        }
+                    }, 1000);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching announcements:', error);
+            });
+    }
+
+    function createAnnouncementModal(announcement, index) {
+        // Format the content to preserve line breaks and formatting
+        const formattedContent = formatAnnouncementContent(announcement.content);
+
+        // Create modal element
+        const modalHtml = `
+            <div class="modal fade announcement-modal" id="announcementModal${index}" tabindex="-1" aria-labelledby="announcementModalLabel${index}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="announcementModalLabel${index}">
+                                <i class="fas fa-bullhorn me-2"></i>${announcement.title}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="announcement-content">${formattedContent}</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn" style="background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%); color: white;" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Append modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Add event listener for when the modal is shown
+        const modalElement = document.getElementById(`announcementModal${index}`);
+        modalElement.addEventListener('shown.bs.modal', function() {
+            // Fix any emoji rendering issues
+            const emojiElements = modalElement.querySelectorAll('.announcement-content .fas');
+            emojiElements.forEach(el => {
+                el.style.display = 'inline-block';
+                el.style.width = '1.25em';
+                el.style.textAlign = 'center';
+            });
+        });
+    }
+
+    function formatAnnouncementContent(content) {
+        if (!content) return '';
+
+        // First, handle any HTML entities to prevent double-encoding
+        let formatted = content.replace(/&/g, '&amp;')
+                              .replace(/</g, '&lt;')
+                              .replace(/>/g, '&gt;');
+
+        // Handle hashtag announcements at the beginning of lines
+        formatted = formatted.replace(/(^|<br>)(#+)\s*ANNOUNCEMENT:\s*([^\n<]+)/gi,
+            '$1<h4 class="fw-bold"><i class="fas fa-bullhorn me-2"></i>$3</h4>');
+
+        // Replace line breaks with <br> tags
+        formatted = formatted.replace(/\n/g, '<br>');
+
+        // Format bullet points and check marks
+        formatted = formatted.replace(/(^|<br>)•\s+([^<]+)/g, '$1<li>$2</li>');
+        formatted = formatted.replace(/(^|<br>)✓\s+([^<]+)/g,
+            '$1<div class="d-flex align-items-start mb-1 ps-3"><i class="fas fa-check text-success me-2"></i><div>$2</div></div>');
+        formatted = formatted.replace(/(^|<br>)✅\s+([^<]+)/g,
+            '$1<div class="d-flex align-items-start mb-1 ps-3"><i class="fas fa-check-square text-success me-2"></i><div>$2</div></div>');
+
+        // Format special icons
+        formatted = formatted.replace(/(^|<br>)📅\s+([^<]+)/g,
+            '$1<div class="d-flex align-items-start mb-1 ps-3"><i class="fas fa-calendar-alt me-2" style="color: #2E4053;"></i><div>$2</div></div>');
+        formatted = formatted.replace(/(^|<br>)📣\s+([^<]+)/g,
+            '$1<div class="d-flex align-items-start mb-1 ps-3"><i class="fas fa-bullhorn me-2" style="color: #1C2833;"></i><div>$2</div></div>');
+        formatted = formatted.replace(/(^|<br>)💡\s+([^<]+)/g,
+            '$1<div class="d-flex align-items-start mb-1 ps-3"><i class="fas fa-lightbulb me-2" style="color: #2E4053;"></i><div>$2</div></div>');
+
+        // Wrap consecutive <li> elements in <ul> tags
+        if (formatted.includes('<li>')) {
+            // Find all sequences of <li> elements
+            formatted = formatted.replace(/(<li>[^<]+<\/li>)+/g, function(match) {
+                return '<ul class="mb-3">' + match + '</ul>';
+            });
+        }
+
+        // Add emphasis to text between asterisks
+        formatted = formatted.replace(/\*\*([^*<]+)\*\*/g, '<strong>$1</strong>');
+        formatted = formatted.replace(/\*([^*<]+)\*/g, '<em>$1</em>');
+
+        // Format section headers (###)
+        formatted = formatted.replace(/(^|<br>)###\s+([^<\n]+)/g,
+            '$1<h5 class="mt-3 mb-2 fw-bold">$2</h5>');
+
+        // Handle emojis in text
+        formatted = formatted.replace(/🎉/g, '<i class="fas fa-party-horn" style="color: #2E4053;"></i>');
+        formatted = formatted.replace(/🚀/g, '<i class="fas fa-rocket" style="color: #2E4053;"></i>');
+
+        // Convert URLs to clickable links
+        // First, handle URLs with protocol (http://, https://)
+        formatted = formatted.replace(
+            /(https?:\/\/[^\s<]+)(?![^<>]*>|[^<>]*<\/a>)/gi,
+            '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+
+        // Then, handle URLs without protocol (www.example.com)
+        formatted = formatted.replace(
+            /(?<![\/"'>])\b(www\.[^\s<]+\.[^\s<]+)(?![^<>]*>|[^<>]*<\/a>)/gi,
+            '<a href="http://$1" target="_blank" rel="noopener noreferrer">$1</a>'
+        );
+
+        return formatted;
+    }
 </script>
 @endpush
+
+<!-- Announcement Modals will be dynamically inserted here -->
+
 @endsection

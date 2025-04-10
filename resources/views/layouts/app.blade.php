@@ -287,7 +287,7 @@
         }
 
         /* Override login card hover animation */
-        body.login-page .login-card, 
+        body.login-page .login-card,
         body.register-page .register-card {
             transform: none !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04) !important;
@@ -846,6 +846,11 @@
                 <li class="{{ Request::is('admin/teacher-admins*') ? 'active' : '' }}">
                     <a href="{{ route('admin.teacher-admins.index') }}">
                         <i class="fas fa-user-shield"></i> <span>Teacher Admins</span>
+                    </a>
+                </li>
+                <li class="{{ Request::is('admin/announcements*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.announcements.index') }}">
+                        <i class="fas fa-bullhorn"></i> <span>Announcements</span>
                     </a>
                 </li>
                 @elseif(Auth::user()->role === 'teacher')
