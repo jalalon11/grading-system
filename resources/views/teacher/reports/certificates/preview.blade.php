@@ -431,7 +431,7 @@
                 <div class="certificate-header">
                     <div class="logo-container school-logo-container">
                         @if($school->logo_path)
-                            <img src="{{ asset($section->school->logo_path) }}" alt="School Logo" class="school-logo">
+                            <img src="{{ $section->school->logo_url }}" alt="School Logo" class="school-logo">
                         @else
                             <div class="school-logo-placeholder">
                                 <i class="fas fa-school"></i>
@@ -529,7 +529,7 @@
                 <div class="certificate-header">
                     <div class="logo-container school-logo-container">
                         @if($school->logo_path)
-                            <img src="{{ asset($section->school->logo_path) }}" alt="School Logo" class="school-logo">
+                            <img src="{{ $section->school->logo_url }}" alt="School Logo" class="school-logo">
                         @else
                             <div class="school-logo-placeholder">
                                 <i class="fas fa-school"></i>
