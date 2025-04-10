@@ -4,12 +4,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Grading System - Streamline Your Academic Assessment</title>
-        
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        
+
         <!-- Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>
@@ -339,6 +339,7 @@
             .bg-clip-text.text-transparent.bg-gradient-to-r {
                 background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
                 -webkit-background-clip: text;
+                background-clip: text;
                 -webkit-text-fill-color: transparent;
                 font-weight: 700;
             }
@@ -350,7 +351,7 @@
                 background: linear-gradient(135deg, #F4F6F6 0%, #D5DBDB 100%);
             }
 
-            .cta-section .text-[#667eea] {
+            .cta-section .text-indigo-500 {
                 color: #1C2833;
             }
 
@@ -703,25 +704,25 @@
                                         <div class="relative w-40 h-40 overflow-hidden rounded-full shadow-lg border-4 border-white mb-6">
                                             <!-- Gradient background with improved colors -->
                                             <div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600"></div>
-                                            
+
                                             <!-- Subtle pattern overlay -->
                                             <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'1.5\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'1.5\'/%3E%3C/g%3E%3C/svg%3E');"></div>
-                                            
+
                                             <!-- Initials with improved styling -->
                                             <div class="absolute inset-0 flex items-center justify-center">
                                                 <span class="text-white text-5xl font-bold tracking-wider" style="text-shadow: 0 2px 4px rgba(0,0,0,0.2);">VJ</span>
                                             </div>
-                                            
+
                                             <!-- Shine effect -->
                                             <div class="avatar-shine"></div>
-                                            
+
                                             <!-- Subtle inner border -->
                                             <div class="absolute inset-0 rounded-full border border-white opacity-30"></div>
                                         </div>
-                                        
+
                                         <h3 class="text-2xl font-bold text-gray-800 mb-2">Vincent Jalalon</h3>
                                         <p class="text-indigo-600 font-medium mb-4">Lead Developer</p>
-                                        
+
                                         <div class="flex justify-center space-x-4 mb-6">
                                             <a href="https://www.facebook.com/vivinz11" target="_blank" class="text-gray-700 hover:text-indigo-600 transition-colors p-2 bg-gray-100 rounded-full">
                                                 <i class="fab fa-facebook text-xl"></i>
@@ -736,7 +737,7 @@
                                                 <i class="fas fa-envelope text-xl"></i>
                                             </a>
                                         </div>
-                                        
+
                                         <div class="w-full p-4 bg-gray-50 rounded-lg mb-6">
                                             <h4 class="font-semibold text-gray-800 mb-2">Contact Information</h4>
                                             <div class="flex items-center mb-2">
@@ -751,7 +752,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="md:w-2/3">
                                 <div class="mb-8">
                                     <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
@@ -760,17 +761,15 @@
                                     </h4>
                                     <div class="text-gray-600 space-y-4">
                                         <p>
-                                            Vincent Jalalon is a dedicated full-stack developer with over 2 years of experience in building technology solutions. 
-                                            Vincent brings a unique perspective to developing tools that enhance 
-                                            the grading system experience.
+                                        Vincent Jalalon is a dedicated full-stack developer with over 2 years of experience in building technology solutions. As the founder of VSMART TUNE UP, Vincent brings a unique perspective to developing tools that enhance the grading system experience, driven by a passion for innovation and efficiency in education technology.
                                         </p>
                                         <p>
-                                            After experiencing firsthand the challenges educators face with outdated grading systems, Vincent embarked on developing this 
+                                            After experiencing firsthand the challenges educators face with outdated grading systems, Vincent embarked on developing this
                                             comprehensive solution designed to streamline the grading process and provide valuable insights into student performance.
                                         </p>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-8">
                                     <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                                         <i class="fas fa-laptop-code text-indigo-600 mr-2"></i>
@@ -803,7 +802,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-8">
                                     <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                                         <i class="fas fa-project-diagram text-indigo-600 mr-2"></i>
@@ -811,7 +810,7 @@
                                     </h4>
                                     <div class="space-y-4 text-gray-600">
                                         <p>
-                                            This grading system is built using the Laravel framework with a focus on performance, security, and user experience. 
+                                            This grading system is built using the Laravel framework with a focus on performance, security, and user experience.
                                             The application leverages modern web technologies to provide a responsive interface that works seamlessly across devices.
                                         </p>
                                         <div class="bg-gray-50 p-4 rounded-lg">
@@ -819,14 +818,14 @@
                                             <ul class="list-disc pl-5 space-y-1">
                                                 <li>Backend: Laravel 12 (PHP 8.2.4)</li>
                                                 <li>Frontend: Blade templates, Tailwind CSS, Bootstrap 5, Alpine.js</li>
-                                                <li>Database: MySQL 8.0</li>
+                                                <li>Database: MySQL</li>
                                                 <li>Authentication: Laravel Cloud Authentication</li>
                                                 <li>Hosting: Laravel Cloud</li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div>
                                     <h4 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                                         <i class="fas fa-code-branch text-indigo-600 mr-2"></i>
@@ -851,7 +850,7 @@
                                             <div class="w-5 h-5 rounded-full bg-gray-300 mt-1 mr-3 flex-shrink-0"></div>
                                             <div>
                                                 <h5 class="font-medium text-gray-800">Phase 3: API & Integrations (Planned)</h5>
-                                                <p class="text-gray-600">Public API for third-party integrations and mobile app development</p>
+                                                <p class="text-gray-600">Public API for third-party integrations</p>
                                             </div>
                                         </div>
                                         <div class="flex items-start">
@@ -871,42 +870,88 @@
         </section>
 
         <!-- Footer -->
-        <footer class="footer">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                    <div>
-                        <h3 class="text-xl font-semibold text-white mb-4">Grading System</h3>
-                        <p class="text-gray-400">
+        <footer class="footer bg-gradient-to-b from-[#1C2833] to-[#17202A]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+                    <!-- About Column -->
+                    <div class="col-span-1 lg:col-span-1">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-[#2E4053] to-[#5D6D7E] rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-graduation-cap text-white text-xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white">Grading System</h3>
+                        </div>
+                        <p class="text-gray-400 mb-4">
                             Transforming how educational institutions manage and analyze student performance.
                         </p>
+                        <div class="flex space-x-3 mt-5">
+                            <a href="https://www.facebook.com/vivinz11" target="_blank" class="w-9 h-9 rounded-full bg-[#2E4053] hover:bg-[#5D6D7E] flex items-center justify-center transition-colors duration-300">
+                                <i class="fab fa-facebook-f text-white"></i>
+                            </a>
+                            <a href="https://github.com/jalalon11" target="_blank" class="w-9 h-9 rounded-full bg-[#2E4053] hover:bg-[#5D6D7E] flex items-center justify-center transition-colors duration-300">
+                                <i class="fab fa-github text-white"></i>
+                            </a>
+                            <a href="https://www.linkedin.com/in/vincent-jhanrey-jalalon-184299347/" target="_blank" class="w-9 h-9 rounded-full bg-[#2E4053] hover:bg-[#5D6D7E] flex items-center justify-center transition-colors duration-300">
+                                <i class="fab fa-linkedin-in text-white"></i>
+                            </a>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-medium text-white mb-4">Quick Links</h4>
+
+                    <!-- Quick Links Column -->
+                    <div class="col-span-1">
+                        <h4 class="text-lg font-medium text-white mb-5 border-b border-gray-700 pb-2">Quick Links</h4>
                         <ul class="space-y-2">
-                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Home</a></li>
-                            <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">Features</a></li>
-                            <li><a href="#benefits" class="text-gray-400 hover:text-white transition-colors">Benefits</a></li>
-                            <li><a href="#developer" class="text-gray-400 hover:text-white transition-colors">Developer</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Home</a></li>
+                            <li><a href="#features" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Features</a></li>
+                            <li><a href="#benefits" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Benefits</a></li>
+                            <li><a href="#developer" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Developer</a></li>
+                            <li><a href="{{ route('login') }}" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Login</a></li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 class="text-lg font-medium text-white mb-4">Development Status</h4>
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
-                            <p class="text-gray-400">System in development</p>
+
+                    <!-- Development Status Column -->
+                    <div class="col-span-1">
+                        <h4 class="text-lg font-medium text-white mb-5 border-b border-gray-700 pb-2">Development Status</h4>
+                        <div class="flex items-center mb-3 bg-[#2E4053] p-3 rounded-lg">
+                            <div class="w-3 h-3 bg-yellow-400 rounded-full mr-3 animate-pulse"></div>
+                            <p class="text-gray-300">System in development</p>
                         </div>
-                        <p class="text-gray-400 mt-2">Version: 1.0.0 Beta</p>
+                        <div class="flex items-center mb-3 bg-[#2E4053] p-3 rounded-lg">
+                            <i class="fas fa-code-branch text-gray-300 mr-3"></i>
+                            <p class="text-gray-300">Version: 1.0.0 Beta</p>
+                        </div>
                         <div class="mt-4">
-                            <p class="text-gray-400">Have suggestions?</p>
-                            <a href="vinz0799@gmail.com" class="text-gray-400 hover:text-white transition-colors flex items-center mt-1">
+                            <p class="text-gray-400 mb-2">Have suggestions?</p>
+                            <a href="mailto:vinz0799@gmail.com" class="text-gray-400 hover:text-white transition-colors flex items-center bg-[#2E4053] p-3 rounded-lg">
                                 <i class="fas fa-paper-plane mr-2"></i>
                                 Send feedback
                             </a>
                         </div>
                     </div>
+
+                    <!-- Newsletter Column -->
+                    <div class="col-span-1 lg:col-span-1">
+                        <h4 class="text-lg font-medium text-white mb-5 border-b border-gray-700 pb-2">Newsletter</h4>
+                        <p class="text-gray-400 mb-4">Subscribe to receive updates about new features and releases.</p>
+                        <form class="space-y-3">
+                            <div>
+                                <input type="email" placeholder="Your email address" class="w-full px-4 py-2 rounded-lg bg-[#2E4053] border border-[#5D6D7E] text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#5D6D7E] focus:border-transparent">
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-[#2E4053] to-[#5D6D7E] hover:from-[#5D6D7E] hover:to-[#2E4053] text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center">
+                                <i class="fas fa-envelope mr-2"></i> Subscribe
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="border-t border-gray-700 pt-8 text-center text-gray-400">
-                    <p>System in development. &copy; {{ date('Y') }} Developed by Vincent Jalalon.</p>
+
+                <!-- Copyright Section -->
+                <div class="border-t border-gray-700 pt-6 flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
+                    <p>System in development. &copy; {{ date('Y') }} Developed by VSMART TUNE UP.</p>
+                    <!-- <div class="mt-3 md:mt-0">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors mx-2">Privacy Policy</a>
+                        <span class="text-gray-600">|</span>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors mx-2">Terms of Service</a>
+                    </div> -->
                 </div>
             </div>
         </footer>
@@ -917,7 +962,7 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const mobileMenuButton = document.getElementById('mobile-menu-button');
                 const mobileMenu = document.getElementById('mobile-menu');
-                
+
                 mobileMenuButton.addEventListener('click', function() {
                     mobileMenu.classList.toggle('hidden');
                 });
@@ -928,14 +973,14 @@
                         e.preventDefault();
                         const targetId = this.getAttribute('href');
                         if (targetId === '#') return;
-                        
+
                         const targetElement = document.querySelector(targetId);
                         if (targetElement) {
                             window.scrollTo({
                                 top: targetElement.offsetTop - 80,
                                 behavior: 'smooth'
                             });
-                            
+
                             // Close mobile menu if open
                             mobileMenu.classList.add('hidden');
                         }

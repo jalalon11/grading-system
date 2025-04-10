@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\SchoolDivisionController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\TeacherAdminController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\CertificateController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
@@ -26,6 +27,9 @@ use App\Http\Middleware\CheckSchoolStatus;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Announcement routes for public access
+Route::get('/api/announcements', [\App\Http\Controllers\AnnouncementViewController::class, 'getActiveAnnouncements'])->name('api.announcements');
 
 // Custom auth routes instead of Auth::routes()
 // Login routes
@@ -87,6 +91,10 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::get('/registration-keys', function() {
             return view('admin.registration_keys');
         })->name('registration-keys');
+
+        // Announcement routes
+        Route::resource('announcements', AnnouncementController::class);
+        Route::patch('announcements/{announcement}/toggle-status', [AnnouncementController::class, 'toggleStatus'])->name('announcements.toggle-status');
     });
 
     // Teacher Routes
