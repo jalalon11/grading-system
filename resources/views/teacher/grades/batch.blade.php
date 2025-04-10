@@ -389,6 +389,15 @@
             e.preventDefault();
             $(this).tab('show');
         });
+
+        // Additional protection against multiple form submissions
+        // This will catch any direct clicks on the submit button
+        $('button[type="submit"]').on('click', function() {
+            if ($('#batchGradeForm').data('submitting')) {
+                console.log('Form already being submitted, preventing button click');
+                return false;
+            }
+        });
     });
 </script>
 
