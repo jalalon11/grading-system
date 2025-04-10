@@ -38,6 +38,26 @@ class School extends Model
     ];
 
     /**
+     * Get the full URL for the school logo
+     */
+    public function getLogoUrlAttribute()
+    {
+        if (!$this->logo_path) {
+            return null;
+        }
+
+        $disk = config('filesystems.default', 'public');
+        
+        if ($disk === 's3') {
+            // For S3/Laravel Cloud storage
+            return config('filesystems.disks.s3.url') . '/' . $this->logo_path;
+        }
+        
+        // For local storage, just return the path relative to public directory
+        return '/' . $this->logo_path;
+    }
+
+    /**
      * Get the school division that this school belongs to
      */
     public function schoolDivision(): BelongsTo

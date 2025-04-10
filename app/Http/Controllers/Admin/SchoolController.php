@@ -124,43 +124,33 @@ class SchoolController extends Controller
                 // Get configured storage disk (will be 's3' in Laravel Cloud, 'public' locally)
                 $disk = config('filesystems.default', 'public');
                 
-                // Store the file on the appropriate disk
-                if ($disk === 's3') {
+                try {
+                    // Store the file on the appropriate disk
                     $path = $logo->store('school_logos', $disk);
-                } else {
-                    // For local development, manually store the file in public/storage
-                    if (!file_exists(public_path('storage/school_logos'))) {
-                        mkdir(public_path('storage/school_logos'), 0755, true);
+                    
+                    if ($disk === 's3') {
+                        // For S3/Laravel Cloud storage
+                        $s3Url = config('filesystems.disks.s3.url');
+                        $schoolData['logo_path'] = $path; // Store relative path
+                    } else {
+                        // For local storage
+                        $schoolData['logo_path'] = 'storage/' . $path;
                     }
                     
-                    $logo->move(public_path('storage/school_logos'), $filename);
-                    $path = 'school_logos/' . $filename;
-                }
-                
-                // Generate the appropriate URL based on the environment
-                if ($disk === 's3') {
-                    // For S3, use the full URL from the configuration
-                    $s3Url = config('filesystems.disks.s3.url');
-                    $schoolData['logo_path'] = $s3Url . '/' . $path;
-                } else {
-                    // For local storage, construct the correct path
-                    $schoolData['logo_path'] = 'storage/school_logos/' . $filename;
-                    
-                    // Log the exact path for debugging
-                    Log::info('Local file path', [
-                        'raw_path' => $path,
-                        'constructed_path' => $schoolData['logo_path'],
-                        'public_exists' => file_exists(public_path($schoolData['logo_path']))
+                    // Log successful upload
+                    Log::info('School logo uploaded successfully', [
+                        'filename' => $filename,
+                        'path' => $path,
+                        'disk' => $disk,
+                        'url' => $schoolData['logo_path']
                     ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to upload school logo', [
+                        'error' => $e->getMessage(),
+                        'disk' => $disk
+                    ]);
+                    throw $e;
                 }
-                
-                // Log successful upload
-                Log::info('School logo uploaded successfully', [
-                    'filename' => $filename,
-                    'path' => $path,
-                    'disk' => $disk,
-                    'url' => $schoolData['logo_path']
-                ]);
             }
 
             // Create the school
@@ -273,71 +263,56 @@ class SchoolController extends Controller
         if ($request->hasFile('logo')) {
             // Delete the old logo if it exists
             if ($school->logo_path) {
-                // Determine the storage disk and path
                 $disk = config('filesystems.default', 'public');
                 
-                if ($disk === 's3') {
-                    // For S3, extract the relative path from the full URL
-                    $s3Url = config('filesystems.disks.s3.url');
-                    $oldPath = str_replace($s3Url . '/', '', $school->logo_path);
-                    Storage::disk('s3')->delete($oldPath);
-                } else {
-                    // For local storage, delete from public path
-                    $oldFilePath = public_path($school->logo_path);
-                    if (file_exists($oldFilePath)) {
-                        unlink($oldFilePath);
-                        Log::info('Deleted old file from path', ['file_path' => $oldFilePath]);
+                try {
+                    if ($disk === 's3') {
+                        // For S3, we stored the relative path
+                        Storage::disk($disk)->delete($school->logo_path);
                     } else {
-                        Log::warning('Old file not found at path', ['file_path' => $oldFilePath]);
+                        // For local storage
+                        $oldPath = str_replace('storage/', '', $school->logo_path);
+                        Storage::disk('public')->delete($oldPath);
                     }
+                    
+                    Log::info('Deleted old school logo', ['path' => $school->logo_path]);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to delete old logo', [
+                        'path' => $school->logo_path,
+                        'error' => $e->getMessage()
+                    ]);
                 }
-                
-                Log::info('Deleted old school logo', ['path' => $school->logo_path]);
             }
             
             $logo = $request->file('logo');
             $filename = 'school_logo_' . time() . '.' . $logo->getClientOriginalExtension();
             
-            // Get configured storage disk (will be 's3' in Laravel Cloud, 'public' locally)
-            $disk = config('filesystems.default', 'public');
-            
-            // Store the file on the appropriate disk
-            if ($disk === 's3') {
+            try {
+                // Store the file on the appropriate disk
                 $path = $logo->store('school_logos', $disk);
-            } else {
-                // For local development, manually store the file in public/storage
-                if (!file_exists(public_path('storage/school_logos'))) {
-                    mkdir(public_path('storage/school_logos'), 0755, true);
+                
+                if ($disk === 's3') {
+                    // For S3/Laravel Cloud storage
+                    $updateData['logo_path'] = $path; // Store relative path
+                } else {
+                    // For local storage
+                    $updateData['logo_path'] = 'storage/' . $path;
                 }
                 
-                $logo->move(public_path('storage/school_logos'), $filename);
-                $path = 'school_logos/' . $filename;
-            }
-            
-            // Generate the appropriate URL based on the environment
-            if ($disk === 's3') {
-                // For S3, use the full URL from the configuration
-                $s3Url = config('filesystems.disks.s3.url');
-                $updateData['logo_path'] = $s3Url . '/' . $path;
-            } else {
-                // For local storage, construct the correct path
-                $updateData['logo_path'] = 'storage/school_logos/' . $filename;
-                
-                // Log the exact path for debugging
-                Log::info('Local file path', [
-                    'raw_path' => $path,
-                    'constructed_path' => $updateData['logo_path'],
-                    'public_exists' => file_exists(public_path($updateData['logo_path']))
+                // Log successful upload
+                Log::info('School logo uploaded successfully', [
+                    'filename' => $filename,
+                    'path' => $path,
+                    'disk' => $disk,
+                    'url' => $updateData['logo_path']
                 ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to upload school logo', [
+                    'error' => $e->getMessage(),
+                    'disk' => $disk
+                ]);
+                throw $e;
             }
-            
-            // Log successful upload
-            Log::info('School logo uploaded successfully', [
-                'filename' => $filename,
-                'path' => $path,
-                'disk' => $disk,
-                'url' => $updateData['logo_path']
-            ]);
         }
         
         $school->update($updateData);
