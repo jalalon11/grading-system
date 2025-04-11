@@ -11,6 +11,13 @@
 
     <title>{{ config('app.name', 'Grading System') }}</title>
 
+    @auth
+        @if(Auth::user()->school && Auth::user()->school->logo_path)
+            <!-- Favicon from School Logo -->
+            <link rel="icon" href="{{ Auth::user()->school->logo_url }}" type="image/x-icon">
+        @endif
+    @endauth
+
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
@@ -790,7 +797,11 @@
         <nav id="sidebar" class="{{ Request::is('login') || Request::is('register') ? 'd-none' : '' }}">
             <div class="sidebar-header">
                 <h4>
-                    <i class="fas fa-graduation-cap"></i>
+                    @if(Auth::user()->school && Auth::user()->school->logo_path)
+                        <img src="{{ Auth::user()->school->logo_url }}" alt="{{ Auth::user()->school->name }} Logo" class="school-logo me-2" style="max-height: 30px; max-width: 30px;">
+                    @else
+                        <i class="fas fa-graduation-cap"></i>
+                    @endif
                     <span class="logo-text">Grading System</span>
                 </h4>
                 <button type="button" id="sidebarCollapse" class="btn d-flex justify-content-center align-items-center">
