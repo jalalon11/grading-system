@@ -2,6 +2,25 @@
 
 @push('styles')
 <style>
+    /* Fix modal backdrop and interaction issues */
+    .modal {
+        z-index: 1055 !important;
+    }
+
+    .modal-backdrop {
+        z-index: 1054 !important;
+    }
+
+    .modal-content {
+        position: relative;
+        z-index: 1056 !important;
+    }
+
+    .modal-dialog {
+        position: relative;
+        z-index: 1056 !important;
+    }
+
     :root {
         --primary-color: #4361ee;
         --secondary-color: #3f37c9;
@@ -25,7 +44,7 @@
         --box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         --transition: all 0.2s ease-in-out;
     }
-    
+
     /* Enhanced Dropdown Styling */
     .dropdown-menu {
         display: none;
@@ -35,20 +54,20 @@
         animation: fadeInDown 0.2s ease-in-out;
         z-index: 1000;
     }
-    
+
     .dropdown-menu.show {
         display: block;
     }
-    
+
     .dropdown-item {
         padding: 0.6rem 1.2rem;
         transition: background-color 0.15s ease-in-out;
     }
-    
+
     .dropdown-item:hover {
         background-color: rgba(67, 97, 238, 0.1);
     }
-    
+
     @keyframes fadeInDown {
         from {
             opacity: 0;
@@ -59,7 +78,7 @@
             transform: translateY(0);
         }
     }
-    
+
     /* Card Styles */
     .student-avatar {
         width: 45px;
@@ -75,7 +94,7 @@
         margin-right: 15px;
         border: 2px solid rgba(255,255,255,0.9);
     }
-    
+
     .student-card {
         transition: var(--transition);
         border-radius: var(--border-radius) !important;
@@ -83,23 +102,23 @@
         border: 1px solid var(--gray-200) !important;
         background-color: white;
     }
-    
+
     .student-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 25px rgba(67, 97, 238, 0.15) !important;
         border-color: var(--primary-color) !important;
     }
-    
+
     .student-card .card-body {
         padding: 1.5rem;
     }
-    
+
     .student-card .student-footer {
         padding: 12px 18px;
         background: rgba(67, 97, 238, 0.03);
         border-top: 1px solid var(--gray-200);
     }
-    
+
     /* Statistics Cards */
     .counter-card {
         border-radius: var(--border-radius);
@@ -112,7 +131,7 @@
         z-index: 1;
         transition: all 0.3s ease;
     }
-    
+
     .counter-card:hover {
         transform: translateY(-8px);
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.18);
@@ -141,7 +160,7 @@
         border-radius: 50%;
         z-index: -1;
     }
-    
+
     .counter-title {
         font-size: 0.9rem;
         text-transform: uppercase;
@@ -150,14 +169,14 @@
         font-weight: 600;
         margin-bottom: 10px;
     }
-    
+
     .counter-value {
         font-size: 2.5rem;
         font-weight: 700;
         line-height: 1;
         margin-bottom: 0.75rem;
     }
-    
+
     .counter-icon {
         width: 50px;
         height: 50px;
@@ -170,7 +189,7 @@
         margin-bottom: 1rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
-    
+
     .counter-subtitle {
         font-size: 0.85rem;
         opacity: 0.85;
@@ -186,11 +205,11 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         transition: var(--transition);
     }
-    
+
     .section-header:hover {
         transform: translateX(5px);
     }
-    
+
     .grade-level-header {
         background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
         color: white;
@@ -199,27 +218,27 @@
         border-radius: var(--border-radius);
         box-shadow: 0 6px 15px rgba(67, 97, 238, 0.15);
     }
-    
+
     .grade-level-header h4 {
         margin-bottom: 0;
         color: white;
     }
-    
+
     .grade-level-header .badge-count {
         background-color: rgba(255, 255, 255, 0.25);
         border: 1px solid rgba(255, 255, 255, 0.4);
     }
-    
+
     .grade-level-header .toggle-grade-btn {
         background-color: rgba(255, 255, 255, 0.2);
         color: white;
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    
+
     .grade-level-header .toggle-grade-btn:hover {
         background-color: rgba(255, 255, 255, 0.3);
     }
-    
+
     /* Improved Assigned Sections Header */
     .assigned-section-header {
         background: linear-gradient(135deg, #4895ef 0%, #4361ee 100%);
@@ -229,22 +248,22 @@
         margin-bottom: 1.5rem;
         box-shadow: 0 6px 15px rgba(72, 149, 239, 0.15);
     }
-    
+
     .assigned-section-header h4 {
         margin-bottom: 0.5rem;
         color: white;
     }
-    
+
     .assigned-section-header p {
         color: rgba(255, 255, 255, 0.9);
         margin-bottom: 0;
     }
-    
+
     /* Search and Filters */
     .search-wrapper {
         position: relative;
     }
-    
+
     .search-input {
         padding-left: 48px;
         border-radius: var(--border-radius);
@@ -254,12 +273,12 @@
         font-size: 0.95rem;
         transition: var(--transition);
     }
-    
+
     .search-input:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
-    
+
     .search-icon {
         position: absolute;
         left: 18px;
@@ -268,7 +287,7 @@
         color: var(--gray-500);
         font-size: 16px;
     }
-    
+
     .filter-dropdown {
         height: 52px;
         border-radius: var(--border-radius);
@@ -278,12 +297,12 @@
         font-size: 0.95rem;
         transition: var(--transition);
     }
-    
+
     .filter-dropdown:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
-    
+
     /* Badges and Buttons */
     .btn-action {
         width: 36px;
@@ -295,18 +314,18 @@
         border-radius: 8px;
         transition: var(--transition);
     }
-    
+
     .btn-action:hover {
         transform: translateY(-2px);
     }
-    
+
     .badge-count {
         padding: 0.5rem 0.85rem;
         border-radius: 30px;
         font-weight: 600;
         font-size: 0.85rem;
     }
-    
+
     .student-info-badge {
         border-radius: 30px;
         padding: 0.25rem 0.75rem;
@@ -320,15 +339,15 @@
         color: var(--gray-700);
         transition: var(--transition);
     }
-    
+
     .student-info-badge:hover {
         background-color: var(--gray-300);
     }
-    
+
     .student-info-badge i {
         margin-right: 0.35rem;
     }
-    
+
     /* Analytics */
     .analytics-container {
         border-radius: var(--border-radius);
@@ -338,14 +357,14 @@
         height: 100%;
         border: 1px solid var(--gray-200);
     }
-    
+
     .analytics-title {
         font-weight: 600;
         margin-bottom: 15px;
         color: var(--dark-color);
         font-size: 1rem;
     }
-    
+
     .gender-stat {
         border-radius: 8px;
         padding: 14px 16px;
@@ -353,11 +372,11 @@
         margin-bottom: 10px;
         transition: var(--transition);
     }
-    
+
     .gender-stat:hover {
         background-color: rgba(67, 97, 238, 0.08);
     }
-    
+
     /* Custom progress bar */
     .progress {
         height: 10px;
@@ -365,166 +384,183 @@
         background-color: var(--gray-200);
         overflow: hidden;
     }
-    
+
     /* Table Styling */
     .table {
         border-collapse: separate;
         border-spacing: 0;
     }
-    
+
     .table th {
         font-weight: 600;
         color: var(--gray-700);
         background-color: var(--gray-100);
         border-bottom: 2px solid var(--gray-300);
     }
-    
+
     .table td {
         vertical-align: middle;
         border-color: var(--gray-200);
     }
-    
+
     .table-hover tbody tr:hover {
         background-color: rgba(67, 97, 238, 0.03);
     }
-    
+
     /* Cards and containers */
     .card {
         border-radius: var(--border-radius);
         border: 1px solid var(--gray-200);
         box-shadow: var(--box-shadow);
     }
-    
+
     /* Custom Alerts */
     .alert {
         border-radius: var(--border-radius);
     }
-    
+
     /* Modal customization */
     .modal-content {
         border-radius: var(--border-radius);
         border: none;
         box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        position: relative;
+        z-index: 1056;
     }
-    
+
     .modal-header {
         border-bottom: 1px solid var(--gray-200);
     }
-    
+
     .modal-footer {
         border-top: 1px solid var(--gray-200);
     }
-    
+
+    /* Fix modal backdrop and interaction issues */
+    .modal {
+        z-index: 1055 !important;
+    }
+
+    .modal-backdrop {
+        z-index: 1054 !important;
+    }
+
+    /* Ensure modal buttons are clickable */
+    .modal-dialog {
+        position: relative;
+        z-index: 1056;
+    }
+
     /* Empty state enhancements */
     .empty-state {
         text-align: center;
         padding: 3rem;
     }
-    
+
     .empty-state-icon {
         font-size: 4rem;
         color: var(--gray-400);
         margin-bottom: 1.5rem;
     }
-    
+
     /* Dark mode styles */
     .dark .student-card {
         background-color: var(--bg-card);
         border-color: var(--border-color) !important;
     }
-    
+
     .dark .student-card:hover {
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25) !important;
         border-color: #4361ee !important;
     }
-    
+
     .dark .student-card .student-footer {
         background: rgba(255, 255, 255, 0.03);
         border-top-color: var(--border-color);
     }
-    
+
     .dark .section-header {
         background: linear-gradient(to right, rgba(67, 97, 238, 0.15), rgba(67, 97, 238, 0.25));
     }
-    
+
     .dark .grade-level-header {
         background: linear-gradient(135deg, #3a0ca3 0%, #480ca8 100%);
     }
-    
+
     .dark .assigned-section-header {
         background: linear-gradient(135deg, #3f37c9 0%, #3a0ca3 100%);
     }
-    
+
     .dark .search-input {
         background-color: var(--bg-card);
         border-color: var(--border-color);
         color: var(--text-color);
     }
-    
+
     .dark .search-input:focus {
         border-color: #4361ee;
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
-    
+
     .dark .search-icon {
         color: var(--text-muted);
     }
-    
+
     .dark .filter-dropdown {
         background-color: var(--bg-card);
         border-color: var(--border-color);
         color: var(--text-color);
     }
-    
+
     .dark .filter-dropdown:focus {
         border-color: #4361ee;
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
-    
+
     .dark .dropdown-menu {
         background-color: var(--bg-card);
         border-color: var(--border-color);
     }
-    
+
     .dark .dropdown-item {
         color: var(--text-color);
     }
-    
+
     .dark .dropdown-item:hover {
         background-color: rgba(67, 97, 238, 0.2);
         color: var(--text-color);
     }
-    
+
     .dark .dropdown-divider {
         border-color: var(--border-color);
     }
-    
+
     /* Dark mode counter cards */
     .dark .counter-card {
         box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     }
-    
+
     .dark .counter-card::before {
         background: rgba(255, 255, 255, 0.05);
     }
-    
+
     .dark .counter-card::after {
         background: rgba(255, 255, 255, 0.05);
     }
-    
+
     /* Dark mode text colors */
     .dark .text-muted {
         color: var(--text-muted) !important;
     }
-    
+
     .dark .student-name {
         color: var(--text-color);
     }
-    
+
     .dark .student-info {
         color: var(--text-muted);
     }
-    
+
     /* Dark mode table styles */
     .dark .table {
         --bs-table-bg: var(--bg-card);
@@ -615,121 +651,127 @@
         background-color: rgba(67, 97, 238, 0.1);
         color: var(--text-color);
     }
-    
+
     /* Dark mode pagination */
     .dark .page-link {
         background-color: var(--bg-card);
         border-color: var(--border-color);
         color: var(--text-color);
     }
-    
+
     .dark .page-link:hover {
         background-color: var(--bg-card-header);
         border-color: var(--border-color);
         color: var(--text-color);
     }
-    
+
     .dark .page-item.active .page-link {
         background-color: #4361ee;
         border-color: #4361ee;
         color: #ffffff;
     }
-    
+
     .dark .page-item.disabled .page-link {
         background-color: var(--bg-card);
         border-color: var(--border-color);
         color: var(--text-muted);
     }
-    
+
     /* Dark mode analytics container */
     .dark .analytics-container {
         background-color: var(--bg-card);
         border-color: var(--border-color);
     }
-    
+
     .dark .analytics-title {
         color: var(--text-color);
     }
-    
+
     .dark .gender-stat {
         background-color: rgba(67, 97, 238, 0.1);
     }
-    
+
     .dark .gender-stat:hover {
         background-color: rgba(67, 97, 238, 0.15);
     }
-    
+
     .dark .progress {
         background-color: var(--border-color);
     }
-    
+
     /* Dark mode subject badges */
     .dark .badge.bg-primary.bg-opacity-10 {
         background-color: rgba(67, 97, 238, 0.2) !important;
         color: #4361ee !important;
     }
-    
+
     .dark .student-info-badge {
         background-color: var(--bg-card-header);
         color: var(--text-color);
     }
-    
+
     .dark .student-info-badge:hover {
         background-color: var(--border-color);
     }
-    
+
     /* Dark mode empty state */
     .dark .empty-state-icon {
         color: var(--text-muted);
     }
-    
+
     .dark .bg-gradient-light {
         background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-header) 100%);
     }
-    
+
     /* Dark mode alerts */
     .dark .alert-warning {
         background-color: rgba(255, 193, 7, 0.1);
         border-color: rgba(255, 193, 7, 0.2);
         color: var(--text-color);
     }
-    
+
     .dark .alert-success {
         background-color: rgba(40, 167, 69, 0.1);
         border-color: rgba(40, 167, 69, 0.2);
         color: var(--text-color);
     }
-    
+
     .dark .alert-danger {
         background-color: rgba(220, 53, 69, 0.1);
         border-color: rgba(220, 53, 69, 0.2);
         color: var(--text-color);
     }
-    
+
     /* Dark mode modals */
     .dark .modal-content {
         background-color: var(--bg-card);
         border-color: var(--border-color);
+        position: relative;
+        z-index: 1056;
     }
-    
+
     .dark .modal-header {
         border-bottom-color: var(--border-color);
     }
-    
+
     .dark .modal-footer {
         border-top-color: var(--border-color);
     }
-    
+
+    .dark .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
     /* Dark mode card */
     .dark .card {
         background-color: var(--bg-card);
         border-color: var(--border-color);
     }
-    
+
     .dark .card-body {
         color: var(--text-color);
     }
-    
+
     /* Dark mode form elements */
     .dark .form-control {
         background-color: var(--bg-card);
@@ -962,12 +1004,12 @@
         height: 100%;
         border: 1px solid var(--gray-200);
     }
-    
+
     .gender-distribution-header {
         padding: 1.25rem;
         border-bottom: 1px solid var(--gray-200);
     }
-    
+
     .gender-distribution-title {
         font-size: 1.1rem;
         font-weight: 600;
@@ -975,11 +1017,11 @@
         display: flex;
         align-items: center;
     }
-    
+
     .gender-distribution-body {
         padding: 1.25rem;
     }
-    
+
     .gender-stat {
         border-radius: 8px;
         padding: 1rem;
@@ -987,23 +1029,23 @@
         margin-bottom: 1rem;
         border: 1px solid rgba(67, 97, 238, 0.1);
     }
-    
+
     .gender-stat:last-child {
         margin-bottom: 0;
     }
-    
+
     .gender-stat-label {
         font-size: 0.9rem;
         font-weight: 500;
         margin-bottom: 0.5rem;
     }
-    
+
     .gender-stat-value {
         font-size: 1.25rem;
         font-weight: 600;
         color: var(--gray-800);
     }
-    
+
     /* Search and Filter Enhancements */
     .search-filter-card {
         background: white;
@@ -1013,11 +1055,11 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         border: 1px solid var(--gray-200);
     }
-    
+
     .search-wrapper {
         position: relative;
     }
-    
+
     .search-input {
         padding-left: 3rem;
         height: 3rem;
@@ -1026,12 +1068,12 @@
         font-size: 1rem;
         transition: var(--transition);
     }
-    
+
     .search-input:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
-    
+
     .search-icon {
         position: absolute;
         left: 1rem;
@@ -1040,7 +1082,7 @@
         color: var(--gray-500);
         font-size: 1.25rem;
     }
-    
+
     .filter-dropdown {
         height: 3rem;
         border-radius: var(--border-radius);
@@ -1048,47 +1090,47 @@
         font-size: 1rem;
         transition: var(--transition);
     }
-    
+
     .filter-dropdown:focus {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
-    
+
     /* Dark mode improvements */
     .dark .gender-distribution-card {
         background-color: var(--bg-card);
         border-color: var(--border-color);
     }
-    
+
     .dark .gender-distribution-header {
         border-bottom-color: var(--border-color);
     }
-    
+
     .dark .gender-stat {
         background-color: rgba(67, 97, 238, 0.1);
         border-color: rgba(67, 97, 238, 0.2);
     }
-    
+
     .dark .gender-stat:hover {
         background-color: rgba(67, 97, 238, 0.15);
     }
-    
+
     .dark .gender-stat-value {
         color: var(--text-color);
     }
-    
+
     .dark .grade-level-header {
         background: linear-gradient(135deg, #3a0ca3 0%, #480ca8 100%);
     }
-    
+
     .dark .assigned-section-header {
         background: linear-gradient(135deg, #3f37c9 0%, #3a0ca3 100%);
     }
-    
+
     .dark .section-header {
         background: linear-gradient(to right, rgba(67, 97, 238, 0.15), rgba(67, 97, 238, 0.25));
     }
-    
+
     .dark .search-filter-card {
         background-color: var(--bg-card);
         border-color: var(--border-color);
@@ -1159,7 +1201,7 @@
                             <div class="counter-subtitle">Across all sections</div>
                         </div>
                     </div>
-                    
+
                     <!-- Sections Count -->
                     <div class="col-md-4 mb-4">
                         <div class="counter-card" style="background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);">
@@ -1171,7 +1213,7 @@
                             <div class="counter-subtitle">Under your supervision</div>
                         </div>
                     </div>
-                    
+
                     <!-- Grade Levels -->
                     <div class="col-md-4 mb-4">
                         <div class="counter-card" style="background: linear-gradient(135deg, #4895ef 0%, #3f37c9 100%);">
@@ -1183,35 +1225,78 @@
                             <div class="counter-subtitle">Active curriculum levels</div>
                         </div>
                     </div>
-                    
-                    <!-- Average Age -->
+
+                    <!-- Upcoming Birthday -->
                     <div class="col-md-4 mb-4">
                         <div class="counter-card" style="background: linear-gradient(135deg, #f72585 0%, #b5179e 100%);">
                             <div class="counter-icon">
                                 <i class="fas fa-birthday-cake"></i>
                             </div>
-                            <div class="counter-title">Average Age</div>
+                            <div class="counter-title">Upcoming Birthday</div>
                             <div class="counter-value">
                                 @php
-                                    $totalAge = 0;
-                                    $studentCount = 0;
+                                    // Use Philippine time (Asia/Manila timezone)
+                                    $today = \Carbon\Carbon::now('Asia/Manila')->startOfDay();
+                                    $upcomingBirthday = null;
+                                    $daysUntilBirthday = null;
+                                    $birthdayStudent = null;
+                                    $minDays = 366; // More than a year
+
+                                    // Only consider students from sections where the teacher is the adviser
+                                    // These are already filtered in the $students collection from the controller
                                     foreach($students as $student) {
                                         if ($student->birth_date) {
-                                            $age = \Carbon\Carbon::parse($student->birth_date)->age;
-                                            $totalAge += $age;
-                                            $studentCount++;
+                                            // Get the birth date and set it to Manila timezone
+                                            $birthdate = \Carbon\Carbon::parse($student->birth_date)->setTimezone('Asia/Manila');
+
+                                            // Create next birthday date (this year)
+                                            $nextBirthday = \Carbon\Carbon::create(
+                                                $today->year,
+                                                $birthdate->month,
+                                                $birthdate->day,
+                                                0, 0, 0,
+                                                'Asia/Manila'
+                                            );
+
+                                            // If the birthday has already occurred this year, look at next year's birthday
+                                            if ($today->gt($nextBirthday)) {
+                                                $nextBirthday->addYear();
+                                            }
+
+                                            // Calculate days until birthday (as whole number)
+                                            $days = (int)$today->diffInDays($nextBirthday, false);
+
+                                            if ($days >= 0 && $days < $minDays) {
+                                                $minDays = $days;
+                                                $upcomingBirthday = $nextBirthday;
+                                                $daysUntilBirthday = $days;
+                                                $birthdayStudent = $student;
+                                            }
                                         }
                                     }
-                                    $averageAge = $studentCount > 0 ? round($totalAge / $studentCount, 1) : 0;
                                 @endphp
-                                {{ $averageAge }}
+                                @if($birthdayStudent)
+                                    @if($daysUntilBirthday === 0)
+                                        Today!
+                                    @else
+                                        {{ $daysUntilBirthday }} {{ Str::plural('day', $daysUntilBirthday) }}
+                                    @endif
+                                @else
+                                    N/A
+                                @endif
                             </div>
-                            <div class="counter-subtitle">Years old</div>
+                            <div class="counter-subtitle">
+                                @if($birthdayStudent)
+                                    {{ $birthdayStudent->first_name }} {{ $birthdayStudent->last_name }}
+                                @else
+                                    No upcoming birthdays
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Improved Gender Distribution -->
             <div class="col-lg-3 mb-4">
                 <div class="gender-distribution-card h-100">
@@ -1223,7 +1308,7 @@
                             Gender Distribution
                         </h6>
                     </div>
-                    
+
                     <div class="gender-distribution-body">
                         <!-- Section selector for gender distribution -->
                         <div class="mb-3">
@@ -1234,22 +1319,22 @@
                                 @endforeach
                             </select>
                         </div>
-                        
+
                         @php
                             // Convert to lowercase for case-insensitive comparison
                             $maleCount = $students->filter(function($student) {
                                 return strtolower($student->gender) === 'male';
                             })->count();
-                            
+
                             $femaleCount = $students->filter(function($student) {
                                 return strtolower($student->gender) === 'female';
                             })->count();
-                            
+
                             $totalStudents = $students->count();
                             $malePercentage = $totalStudents > 0 ? round(($maleCount / $totalStudents) * 100) : 0;
                             $femalePercentage = $totalStudents > 0 ? round(($femaleCount / $totalStudents) * 100) : 0;
                         @endphp
-                        
+
                         <div id="gender-stats-container">
                             <div class="gender-stat">
                                 <div class="d-flex justify-content-between mb-2">
@@ -1265,7 +1350,7 @@
                                     <small class="text-muted">{{ $malePercentage }}%</small>
                                 </div>
                             </div>
-                            
+
                             <div class="gender-stat">
                                 <div class="d-flex justify-content-between mb-2">
                                     <div class="gender-stat-label">
@@ -1297,7 +1382,7 @@
                         <input type="text" id="studentSearch" class="form-control search-input" placeholder="Search by name, ID, or section...">
                     </div>
                 </div>
-                
+
                 <!-- Filter Dropdowns -->
                 <div class="col-md-3">
                     <label for="gradeFilter" class="form-label fw-medium mb-2">Grade Level</label>
@@ -1308,7 +1393,7 @@
                         @endforeach
                     </select>
                 </div>
-                
+
                 <div class="col-md-3">
                     <label for="sectionFilter" class="form-label fw-medium mb-2">Section</label>
                     <select id="sectionFilter" class="form-select filter-dropdown">
@@ -1335,7 +1420,7 @@
                         <span class="bg-white bg-opacity-25 p-2 rounded-circle me-3 text-white">
                             <i class="fas fa-graduation-cap"></i>
                         </span>
-                        Grade {{ $gradeLevel }}
+                         {{ $gradeLevel }}
                         <span class="badge ms-2 badge-count">{{ $gradeStudents->count() }} students</span>
                     </h4>
                     <div>
@@ -1369,7 +1454,7 @@
 
                     <div class="row g-3 mb-4 student-section" data-grade="{{ $gradeLevel }}" data-section-id="{{ $sectionStudents->first()->section->id ?? '' }}">
                         @foreach($sectionStudents as $student)
-                            <div class="col-xl-3 col-md-6 mb-3 student-item" 
+                            <div class="col-xl-3 col-md-6 mb-3 student-item"
                                  data-name="{{ strtolower($student->last_name . ' ' . $student->first_name) }}"
                                  data-student-id="{{ strtolower($student->student_id) }}">
                                 <div class="card student-card shadow-sm h-100">
@@ -1400,9 +1485,9 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <hr class="my-2">
-                                        
+
                                         <div class="mb-2 d-flex flex-wrap">
                                             <div class="student-info-badge me-1 mb-1">
                                                 <i class="fas fa-venus-mars text-primary"></i> {{ $student->gender }}
@@ -1416,7 +1501,7 @@
                                                 <i class="fas fa-id-badge text-info"></i> LRN: {{ $student->lrn ?? 'N/A' }}
                                             </div>
                                         </div>
-                                        
+
                                         <div class="mb-2">
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-user-shield text-success me-2 small"></i>
@@ -1438,38 +1523,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Delete Modal -->
-                                <div class="modal fade" id="deleteModal{{ $student->id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ $student->id }}" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel{{ $student->id }}">Confirm Delete</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div class="text-center mb-3">
-                                                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-                                                        <i class="fas fa-exclamation-triangle text-danger fa-3x"></i>
-                                                    </div>
-                                                    <h5>Are you sure you want to delete this student?</h5>
-                                                </div>
-                                                <div class="alert alert-warning">
-                                                    <p class="mb-0"><strong>{{ $student->full_name ?? $student->first_name . ' ' . $student->last_name }}</strong> will be permanently removed from your records.</p>
-                                                </div>
-                                                <p class="text-danger small"><i class="fas fa-info-circle me-1"></i> This action cannot be undone.</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger">Yes, Delete Student</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -1481,7 +1534,7 @@
         <div class="my-5">
             <hr>
         </div>
-        
+
         <!-- Assigned Subjects Sections -->
         @if($assignedStudents->count() > 0)
             <div class="assigned-section-header">
@@ -1498,14 +1551,14 @@
                     Sections where you teach subjects but are not the adviser. You can only view grades for subjects you teach.
                 </p>
             </div>
-            
+
             <!-- Group assigned students by section -->
             @php
                 $assignedStudentsBySection = $assignedStudents->groupBy(function ($student) {
                     return $student->section_id;
                 });
             @endphp
-            
+
             @foreach($assignedSections as $section)
                 @if(isset($assignedStudentsBySection[$section->id]))
                     <div class="section-header shadow-sm border-start border-primary border-4 rounded" data-section-id="{{ $section->id }}">
@@ -1514,12 +1567,12 @@
                                 <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-2 text-primary">
                                     <i class="fas fa-users"></i>
                                 </span>
-                                Section: {{ $section->name }} (Grade {{ $section->grade_level }})
+                                Section: {{ $section->name }} {{ $section->grade_level }}
                                 <span class="badge bg-primary ms-2 badge-count">{{ $assignedStudentsBySection[$section->id]->count() }} students</span>
                             </h5>
                         </div>
                     </div>
-                    
+
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-body p-3">
                             <div class="mb-3">
@@ -1535,7 +1588,7 @@
                                     @endforeach
                                 </div>
                             </div>
-                            
+
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead class="table-light">
@@ -1598,7 +1651,7 @@
                                                     <!-- Single subject, just show a direct link -->
                                                     @php $subject = $assignedSubjectsBySection[$section->id][0]; @endphp
                                                     <a href="{{ route('teacher.students.show', [
-                                                        'student' => $student->id, 
+                                                        'student' => $student->id,
                                                         'from_assigned' => 1,
                                                         'subject_id' => $subject->id
                                                     ]) }}" class="btn btn-sm btn-primary">
@@ -1657,7 +1710,7 @@
         document.querySelectorAll('.counter-card').forEach(card => {
             card.style.height = '100%';
         });
-        
+
         const studentSearch = document.getElementById('studentSearch');
         const gradeFilter = document.getElementById('gradeFilter');
         const sectionFilter = document.getElementById('sectionFilter');
@@ -1687,26 +1740,26 @@
             const searchTerm = studentSearch.value.toLowerCase();
             const selectedGrade = gradeFilter.value;
             const selectedSection = sectionFilter.value;
-            
+
             let visibleCount = 0;
             let visibleSections = new Set();
             let visibleGrades = new Set();
-            
+
             // Loop through all student items
             studentItems.forEach(item => {
                 const studentName = item.getAttribute('data-name');
                 const studentId = item.getAttribute('data-student-id');
                 const studentGrade = item.closest('.student-section').getAttribute('data-grade');
                 const studentSectionId = item.closest('.student-section').getAttribute('data-section-id');
-                
+
                 // Check if student matches all filters
-                const matchesSearch = searchTerm === '' || 
-                    studentName.includes(searchTerm) || 
+                const matchesSearch = searchTerm === '' ||
+                    studentName.includes(searchTerm) ||
                     studentId.includes(searchTerm);
-                    
+
                 const matchesGrade = selectedGrade === '' || studentGrade === selectedGrade;
                 const matchesSection = selectedSection === '' || studentSectionId === selectedSection;
-                
+
                 // Show/hide based on filters
                 if (matchesSearch && matchesGrade && matchesSection) {
                     item.classList.remove('d-none');
@@ -1717,35 +1770,35 @@
                     item.classList.add('d-none');
                 }
             });
-            
+
             // Show/hide section containers based on visible students
             studentSections.forEach(section => {
                 const sectionId = section.getAttribute('data-section-id');
                 const hasVisibleStudents = visibleSections.has(sectionId);
                 section.classList.toggle('d-none', !hasVisibleStudents);
             });
-            
+
             // Show/hide section headers
             sectionHeaders.forEach(header => {
                 const sectionId = header.getAttribute('data-section-id');
                 const hasVisibleStudents = visibleSections.has(sectionId);
                 header.classList.toggle('d-none', !hasVisibleStudents);
             });
-            
+
             // Show/hide grade level headers
             gradeLevelHeaders.forEach(header => {
                 const grade = header.querySelector('.toggle-grade-btn').getAttribute('data-grade');
                 const hasVisibleStudents = visibleGrades.has(grade);
                 header.classList.toggle('d-none', !hasVisibleStudents);
             });
-            
+
             // Show/hide grade level containers
             gradeLevelContainers.forEach(container => {
                 const grade = container.getAttribute('data-grade');
                 const hasVisibleStudents = visibleGrades.has(grade);
                 container.classList.toggle('d-none', !hasVisibleStudents);
             });
-            
+
             // Show/hide no results message
             noResults.classList.toggle('d-none', visibleCount > 0);
         }
@@ -1753,7 +1806,7 @@
         // Function to update gender distribution based on selected section
         function updateGenderDistribution() {
             const selectedSectionId = genderSectionFilter.value;
-            
+
             // Make an AJAX request to get gender data for the selected section
             fetch('/teacher/students/gender-distribution?section_id=' + selectedSectionId)
                 .then(response => {
@@ -1779,7 +1832,7 @@
                                 <small class="text-muted">${data.male_percentage}%</small>
                             </div>
                         </div>
-                        
+
                         <div class="gender-stat">
                             <div class="d-flex justify-content-between mb-2">
                                 <div class="gender-stat-label">
@@ -1795,7 +1848,7 @@
                             </div>
                         </div>
                     `;
-                    
+
                     // Update the gender stats container
                     document.getElementById('gender-stats-container').innerHTML = html;
                 })
@@ -1823,7 +1876,7 @@
                 const grade = this.getAttribute('data-grade');
                 const container = document.querySelector(`.grade-level-container[data-grade="${grade}"]`);
                 const icon = this.querySelector('i');
-                
+
                 if (container) {
                     container.classList.toggle('d-none');
                     icon.classList.toggle('fa-chevron-down');
@@ -1836,15 +1889,15 @@
         if (studentSearch) {
             studentSearch.addEventListener('input', filterStudents);
         }
-        
+
         if (gradeFilter) {
             gradeFilter.addEventListener('change', filterStudents);
         }
-        
+
         if (sectionFilter) {
             sectionFilter.addEventListener('change', filterStudents);
         }
-        
+
         // Reset filters
         if (resetFiltersBtn) {
             resetFiltersBtn.addEventListener('click', function() {
@@ -1856,27 +1909,27 @@
                 if (genderSectionFilter) updateGenderDistribution();
             });
         }
-        
+
         // Fix dropdown functionality for "View Subject Grades"
         document.querySelectorAll('.dropdown-toggle').forEach(dropdown => {
             dropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const dropdownMenu = this.nextElementSibling;
-                
+
                 // Close all other open dropdowns
                 document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
                     if (menu !== dropdownMenu) {
                         menu.classList.remove('show');
                     }
                 });
-                
+
                 // Toggle current dropdown
                 if (dropdownMenu) {
                     dropdownMenu.classList.toggle('show');
                 }
             });
         });
-        
+
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.matches('.dropdown-toggle, .dropdown-menu *')) {
@@ -1885,7 +1938,204 @@
                 });
             }
         });
+
+        // Fix modal backdrop and interaction issues
+        document.querySelectorAll('.modal').forEach(modalEl => {
+            modalEl.addEventListener('shown.bs.modal', function() {
+                // Ensure the modal is above the backdrop
+                this.style.zIndex = '1055';
+
+                // Find the backdrop and set its z-index
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.style.zIndex = '1054';
+                }
+
+                // Ensure the modal dialog and content are above both
+                const dialog = this.querySelector('.modal-dialog');
+                if (dialog) {
+                    dialog.style.zIndex = '1056';
+                }
+
+                const content = this.querySelector('.modal-content');
+                if (content) {
+                    content.style.zIndex = '1056';
+                }
+            });
+        });
+
+        // Special handling for delete modals
+        document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target^="#deleteModal"]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // First, force close any existing modals to prevent stacking issues
+                forceCloseAllModals();
+
+                // Short delay to ensure cleanup is complete
+                setTimeout(() => {
+                    const targetId = this.getAttribute('data-bs-target');
+                    const modalEl = document.querySelector(targetId);
+
+                    if (modalEl) {
+                        // Ensure the modal is properly initialized
+                        if (typeof bootstrap !== 'undefined') {
+                            // Store the modal instance in a variable for later use
+                            const modalInstance = new bootstrap.Modal(modalEl);
+                            modalEl._bsModal = modalInstance;
+                            modalInstance.show();
+
+                            // Handle cancel button click
+                            const cancelBtn = modalEl.querySelector('.cancel-delete-btn');
+                            if (cancelBtn) {
+                                // Remove any existing event listeners
+                                cancelBtn.removeEventListener('click', cancelDeleteHandler);
+                                // Add new event listener
+                                cancelBtn.addEventListener('click', cancelDeleteHandler);
+                            }
+
+                            // Handle close button click
+                            const closeBtn = modalEl.querySelector('.close-delete-btn');
+                            if (closeBtn) {
+                                // Remove any existing event listeners
+                                closeBtn.removeEventListener('click', cancelDeleteHandler);
+                                // Add new event listener
+                                closeBtn.addEventListener('click', cancelDeleteHandler);
+                            }
+                        }
+
+                        // Apply styles to ensure modal is visible and interactive
+                        modalEl.style.display = 'block';
+                        modalEl.style.zIndex = '1055';
+
+                        // Ensure buttons are clickable
+                        const buttons = modalEl.querySelectorAll('button');
+                        buttons.forEach(btn => {
+                            btn.style.position = 'relative';
+                            btn.style.zIndex = '1057';
+                        });
+                    }
+                }, 50);
+            });
+        });
+
+        // Function to handle cancel button click
+        function cancelDeleteHandler() {
+            const modalEl = this.closest('.modal');
+            if (modalEl) {
+                // Force hide the modal
+                if (modalEl._bsModal) {
+                    modalEl._bsModal.hide();
+                }
+
+                // Immediate cleanup
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                modalEl.setAttribute('aria-hidden', 'true');
+                modalEl.removeAttribute('aria-modal');
+                modalEl.removeAttribute('role');
+
+                // Remove all backdrops
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    backdrop.parentNode.removeChild(backdrop);
+                });
+
+                // Clean up body
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+
+                // Additional cleanup after a short delay
+                setTimeout(() => {
+                    // Double-check for any remaining backdrops
+                    const remainingBackdrops = document.querySelectorAll('.modal-backdrop');
+                    remainingBackdrops.forEach(backdrop => {
+                        backdrop.parentNode.removeChild(backdrop);
+                    });
+                }, 100);
+            }
+        }
+
+        // Add event listeners to all cancel and close buttons
+        document.querySelectorAll('.cancel-delete-btn, .close-delete-btn').forEach(btn => {
+            btn.addEventListener('click', cancelDeleteHandler);
+        });
+
+        // Function to force close all modals
+        function forceCloseAllModals() {
+            const openModals = document.querySelectorAll('.modal');
+            if (openModals.length > 0) {
+                openModals.forEach(modal => {
+                    // Force cleanup
+                    modal.classList.remove('show');
+                    modal.style.display = 'none';
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.removeAttribute('aria-modal');
+                    modal.removeAttribute('role');
+                });
+
+                // Remove all backdrops
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    backdrop.parentNode.removeChild(backdrop);
+                });
+
+                // Clean up body
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+        }
+
+        // Global event listener for ESC key to force close any open modals
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                forceCloseAllModals();
+            }
+        });
+
+        // Click handler for modal backdrop
+        document.addEventListener('click', function(e) {
+            // Check if click is on a backdrop or modal container (not on modal content)
+            if (e.target.classList.contains('modal') || e.target.classList.contains('modal-backdrop')) {
+                forceCloseAllModals();
+            }
+        });
     });
 </script>
 @endpush
-@endsection 
+
+<!-- Student Delete Modals -->
+@foreach($students as $student)
+<div class="modal fade" id="deleteModal{{ $student->id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ $student->id }}" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel{{ $student->id }}">Confirm Delete</h5>
+                <button type="button" class="btn-close close-delete-btn" aria-label="Close" style="position: relative; z-index: 1057;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
+                        <i class="fas fa-exclamation-triangle text-danger fa-3x"></i>
+                    </div>
+                    <h5>Are you sure you want to delete this student?</h5>
+                </div>
+                <div class="alert alert-warning">
+                    <p class="mb-0"><strong>{{ $student->full_name ?? $student->first_name . ' ' . $student->last_name }}</strong> will be permanently removed from your records.</p>
+                </div>
+                <p class="text-danger small"><i class="fas fa-info-circle me-1"></i> This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary cancel-delete-btn" style="position: relative; z-index: 1057;">Cancel</button>
+                <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" style="position: relative; z-index: 1057;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger" style="position: relative; z-index: 1057;">Yes, Delete Student</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
+
+@endsection

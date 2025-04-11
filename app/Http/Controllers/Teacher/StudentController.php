@@ -21,14 +21,14 @@ class StudentController extends Controller
         try {
             // Get sections associated with the current teacher
             $sections = Section::where('adviser_id', Auth::id())->pluck('id');
-            
+
             // Get students in these sections
             $students = Student::whereIn('section_id', $sections)
                 ->with('section')
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
-            
+
             // Get assigned sections where the teacher teaches subjects but is not the adviser
             $teacherId = Auth::id();
             $assignedSectionIds = DB::table('section_subject')
@@ -40,26 +40,26 @@ class StudentController extends Controller
                 })
                 ->pluck('sections.id')
                 ->unique();
-            
+
             $assignedSections = Section::whereIn('id', $assignedSectionIds)
                 ->get();
-            
+
             // Get students from these assigned sections
             $assignedStudents = Student::whereIn('section_id', $assignedSectionIds)
                 ->with('section')
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
-            
+
             // Get subjects assigned to the teacher for each section
             $teacherSubjectsData = DB::table('section_subject')
                 ->where('teacher_id', $teacherId)
                 ->join('subjects', 'section_subject.subject_id', '=', 'subjects.id')
                 ->select('section_subject.section_id', 'subjects.id', 'subjects.name', 'subjects.code')
                 ->get();
-            
+
             $assignedSubjectsBySection = [];
-            
+
             foreach ($teacherSubjectsData as $subjectData) {
                 if (!isset($assignedSubjectsBySection[$subjectData->section_id])) {
                     $assignedSubjectsBySection[$subjectData->section_id] = [];
@@ -70,9 +70,9 @@ class StudentController extends Controller
                     'code' => $subjectData->code
                 ];
             }
-            
+
             return view('teacher.students.index', compact(
-                'students', 
+                'students',
                 'assignedStudents',
                 'assignedSections',
                 'assignedSubjectsBySection'
@@ -83,7 +83,7 @@ class StudentController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return view('teacher.students.index', [
                 'students' => collect(),
                 'assignedStudents' => collect(),
@@ -99,7 +99,7 @@ class StudentController extends Controller
     public function create()
     {
         $sections = Section::where('adviser_id', Auth::id())->get();
-        
+
         return view('teacher.students.create', compact('sections'));
     }
 
@@ -118,17 +118,17 @@ class StudentController extends Controller
             'birth_date' => 'required|date',
             'section_id' => 'required|exists:sections,id',
             'address' => 'nullable|string',
-            'guardian_name' => 'nullable|string|max:255',
-            'guardian_contact' => 'nullable|string|max:50',
+            'guardian_name' => 'required|string|max:255',
+            'guardian_contact' => 'required|string|max:50',
         ]);
-        
+
         // Verify the section belongs to this teacher
         $section = Section::where('id', $validated['section_id'])
             ->where('adviser_id', Auth::id())
             ->firstOrFail();
-        
+
         Student::create($validated);
-        
+
         return redirect()->route('teacher.students.index')
             ->with('success', 'Student added successfully.');
     }
@@ -141,7 +141,7 @@ class StudentController extends Controller
         // Check if viewing from assigned section
         $isFromAssignedSection = $request->has('from_assigned');
         $assignedSubjectId = $request->query('subject_id');
-        
+
         if ($isFromAssignedSection && $assignedSubjectId) {
             try {
                 // Verify this teacher teaches this subject to this student
@@ -153,24 +153,24 @@ class StudentController extends Controller
                     },
                     'attendances'
                 ])->findOrFail($id);
-                
+
                 // Check if the teacher is assigned to teach this subject in the student's section
                 $teacherAssigned = DB::table('section_subject')
                     ->where('section_id', $student->section_id)
                     ->where('subject_id', $assignedSubjectId)
                     ->where('teacher_id', Auth::id())
                     ->exists();
-                
+
                 if (!$teacherAssigned) {
                     abort(403, 'You are not authorized to view this student\'s grades for this subject.');
                 }
-                
+
                 // Get the selected transmutation table from the request or use default (1)
                 $selectedTransmutationTable = $request->query('transmutation_table', 1);
-                
+
                 // Get the subject with its detailed information
                 $subject = Subject::findOrFail($assignedSubjectId);
-                
+
                 return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'isFromAssignedSection', 'subject'));
             } catch (\Exception $e) {
                 Log::error('Error in student show: ' . $e->getMessage(), [
@@ -178,23 +178,23 @@ class StudentController extends Controller
                     'line' => $e->getLine(),
                     'trace' => $e->getTraceAsString()
                 ]);
-                
+
                 return redirect()->route('teacher.students.index')
                     ->with('error', 'Error loading student data. Please try again or contact administrator.');
             }
         }
-        
+
         // Default behavior - get sections associated with the current teacher
         $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
-        
+
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)
             ->with(['section.subjects', 'section.adviser', 'grades.subject', 'attendances'])
             ->findOrFail($id);
-        
+
         // Get the selected transmutation table from the request or use default (1)
         $selectedTransmutationTable = $request->query('transmutation_table', 1);
-        
+
         return view('teacher.students.show', compact('student', 'selectedTransmutationTable'));
     }
 
@@ -206,10 +206,10 @@ class StudentController extends Controller
         // Get sections associated with the current teacher
         $sections = Section::where('adviser_id', Auth::id())->get();
         $sectionIds = $sections->pluck('id');
-        
+
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)->findOrFail($id);
-        
+
         return view('teacher.students.edit', compact('student', 'sections'));
     }
 
@@ -220,10 +220,10 @@ class StudentController extends Controller
     {
         // Get sections associated with the current teacher
         $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
-        
+
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)->findOrFail($id);
-        
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
@@ -234,17 +234,17 @@ class StudentController extends Controller
             'birth_date' => 'required|date',
             'section_id' => 'required|exists:sections,id',
             'address' => 'nullable|string',
-            'guardian_name' => 'nullable|string|max:255',
-            'guardian_contact' => 'nullable|string|max:50',
+            'guardian_name' => 'required|string|max:255',
+            'guardian_contact' => 'required|string|max:50',
         ]);
-        
+
         // Verify the section belongs to this teacher
         $section = Section::where('id', $validated['section_id'])
             ->where('adviser_id', Auth::id())
             ->firstOrFail();
-        
+
         $student->update($validated);
-        
+
         return redirect()->route('teacher.students.index')
             ->with('success', 'Student information updated successfully.');
     }
@@ -256,18 +256,18 @@ class StudentController extends Controller
     {
         // Get sections associated with the current teacher
         $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
-        
+
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)->findOrFail($id);
-        
+
         // Check if student has grades or attendance records
         if ($student->grades()->count() > 0 || $student->attendances()->count() > 0) {
             return redirect()->route('teacher.students.index')
                 ->with('error', 'Cannot delete student with grades or attendance records.');
         }
-        
+
         $student->delete();
-        
+
         return redirect()->route('teacher.students.index')
             ->with('success', 'Student deleted successfully.');
     }
@@ -281,7 +281,7 @@ class StudentController extends Controller
     public function genderDistribution(Request $request)
     {
         $sectionId = $request->input('section_id', 'all');
-        
+
         if ($sectionId === 'all') {
             // Get all students for the teacher
             $students = Student::with('section')->whereHas('section', function($query) {
@@ -296,20 +296,20 @@ class StudentController extends Controller
                 })
                 ->get();
         }
-        
+
         // Calculate gender statistics
         $maleCount = $students->filter(function($student) {
             return strtolower($student->gender) === 'male';
         })->count();
-        
+
         $femaleCount = $students->filter(function($student) {
             return strtolower($student->gender) === 'female';
         })->count();
-        
+
         $totalStudents = $students->count();
         $malePercentage = $totalStudents > 0 ? round(($maleCount / $totalStudents) * 100) : 0;
         $femalePercentage = $totalStudents > 0 ? round(($femaleCount / $totalStudents) * 100) : 0;
-        
+
         return response()->json([
             'male_count' => $maleCount,
             'female_count' => $femaleCount,

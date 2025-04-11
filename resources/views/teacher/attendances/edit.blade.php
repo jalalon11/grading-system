@@ -216,7 +216,7 @@
                         @endif
 
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('teacher.attendances.show', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-times me-1"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-primary btn-lg">
