@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\TeacherAdminController;
 use App\Http\Controllers\Admin\AnnouncementController;
+use App\Http\Controllers\Admin\RegistrationKeyController;
 use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\CertificateController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
@@ -88,9 +89,8 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         // Admin routes for registration key management
         Route::post('/reset-master-key', [\App\Http\Controllers\RegistrationKeyController::class, 'resetMasterKey'])->name('reset-master-key');
         Route::post('/generate-one-time-key', [\App\Http\Controllers\RegistrationKeyController::class, 'generateOneTimeKey'])->name('generate-one-time-key');
-        Route::get('/registration-keys', function() {
-            return view('admin.registration_keys');
-        })->name('registration-keys');
+        Route::post('/generate-bulk-keys', [\App\Http\Controllers\RegistrationKeyController::class, 'generateBulkKeys'])->name('generate-bulk-keys');
+        Route::get('/registration-keys', [RegistrationKeyController::class, 'index'])->name('registration-keys');
 
         // Announcement routes
         Route::resource('announcements', AnnouncementController::class);
