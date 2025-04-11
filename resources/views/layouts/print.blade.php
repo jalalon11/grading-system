@@ -7,6 +7,13 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
+    @auth
+        @if(Auth::user()->school && Auth::user()->school->logo_path)
+            <!-- Favicon from School Logo -->
+            <link rel="icon" href="{{ Auth::user()->school->logo_url }}" type="image/x-icon">
+        @endif
+    @endauth
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
