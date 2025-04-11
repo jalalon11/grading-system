@@ -152,17 +152,12 @@
     .auth-card {
         max-width: 450px;
         width: 100%;
-        transition: all 0.3s ease;
         position: relative;
         z-index: 1;
         backdrop-filter: blur(10px);
         background: rgba(244, 246, 246, 0.95);
         border: 1px solid rgba(170, 183, 184, 0.2);
-    }
-
-    .auth-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
     .school-logo {
@@ -175,9 +170,9 @@
         justify-content: center;
         margin: 0 auto 2rem;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        animation: float 6s ease-in-out infinite;
         position: relative;
         overflow: hidden;
+        animation: float 6s ease-in-out infinite;
     }
 
     .school-logo::after {
@@ -185,7 +180,7 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
         transform: translateX(-100%);
         animation: shine 3s infinite;
     }
@@ -332,6 +327,65 @@
         padding: 0;
     }
 
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .auth-card {
+            max-width: 100%;
+            margin: 1rem;
+            width: calc(100% - 2rem);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+        }
+
+        .school-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 0.5rem 1rem;
+        }
+
+        .form-control, .input-group-text {
+            padding: 0.75rem;
+        }
+
+        .btn-auth {
+            padding: 0.75rem 1.25rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .auth-card {
+            margin: 0.5rem;
+            width: calc(100% - 1rem);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .auth-title {
+            font-size: 1.5rem;
+        }
+
+        .nav-tabs .nav-item {
+            margin: 0 0.25rem;
+        }
+
+        .nav-tabs .nav-link {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+    }
+
     /* Error message styling */
     .invalid-feedback {
         font-size: 0.875rem;
@@ -399,6 +453,21 @@
         display: block;
         clear: both;
         content: "";
+    }
+
+    /* Announcement modal animation */
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .announcement-modal.show .modal-dialog {
+        animation: modalFadeIn 0.3s ease-out forwards;
+    }
+
+    .announcement-modal .modal-dialog {
+        transform: scale(0.95) translateY(-10px);
+        opacity: 0;
     }
 
 </style>
