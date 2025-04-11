@@ -630,9 +630,9 @@
                             <i class="fas fa-search me-2"></i> View Grades
                         </button>
                     </div>
-
+                    <!--  Commented Out and will be used for debugging  -->
                     <!-- Comprehensive Grade View Toggle -->
-                    <div class="col-12 mt-3">
+                    <!-- <div class="col-12 mt-3">
                         <div class="card border-0 shadow-sm {{ request('view_all') == 'true' ? 'bg-primary bg-opacity-10' : 'bg-light' }}">
                             <div class="card-body d-flex align-items-center">
                                 <div class="form-check form-switch me-3">
@@ -652,7 +652,7 @@
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </form>
             @endif
         </div>
@@ -869,21 +869,36 @@
 
         <!-- Student Grades Table -->
         <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold text-primary">
-                    <i class="fas fa-user-graduate me-2"></i> Student Grades
+            <div class="card-header py-3 bg-white">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2 mb-md-0">
+                    <h5 class="mb-2 mb-md-0 fw-bold text-primary">
+                        <i class="fas fa-user-graduate me-2"></i> Student Grades
                     </h5>
-                <div class="d-flex">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <button class="btn btn-sm btn-outline-primary" id="toggleTableView">
-                                <i class="fas fa-table-columns me-1"></i> Toggle View
-                            </button>
+                </div>
+
+                <div class="selected-info mt-2">
+                    <div class="d-flex flex-column flex-sm-row gap-2 shadow-sm rounded-3 border bg-white p-2">
+                        <div class="d-flex align-items-center flex-grow-1 p-1">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="fas fa-users text-success"></i>
+                            </div>
+                            <div>
+                                <small class="text-muted d-block">Section</small>
+                                <span class="fw-bold">{{ isset($sections) ? $sections->where('id', $selectedSectionId)->first()->name ?? 'N/A' : 'N/A' }}</span>
+                            </div>
                         </div>
-                        <div>
-                            <button id="printGradesBtn" class="btn btn-sm btn-outline-secondary">
-                        <i class="fas fa-print me-1"></i> Print
-                    </button>
+
+                        <div class="d-none d-sm-block vr mx-1"></div>
+                        <div class="border-top border-sm-0 pt-2 pt-sm-0 mt-1 mt-sm-0 d-sm-none"></div>
+
+                        <div class="d-flex align-items-center flex-grow-1 p-1">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="fas fa-book text-primary"></i>
+                            </div>
+                            <div class="text-truncate">
+                                <small class="text-muted d-block">Subject</small>
+                                <span class="fw-bold">{{ $selectedSubject->name ?? 'N/A' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

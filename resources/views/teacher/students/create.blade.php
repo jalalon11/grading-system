@@ -163,7 +163,7 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <form action="{{ route('teacher.students.store') }}" method="POST">
+                    <form action="{{ route('teacher.students.store') }}" method="POST" id="studentForm">
                         @csrf
 
                         <!-- Personal Information -->
@@ -173,7 +173,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('first_name') is-invalid @enderror" 
+                                        <input type="text" class="form-control @error('first_name') is-invalid @enderror"
                                             id="first_name" name="first_name" value="{{ old('first_name') }}" required>
                                         @error('first_name')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -184,7 +184,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="middle_name" class="form-label">Middle Name</label>
-                                        <input type="text" class="form-control @error('middle_name') is-invalid @enderror" 
+                                        <input type="text" class="form-control @error('middle_name') is-invalid @enderror"
                                             id="middle_name" name="middle_name" value="{{ old('middle_name') }}">
                                         @error('middle_name')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -195,7 +195,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('last_name') is-invalid @enderror" 
+                                        <input type="text" class="form-control @error('last_name') is-invalid @enderror"
                                             id="last_name" name="last_name" value="{{ old('last_name') }}" required>
                                         @error('last_name')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -208,7 +208,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="student_id" class="form-label">Student ID <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('student_id') is-invalid @enderror" 
+                                        <input type="text" class="form-control @error('student_id') is-invalid @enderror"
                                             id="student_id" name="student_id" value="{{ old('student_id') }}" required>
                                         @error('student_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -219,7 +219,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="lrn" class="form-label">Learner Reference Number (LRN) <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('lrn') is-invalid @enderror" 
+                                        <input type="text" class="form-control @error('lrn') is-invalid @enderror"
                                             id="lrn" name="lrn" value="{{ old('lrn') }}" required
                                             oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                         @error('lrn')
@@ -248,7 +248,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="birth_date" class="form-label">Birth Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control @error('birth_date') is-invalid @enderror" 
+                                        <input type="date" class="form-control @error('birth_date') is-invalid @enderror"
                                             id="birth_date" name="birth_date" value="{{ old('birth_date') }}" required
                                             max="{{ date('Y-m-d') }}">
                                         @error('birth_date')
@@ -262,7 +262,7 @@
                                 <div class="col-12">
                                     <div class="form-group">
                                         <label for="address" class="form-label">Address</label>
-                                        <textarea class="form-control @error('address') is-invalid @enderror" 
+                                        <textarea class="form-control @error('address') is-invalid @enderror"
                                             id="address" name="address" rows="2">{{ old('address') }}</textarea>
                                         @error('address')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -278,9 +278,9 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="guardian_name" class="form-label">Guardian Name</label>
-                                        <input type="text" class="form-control @error('guardian_name') is-invalid @enderror" 
-                                            id="guardian_name" name="guardian_name" value="{{ old('guardian_name') }}">
+                                        <label for="guardian_name" class="form-label">Guardian Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('guardian_name') is-invalid @enderror"
+                                            id="guardian_name" name="guardian_name" value="{{ old('guardian_name') }}" required>
                                         @error('guardian_name')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -289,9 +289,9 @@
 
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="guardian_contact" class="form-label">Guardian Contact</label>
-                                        <input type="text" class="form-control @error('guardian_contact') is-invalid @enderror" 
-                                            id="guardian_contact" name="guardian_contact" value="{{ old('guardian_contact') }}">
+                                        <label for="guardian_contact" class="form-label">Guardian Contact <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('guardian_contact') is-invalid @enderror"
+                                            id="guardian_contact" name="guardian_contact" value="{{ old('guardian_contact') }}" required>
                                         @error('guardian_contact')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -307,7 +307,7 @@
                                 <div class="col-12">
                                     <div class="form-group">
                                         <label for="section_id" class="form-label">Section <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('section_id') is-invalid @enderror" 
+                                        <select class="form-select @error('section_id') is-invalid @enderror"
                                             id="section_id" name="section_id" required>
                                             <option value="">Select Section</option>
                                             @foreach($sections as $section)
@@ -325,7 +325,7 @@
                         </div>
 
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-save me-1"></i> Save Student
                             </button>
                         </div>
@@ -340,6 +340,38 @@
 <script>
     // Set max date to today
     document.getElementById('birth_date').max = new Date().toISOString().split('T')[0];
+
+    // Prevent multiple form submissions
+    document.addEventListener('DOMContentLoaded', function() {
+        const studentForm = document.getElementById('studentForm');
+        const submitBtn = document.querySelector('#studentForm button[type="submit"]');
+
+        if (studentForm && submitBtn) {
+            console.log('Found student form and submit button');
+
+            studentForm.addEventListener('submit', function(e) {
+                // Check if the form is already being submitted
+                if (studentForm.classList.contains('submitting')) {
+                    console.log('Form already being submitted');
+                    e.preventDefault();
+                    return false;
+                }
+
+                console.log('Form submitted, adding loading state');
+                // Add submitting class to form
+                studentForm.classList.add('submitting');
+
+                // Disable button and show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+
+                // Allow form submission
+                return true;
+            });
+        } else {
+            console.error('Could not find student form or submit button');
+        }
+    });
 </script>
 @endpush
-@endsection 
+@endsection
