@@ -29,7 +29,7 @@
                 <div class="card-body d-flex flex-column align-items-center">
                     @if(Auth::user()->school && Auth::user()->school->logo_path)
                     <div class="mb-4 mt-2">
-                            <img src="{{ Auth::user()->school->logo_url }}" alt="{{ Auth::user()->school->name }} Logo" class="rounded" style="max-height: 60px;">
+                        <img src="{{ Auth::user()->school->logo_url }}" alt="{{ Auth::user()->school->name }} Logo" class="img-fluid rounded" style="max-height: 70px;">
                     </div>
                     @else
                     <div class="avatar mb-4 mt-2">
