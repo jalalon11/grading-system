@@ -266,7 +266,7 @@
                                            class="form-control @error('key') is-invalid @enderror"
                                            name="key" value="{{ old('key') }}"
                                            required autofocus
-                                           placeholder="Enter your registration key">
+                                           placeholder="Enter registration key">
                                 </div>
                                 @error('key')
                                     <div class="invalid-feedback">

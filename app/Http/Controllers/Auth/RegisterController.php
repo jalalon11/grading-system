@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
@@ -29,6 +31,27 @@ class RegisterController extends Controller
      * @var string
      */
     protected $redirectTo = '/home';
+
+    /**
+     * Handle a registration request for the application.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function register(Request $request)
+    {
+        $this->validator($request->all())->validate();
+
+        event(new Registered($user = $this->create($request->all())));
+
+        $this->guard()->login($user);
+
+        // Clear the registration key session data after successful registration
+        $request->session()->forget(['valid_registration_key', 'registration_key_info']);
+
+        return $this->registered($request, $user)
+                        ?: redirect($this->redirectPath());
+    }
 
     /**
      * Create a new controller instance.
@@ -64,10 +87,39 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        // Get registration key info from session
+        $keyInfo = session('registration_key_info', []);
+
+        // Set default role and values
+        $role = 'teacher';
+        $schoolId = null;
+        $isTeacherAdmin = false;
+
+        // If we have key info, use it to set role, school_id, and teacher admin status
+        if (!empty($keyInfo)) {
+            // Set role and teacher admin status based on key type
+            if (isset($keyInfo['key_type']) && $keyInfo['key_type']) {
+                if ($keyInfo['key_type'] === 'teacher_admin') {
+                    $role = 'teacher';
+                    $isTeacherAdmin = true;
+                } else {
+                    $role = 'teacher';
+                }
+            }
+
+            // Set school_id if provided
+            if (isset($keyInfo['school_id']) && $keyInfo['school_id']) {
+                $schoolId = $keyInfo['school_id'];
+            }
+        }
+
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'role' => $role,
+            'school_id' => $schoolId,
+            'is_teacher_admin' => $isTeacherAdmin,
         ]);
     }
 }

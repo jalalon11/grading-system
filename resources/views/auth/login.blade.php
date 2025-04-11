@@ -470,6 +470,17 @@
         opacity: 0;
     }
 
+    /* Warning alert styling */
+    .alert-warning {
+        border-left: 4px solid #f59f00;
+        background-color: #fff9db;
+        color: #6b5900;
+    }
+
+    .alert-warning strong {
+        color: #e67700;
+    }
+
 </style>
 @endpush
 
@@ -604,7 +615,7 @@
                                                     <i class="fas fa-key"></i>
                                                 </span>
                                                 <input id="registration-key" type="text" class="form-control"
-                                                       placeholder="Enter your registration key" required>
+                                                       placeholder="Enter registration key" required>
                                                 <button class="btn btn-outline-primary" type="submit" id="verifyKeyBtn">
                                                     <i class="fas fa-check me-1"></i>Verify
                                                 </button>
@@ -618,6 +629,14 @@
                                 <form method="POST" action="{{ route('register') }}" class="register-form d-none" id="registerForm">
                                     @csrf
                                     <input type="hidden" name="registration_key" id="verified-key">
+
+                                    <!-- <div class="mb-4 p-3 border border-primary border-opacity-25 rounded bg-primary bg-opacity-10">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-info-circle text-primary me-2"></i>
+                                            <h6 class="mb-0 fw-bold">Complete Your Registration</h6>
+                                        </div>
+                                        <p class="small mb-0">Please fill out all fields below to complete your registration. Your registration key has been verified but will become invalid if you refresh or leave this page.</p>
+                                    </div> -->
 
                                     <div class="mb-4">
                                         <label for="register-name" class="form-label fw-medium mb-2">Full Name</label>
@@ -760,6 +779,9 @@ document.addEventListener('DOMContentLoaded', function() {
         registerForm.addEventListener('submit', function() {
             registerButton.classList.add('loading');
             registerButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating account...';
+
+            // Remove the page unload warning when form is submitted
+            window.onbeforeunload = null;
         });
     }
 
@@ -805,14 +827,44 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.valid) {
                 // Key is valid, show registration form
                 keyFormContainer.innerHTML = `
-                    <div class="alert alert-success mb-0">
+                    <div class="alert alert-success mb-3">
                         <div class="d-flex align-items-center">
                             <i class="fas fa-check-circle me-2"></i>
                             <span>Registration key verified successfully!</span>
                         </div>
+                    </div>
+                    <div class="alert alert-warning mb-0">
+                        <div class="d-flex">
+                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                            <div>
+                                <strong>IMPORTANT:</strong> Do not refresh this page or navigate away! Your registration key will become invalid if you do.
+                                <br>Complete your registration now to avoid losing your key.
+                            </div>
+                        </div>
                     </div>`;
                 registerForm.classList.remove('d-none');
                 verifiedKeyInput.value = key;
+
+                // Add page unload warning
+                window.onbeforeunload = function() {
+                    return "WARNING: Leaving this page will invalidate your registration key. Please complete your registration first.";
+                };
+
+                // Add click handler for tab switching to prevent accidental navigation
+                document.querySelectorAll('#authTabs .nav-link').forEach(tab => {
+                    if (tab.id !== 'register-tab') {
+                        tab.addEventListener('click', function(e) {
+                            if (!confirm('WARNING: Switching tabs will invalidate your registration key. Are you sure you want to leave the registration form?')) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                return false;
+                            } else {
+                                // User confirmed, remove the warning
+                                window.onbeforeunload = null;
+                            }
+                        });
+                    }
+                });
             } else {
                 // Key is invalid, show error
                 keyInput.classList.add('is-invalid');
