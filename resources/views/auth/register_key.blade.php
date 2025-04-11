@@ -51,17 +51,12 @@
     .register-key-card {
         max-width: 420px;
         width: 100%;
-        transition: all 0.3s ease;
         position: relative;
         z-index: 1;
         backdrop-filter: blur(10px);
         background: rgba(244, 246, 246, 0.95);
         border: 1px solid rgba(170, 183, 184, 0.2);
-    }
-
-    .register-key-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
     .key-logo {
@@ -76,6 +71,27 @@
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         position: relative;
         overflow: hidden;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .key-logo::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transform: translateX(-100%);
+        animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+        100% { transform: translateX(100%); }
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
     }
 
     .key-header {
@@ -90,7 +106,9 @@
         margin-bottom: 0.75rem;
         background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
+        color: transparent;
     }
 
     .key-subtitle {
@@ -112,6 +130,52 @@
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         background: #ffffff;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .register-key-card {
+            max-width: 100%;
+            margin: 1rem;
+            width: calc(100% - 2rem);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .key-title {
+            font-size: 1.75rem;
+        }
+
+        .key-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control, .input-group-text {
+            padding: 0.75rem;
+        }
+
+        .btn-auth {
+            padding: 0.75rem 1.25rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .register-key-card {
+            margin: 0.5rem;
+            width: calc(100% - 1rem);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .key-title {
+            font-size: 1.5rem;
+        }
     }
 
     .input-group-text {
@@ -233,7 +297,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const keyForm = document.getElementById('keyForm');
     const verifyButton = keyForm.querySelector('button[type="submit"]');
-    
+
     // Form submission animation
     keyForm.addEventListener('submit', function() {
         verifyButton.classList.add('loading');
@@ -242,4 +306,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
-@endsection 
+@endsection

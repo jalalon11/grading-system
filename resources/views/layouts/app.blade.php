@@ -287,14 +287,14 @@
         }
 
         /* Override login card hover animation */
-        body.login-page .login-card,
+        body.login-page .auth-card,
         body.register-page .register-card {
             transform: none !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04) !important;
             transition: none !important;
         }
 
-        body.login-page .login-card:hover,
+        body.login-page .auth-card:hover,
         body.register-page .register-card:hover {
             transform: none !important;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04) !important;
@@ -306,30 +306,7 @@
             transition: all 0.2s ease !important;
         }
 
-        /* Fix sign in button animation */
-        body.login-page .btn-login::before,
-        body.register-page .btn-register::before {
-            animation: none !important;
-            display: none !important;
-        }
-
-        body.login-page .btn-login:hover::before,
-        body.register-page .btn-register:hover::before {
-            animation: none !important;
-            display: none !important;
-        }
-
-        /* Fix floating animation on login logo */
-        body.login-page .school-logo,
-        body.register-page .school-logo {
-            animation: none !important;
-        }
-
-        body.login-page .school-logo::after,
-        body.register-page .school-logo::after {
-            animation: none !important;
-            display: none !important;
-        }
+        /* Allow animations on login page */
 
         /* Add specific styles for register page */
         body.register-page {

@@ -65,17 +65,12 @@
     .register-card {
         max-width: 500px;
         width: 100%;
-        transition: all 0.3s ease;
         position: relative;
         z-index: 1;
         backdrop-filter: blur(10px);
         background: rgba(244, 246, 246, 0.95);
         border: 1px solid rgba(170, 183, 184, 0.2);
-    }
-
-    .register-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     }
 
     .school-logo {
@@ -88,9 +83,9 @@
         justify-content: center;
         margin: 0 auto 2rem;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        animation: float 6s ease-in-out infinite;
         position: relative;
         overflow: hidden;
+        animation: float 6s ease-in-out infinite;
     }
 
     .school-logo::after {
@@ -98,7 +93,7 @@
         position: absolute;
         width: 100%;
         height: 100%;
-        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
         transform: translateX(-100%);
         animation: shine 3s infinite;
     }
@@ -125,7 +120,9 @@
         margin-bottom: 0.75rem;
         background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
+        color: transparent;
     }
 
     .register-subtitle {
@@ -147,6 +144,52 @@
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         background: #ffffff;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .register-card {
+            max-width: 100%;
+            margin: 1rem;
+            width: calc(100% - 2rem);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .register-title {
+            font-size: 1.75rem;
+        }
+
+        .school-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control, .input-group-text {
+            padding: 0.75rem;
+        }
+
+        .btn-auth {
+            padding: 0.75rem 1.25rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .register-card {
+            margin: 0.5rem;
+            width: calc(100% - 1rem);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .register-title {
+            font-size: 1.5rem;
+        }
     }
 
     .input-group-text {
@@ -252,9 +295,9 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
-                                    <input id="name" type="text" 
+                                    <input id="name" type="text"
                                            class="form-control @error('name') is-invalid @enderror"
-                                           name="name" value="{{ old('name') }}" 
+                                           name="name" value="{{ old('name') }}"
                                            required autocomplete="name" autofocus
                                            placeholder="Enter your full name">
                                 </div>
@@ -275,7 +318,7 @@
                                     <input id="email" type="email"
                                            class="form-control @error('email') is-invalid @enderror"
                                            name="email" value="{{ old('email') }}"
-                                           required autocomplete="email" 
+                                           required autocomplete="email"
                                            placeholder="Enter your email address">
                                 </div>
                                 @error('email')
