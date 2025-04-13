@@ -176,6 +176,16 @@
                             </div>
                             <i class="fas fa-chevron-right ms-auto"></i>
                         </a>
+                        <a href="{{ route('admin.resources.index') }}" class="list-group-item list-group-item-action py-3 px-4 d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-center me-3 bg-danger bg-opacity-10 rounded-circle" style="width: 45px; height: 45px;">
+                                <i class="fas fa-book-reader text-danger"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Manage Learning Resources</h6>
+                                <p class="text-muted small mb-0">Add and manage resource materials for teachers</p>
+                            </div>
+                            <i class="fas fa-chevron-right ms-auto"></i>
+                        </a>
                     </div>
                 </div>
             </div>
