@@ -1096,6 +1096,56 @@
         box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
     }
 
+    /* Section Toggle Styles */
+    .section-header {
+        padding: 15px;
+        margin-bottom: 0;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .section-header:hover {
+        background-color: rgba(67, 97, 238, 0.05);
+    }
+
+    .toggle-section-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary-color);
+        border: none;
+        transition: var(--transition);
+    }
+
+    .toggle-section-btn:hover {
+        background-color: rgba(67, 97, 238, 0.2);
+    }
+
+    .toggle-section-btn i {
+        transition: transform 0.3s ease;
+    }
+
+    .toggle-section-btn.collapsed i {
+        transform: rotate(-180deg);
+    }
+
+    .section-content {
+        transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin 0.3s ease-out;
+        overflow: hidden;
+    }
+
+    .section-content.collapsed {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
     /* Dark mode improvements */
     .dark .gender-distribution-card {
         background-color: var(--bg-card);
@@ -1414,7 +1464,7 @@
         @endphp
 
         @foreach($studentsByGradeLevel as $gradeLevel => $gradeStudents)
-            <div class="grade-level-header">
+            <div class="grade-level-header shadow-sm border-start border-primary border-4 rounded mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <h4 class="mb-0 d-flex align-items-center">
                         <span class="bg-white bg-opacity-25 p-2 rounded-circle me-3 text-white">
@@ -1424,9 +1474,9 @@
                         <span class="badge ms-2 badge-count">{{ $gradeStudents->count() }} students</span>
                     </h4>
                     <div>
-                        <button class="btn btn-sm toggle-grade-btn rounded-pill" data-grade="{{ $gradeLevel }}">
+                        <!-- <button class="btn btn-sm toggle-section-btn rounded-pill" data-grade="{{ $gradeLevel }}">
                             <i class="fas fa-chevron-down"></i>
-                        </button>
+                        </button> -->
                     </div>
                 </div>
             </div>
@@ -1438,9 +1488,12 @@
                 })->sortKeys();
             @endphp
 
-            <div class="grade-level-container" data-grade="{{ $gradeLevel }}">
+            <div class="grade-level-container section-content" id="grade-content-{{ $gradeLevel }}" data-grade="{{ $gradeLevel }}">
                 @foreach($studentsBySection as $sectionName => $sectionStudents)
-                    <div class="section-header" data-section-id="{{ $sectionStudents->first()->section->id ?? '' }}">
+                    @php
+                        $sectionId = $sectionStudents->first()->section->id ?? 'section-' . Str::slug($sectionName);
+                    @endphp
+                    <div class="section-header shadow-sm border-start border-info border-4 rounded" data-section-id="{{ $sectionId }}">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 d-flex align-items-center">
                                 <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-2 text-primary">
@@ -1449,10 +1502,14 @@
                                 {{ $sectionName }}
                                 <span class="badge bg-primary ms-2 badge-count">{{ $sectionStudents->count() }} students</span>
                             </h5>
+                            <button class="btn btn-sm toggle-section-btn rounded-pill" data-section="{{ $sectionId }}">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-4 student-section" data-grade="{{ $gradeLevel }}" data-section-id="{{ $sectionStudents->first()->section->id ?? '' }}">
+                    <div class="section-content" id="section-content-{{ $sectionId }}">
+                        <div class="row g-3 mb-4 student-section" data-grade="{{ $gradeLevel }}" data-section-id="{{ $sectionId }}">
                         @foreach($sectionStudents as $student)
                             <div class="col-xl-3 col-md-6 mb-3 student-item"
                                  data-name="{{ strtolower($student->last_name . ' ' . $student->first_name) }}"
@@ -1525,6 +1582,7 @@
                                 </div>
                             </div>
                         @endforeach
+                        </div>
                     </div>
                 @endforeach
             </div>
@@ -1570,10 +1628,13 @@
                                 Section: {{ $section->name }} {{ $section->grade_level }}
                                 <span class="badge bg-primary ms-2 badge-count">{{ $assignedStudentsBySection[$section->id]->count() }} students</span>
                             </h5>
+                            <button class="btn btn-sm toggle-section-btn rounded-pill" data-section="{{ $section->id }}">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="card shadow-sm border-0 mb-4">
+                    <div class="card shadow-sm border-0 mb-4 section-content" id="section-content-{{ $section->id }}">
                         <div class="card-body p-3">
                             <div class="mb-3">
                                 <h6 class="mb-2 d-flex align-items-center">
@@ -1874,13 +1935,93 @@
         toggleGradeBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 const grade = this.getAttribute('data-grade');
-                const container = document.querySelector(`.grade-level-container[data-grade="${grade}"]`);
+                const container = document.getElementById(`grade-content-${grade}`);
                 const icon = this.querySelector('i');
 
                 if (container) {
-                    container.classList.toggle('d-none');
-                    icon.classList.toggle('fa-chevron-down');
-                    icon.classList.toggle('fa-chevron-up');
+                    // Toggle collapsed state
+                    container.classList.toggle('collapsed');
+                    this.classList.toggle('collapsed');
+
+                    // Store state in localStorage for persistence
+                    const isCollapsed = container.classList.contains('collapsed');
+                    localStorage.setItem(`grade-${grade}-collapsed`, isCollapsed);
+                }
+            });
+
+            // Initialize state from localStorage on page load
+            const grade = btn.getAttribute('data-grade');
+            const container = document.getElementById(`grade-content-${grade}`);
+            const savedState = localStorage.getItem(`grade-${grade}-collapsed`);
+
+            if (savedState === 'true' && container) {
+                container.classList.add('collapsed');
+                btn.classList.add('collapsed');
+            }
+        });
+
+        // Toggle assigned section content
+        const toggleSectionBtns = document.querySelectorAll('.toggle-section-btn');
+        toggleSectionBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const sectionId = this.getAttribute('data-section');
+                const contentEl = document.getElementById(`section-content-${sectionId}`);
+                const icon = this.querySelector('i');
+
+                if (contentEl) {
+                    // Toggle collapsed state
+                    contentEl.classList.toggle('collapsed');
+                    this.classList.toggle('collapsed');
+
+                    // Store state in localStorage for persistence
+                    const isCollapsed = contentEl.classList.contains('collapsed');
+                    localStorage.setItem(`section-${sectionId}-collapsed`, isCollapsed);
+                }
+            });
+
+            // Initialize state from localStorage on page load
+            const sectionId = btn.getAttribute('data-section');
+            const contentEl = document.getElementById(`section-content-${sectionId}`);
+            const savedState = localStorage.getItem(`section-${sectionId}-collapsed`);
+
+            if (savedState === 'true' && contentEl) {
+                contentEl.classList.add('collapsed');
+                btn.classList.add('collapsed');
+            }
+        });
+
+        // Make section headers clickable to toggle content
+        document.querySelectorAll('.section-header').forEach(header => {
+            header.addEventListener('click', function(e) {
+                // Don't trigger if clicking on the button itself (it has its own handler)
+                if (e.target.closest('.toggle-section-btn')) {
+                    return;
+                }
+
+                const sectionId = this.getAttribute('data-section-id');
+                const toggleBtn = this.querySelector(`.toggle-section-btn[data-section="${sectionId}"]`);
+
+                if (toggleBtn) {
+                    // Simulate click on the toggle button
+                    toggleBtn.click();
+                }
+            });
+        });
+
+        // Make grade level headers clickable to toggle content
+        document.querySelectorAll('.grade-level-header').forEach(header => {
+            header.addEventListener('click', function(e) {
+                // Don't trigger if clicking on the button itself (it has its own handler)
+                if (e.target.closest('.toggle-section-btn')) {
+                    return;
+                }
+
+                const gradeLevel = this.querySelector('.toggle-section-btn').getAttribute('data-grade');
+                const toggleBtn = this.querySelector(`.toggle-section-btn[data-grade="${gradeLevel}"]`);
+
+                if (toggleBtn) {
+                    // Simulate click on the toggle button
+                    toggleBtn.click();
                 }
             });
         });
