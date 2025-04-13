@@ -111,26 +111,83 @@ $subjectCount = count($gradesBySubject);
 foreach($gradesBySubject as $subjectId => $subject) {
     $averageGrades[$subjectId] = [];
     $termTotals = [];
+    $gradeApprovals = [];
+
+    // Get subject configuration
+    $subjectObj = \App\Models\Subject::find($subjectId);
+    $config = $subjectObj ? $subjectObj->gradeConfiguration : null;
+
+    // Default weights if no configuration
+    $writtenWorkPercentage = $config ? $config->written_work_percentage : 30;
+    $performanceTaskPercentage = $config ? $config->performance_task_percentage : 50;
+    $quarterlyAssessmentPercentage = $config ? $config->quarterly_assessment_percentage : 20;
 
     foreach($terms as $term) {
-        if (isset($subject['grades'][$term])) {
-            // Calculate using total score / total max score method
-            $totalScore = 0;
-            $totalMaxScore = 0;
+        // Check if grades are approved for this subject and term
+        $isApproved = false;
 
-            foreach ($subject['grades'][$term] as $grade) {
-                $totalScore += $grade->score;
-                $totalMaxScore += $grade->max_score;
+        // Check if this subject has an approval in the extendedApprovals
+        if (isset($extendedApprovals[$subjectId])) {
+            $approval = $extendedApprovals[$subjectId];
+            // Make sure the approval is for the current term
+            if ($approval->quarter == $term) {
+                $isApproved = $approval->is_approved;
+            }
+        }
+
+        $gradeApprovals[$subjectId][$term] = $isApproved;
+
+        if (isset($subject['grades'][$term])) {
+            // Group grades by type
+            $writtenWorks = collect($subject['grades'][$term])->where('grade_type', 'written_work');
+            $performanceTasks = collect($subject['grades'][$term])->where('grade_type', 'performance_task');
+            $quarterlyAssessments = collect($subject['grades'][$term])->where(function($grade) {
+                return $grade->grade_type == 'quarterly_assessment' ||
+                       $grade->grade_type == 'quarterly' ||
+                       $grade->grade_type == 'quarterly_exam';
+            });
+
+            // Calculate component totals
+            $wwTotal = 0;
+            $wwMaxTotal = 0;
+            foreach($writtenWorks as $ww) {
+                $wwTotal += $ww->score;
+                $wwMaxTotal += $ww->max_score;
+            }
+            $wwPercentage = $wwMaxTotal > 0 ? ($wwTotal / $wwMaxTotal) * 100 : 0;
+            $wwWeighted = $wwPercentage * ($writtenWorkPercentage / 100);
+
+            $ptTotal = 0;
+            $ptMaxTotal = 0;
+            foreach($performanceTasks as $pt) {
+                $ptTotal += $pt->score;
+                $ptMaxTotal += $pt->max_score;
+            }
+            $ptPercentage = $ptMaxTotal > 0 ? ($ptTotal / $ptMaxTotal) * 100 : 0;
+            $ptWeighted = $ptPercentage * ($performanceTaskPercentage / 100);
+
+            $qaTotal = 0;
+            $qaMaxTotal = 0;
+            foreach($quarterlyAssessments as $qa) {
+                $qaTotal += $qa->score;
+                $qaMaxTotal += $qa->max_score;
+            }
+            $qaPercentage = $qaMaxTotal > 0 ? ($qaTotal / $qaMaxTotal) * 100 : 0;
+            $qaWeighted = $qaPercentage * ($quarterlyAssessmentPercentage / 100);
+
+            // Calculate final grade using weighted components
+            $finalGrade = $wwWeighted + $ptWeighted + $qaWeighted;
+
+            // Apply transmutation
+            $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTransmutationTable);
+            $averageGrades[$subjectId][$term] = $transmutedGrade;
+
+            if (!isset($termTotals[$term])) {
+                $termTotals[$term] = 0;
             }
 
-            if ($totalMaxScore > 0) {
-                $averagePercentage = ($totalScore / $totalMaxScore) * 100;
-                $transmutedGrade = getTransmutedGrade($averagePercentage, $selectedTransmutationTable);
-                $averageGrades[$subjectId][$term] = $transmutedGrade;
-
-                if (!isset($termTotals[$term])) {
-                    $termTotals[$term] = 0;
-                }
+            // Only add to term totals if approved
+            if ($isApproved) {
                 $termTotals[$term] += $transmutedGrade;
             }
         }
@@ -1212,10 +1269,12 @@ $age = $birthDate->diff($today)->y;
 
                                 @foreach($terms as $term)
                                     <td class="text-center">
-                                        @if(isset($averageGrades[$subjectId][$term]))
+                                        @if(isset($averageGrades[$subjectId][$term]) && isset($gradeApprovals[$subjectId][$term]) && $gradeApprovals[$subjectId][$term])
                                             <span class="grade-value {{ $averageGrades[$subjectId][$term] < 75 ? 'grade-failing' : '' }}">
                                                 {{ $averageGrades[$subjectId][$term] }}
                                             </span>
+                                        @elseif(isset($averageGrades[$subjectId][$term]) && isset($gradeApprovals[$subjectId][$term]) && !$gradeApprovals[$subjectId][$term])
+                                            <span class="text-muted">Grades Unavailable - awaiting for approval</span>
                                         @else
                                             <span class="text-muted">--</span>
                                         @endif
@@ -1223,10 +1282,25 @@ $age = $birthDate->diff($today)->y;
                                 @endforeach
 
                                 <td class="text-center">
-                                    @if(isset($averageGrades[$subjectId]['Final']))
+                                    @php
+                                        $hasApprovedGrades = false;
+                                        $hasAnyGrades = false;
+                                        foreach($terms as $term) {
+                                            if (isset($gradeApprovals[$subjectId][$term])) {
+                                                $hasAnyGrades = true;
+                                                if ($gradeApprovals[$subjectId][$term]) {
+                                                    $hasApprovedGrades = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @if(isset($averageGrades[$subjectId]['Final']) && $hasApprovedGrades)
                                         <span class="grade-value final-column {{ $averageGrades[$subjectId]['Final'] < 75 ? 'grade-failing' : '' }}">
                                             {{ $averageGrades[$subjectId]['Final'] }}
                                         </span>
+                                    @elseif($hasAnyGrades && !$hasApprovedGrades)
+                                        <span class="text-muted">Grades Unavailable - awaiting for approval</span>
                                     @else
                                         <span class="text-muted">--</span>
                                     @endif
@@ -1242,10 +1316,25 @@ $age = $birthDate->diff($today)->y;
 
                         @foreach($terms as $term)
                             <td class="text-center">
-                                @if(isset($overallAverage) && isset($overallAverage[$term]) && $overallAverage[$term] > 0)
+                                @php
+                                    $hasApprovedSubjectsForTerm = false;
+                                    $hasAnySubjectsForTerm = false;
+                                    foreach($gradesBySubject as $subjectId => $subject) {
+                                        if (isset($gradeApprovals[$subjectId][$term])) {
+                                            $hasAnySubjectsForTerm = true;
+                                            if ($gradeApprovals[$subjectId][$term]) {
+                                                $hasApprovedSubjectsForTerm = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                @if(isset($overallAverage) && isset($overallAverage[$term]) && $overallAverage[$term] > 0 && $hasApprovedSubjectsForTerm)
                                     <span class="grade-value {{ $overallAverage[$term] < 75 ? 'grade-failing' : '' }}">
                                         {{ $overallAverage[$term] }}
                                     </span>
+                                @elseif($hasAnySubjectsForTerm && !$hasApprovedSubjectsForTerm)
+                                    <span class="text-muted">Grades Unavailable - awaiting for approval</span>
                                 @else
                                     <span class="text-muted">--</span>
                                 @endif
@@ -1253,10 +1342,27 @@ $age = $birthDate->diff($today)->y;
                         @endforeach
 
                         <td class="text-center">
-                            @if(isset($overallAverage) && isset($overallAverage['Final']) && $overallAverage['Final'] > 0)
+                            @php
+                                $hasAnyApprovedSubjects = false;
+                                $hasAnySubjects = false;
+                                foreach($gradesBySubject as $subjectId => $subject) {
+                                    foreach($terms as $term) {
+                                        if (isset($gradeApprovals[$subjectId][$term])) {
+                                            $hasAnySubjects = true;
+                                            if ($gradeApprovals[$subjectId][$term]) {
+                                                $hasAnyApprovedSubjects = true;
+                                                break 2;
+                                            }
+                                        }
+                                    }
+                                }
+                            @endphp
+                            @if(isset($overallAverage) && isset($overallAverage['Final']) && $overallAverage['Final'] > 0 && $hasAnyApprovedSubjects)
                                 <span class="grade-value final-column {{ $overallAverage['Final'] < 75 ? 'grade-failing' : '' }}" style="font-size: 1.1rem;">
                                     {{ $overallAverage['Final'] }}
                                 </span>
+                            @elseif($hasAnySubjects && !$hasAnyApprovedSubjects)
+                                <span class="text-muted">Grades Unavailable - awaiting for approval</span>
                             @else
                                 <span class="text-muted">--</span>
                             @endif
@@ -1273,6 +1379,227 @@ $age = $birthDate->diff($today)->y;
                 <div class="d-flex align-items-center">
                     <span class="grade-failing me-2" style="font-weight: bold;">Below 75</span>
                     <small>Needs Improvement</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Performance Debugging Section -->
+        <div class="mt-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bug me-2 text-primary"></i> Grade Calculation Debugging
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#debuggingSection" aria-expanded="false" aria-controls="debuggingSection">
+                        <i class="fas fa-code me-1"></i> Toggle Details
+                    </button>
+                </div>
+                <div class="collapse" id="debuggingSection">
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This section shows detailed information about how grades are calculated for each subject.
+                        </div>
+
+                        @if(count($gradesBySubject) == 0)
+                            <div class="text-muted text-center py-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No grades have been entered for this student yet.
+                            </div>
+                        @else
+                            @foreach($gradesBySubject as $subjectId => $subject)
+                                <div class="mb-4 pb-3 border-bottom">
+                                    <h5 class="mb-3">{{ $subject['name'] }}</h5>
+
+                                    @foreach($terms as $term)
+                                        @if(isset($subject['grades'][$term]))
+                                            <div class="mb-3">
+                                                <h6 class="mb-2">{{ $term }} - Raw Grades</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Assessment</th>
+                                                                <th>Type</th>
+                                                                <th>Score</th>
+                                                                <th>Max Score</th>
+                                                                <th>Percentage</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @php
+                                                                // Group grades by type
+                                                                $writtenWorks = collect($subject['grades'][$term])->where('grade_type', 'written_work');
+                                                                $performanceTasks = collect($subject['grades'][$term])->where('grade_type', 'performance_task');
+                                                                $quarterlyAssessments = collect($subject['grades'][$term])->where(function($grade) {
+                                                                    return $grade->grade_type == 'quarterly_assessment' ||
+                                                                           $grade->grade_type == 'quarterly' ||
+                                                                           $grade->grade_type == 'quarterly_exam';
+                                                                });
+                                                            @endphp
+
+                                                            @foreach($subject['grades'][$term] as $grade)
+                                                                <tr>
+                                                                    <td>{{ $grade->assessment_name ?: 'Unnamed Assessment' }}</td>
+                                                                    <td>
+                                                                        @if($grade->grade_type == 'written_work')
+                                                                            <span class="badge bg-primary">Written Work</span>
+                                                                        @elseif($grade->grade_type == 'performance_task')
+                                                                            <span class="badge bg-success">Performance Task</span>
+                                                                        @elseif($grade->grade_type == 'quarterly_assessment' || $grade->grade_type == 'quarterly' || $grade->grade_type == 'quarterly_exam')
+                                                                            <span class="badge bg-warning">Quarterly Assessment</span>
+                                                                        @else
+                                                                            <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $grade->grade_type)) }}</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>{{ $grade->score }}</td>
+                                                                    <td>{{ $grade->max_score }}</td>
+                                                                    <td>{{ number_format(($grade->score / $grade->max_score) * 100, 2) }}%</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Calculation Details -->
+                                                <h6 class="mt-3 mb-2">{{ $term }} - Calculation Details</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Component</th>
+                                                                <th>Total Score</th>
+                                                                <th>Total Max Score</th>
+                                                                <th>Raw Percentage</th>
+                                                                <th>Weight</th>
+                                                                <th>Weighted Score</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @php
+                                                                // Get subject configuration
+                                                                $subjectObj = \App\Models\Subject::find($subjectId);
+                                                                $config = $subjectObj ? $subjectObj->gradeConfiguration : null;
+
+                                                                // Default weights if no configuration
+                                                                $writtenWorkPercentage = $config ? $config->written_work_percentage : 30;
+                                                                $performanceTaskPercentage = $config ? $config->performance_task_percentage : 50;
+                                                                $quarterlyAssessmentPercentage = $config ? $config->quarterly_assessment_percentage : 20;
+
+                                                                // Calculate component totals
+                                                                $wwTotal = 0;
+                                                                $wwMaxTotal = 0;
+                                                                foreach($writtenWorks as $ww) {
+                                                                    $wwTotal += $ww->score;
+                                                                    $wwMaxTotal += $ww->max_score;
+                                                                }
+                                                                $wwPercentage = $wwMaxTotal > 0 ? ($wwTotal / $wwMaxTotal) * 100 : 0;
+                                                                $wwWeighted = $wwPercentage * ($writtenWorkPercentage / 100);
+
+                                                                $ptTotal = 0;
+                                                                $ptMaxTotal = 0;
+                                                                foreach($performanceTasks as $pt) {
+                                                                    $ptTotal += $pt->score;
+                                                                    $ptMaxTotal += $pt->max_score;
+                                                                }
+                                                                $ptPercentage = $ptMaxTotal > 0 ? ($ptTotal / $ptMaxTotal) * 100 : 0;
+                                                                $ptWeighted = $ptPercentage * ($performanceTaskPercentage / 100);
+
+                                                                $qaTotal = 0;
+                                                                $qaMaxTotal = 0;
+                                                                foreach($quarterlyAssessments as $qa) {
+                                                                    $qaTotal += $qa->score;
+                                                                    $qaMaxTotal += $qa->max_score;
+                                                                }
+                                                                $qaPercentage = $qaMaxTotal > 0 ? ($qaTotal / $qaMaxTotal) * 100 : 0;
+                                                                $qaWeighted = $qaPercentage * ($quarterlyAssessmentPercentage / 100);
+
+                                                                // Calculate final grade
+                                                                $finalGrade = $wwWeighted + $ptWeighted + $qaWeighted;
+
+                                                                // Calculate using total score / total max score method (for comparison)
+                                                                $totalScore = 0;
+                                                                $totalMaxScore = 0;
+                                                                foreach ($subject['grades'][$term] as $grade) {
+                                                                    $totalScore += $grade->score;
+                                                                    $totalMaxScore += $grade->max_score;
+                                                                }
+                                                                $averagePercentage = $totalMaxScore > 0 ? ($totalScore / $totalMaxScore) * 100 : 0;
+                                                            @endphp
+
+                                                            <tr>
+                                                                <td><strong>Written Works</strong></td>
+                                                                <td>{{ $wwTotal }}</td>
+                                                                <td>{{ $wwMaxTotal }}</td>
+                                                                <td>{{ number_format($wwPercentage, 2) }}%</td>
+                                                                <td>{{ $writtenWorkPercentage }}%</td>
+                                                                <td>{{ number_format($wwWeighted, 2) }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Performance Tasks</strong></td>
+                                                                <td>{{ $ptTotal }}</td>
+                                                                <td>{{ $ptMaxTotal }}</td>
+                                                                <td>{{ number_format($ptPercentage, 2) }}%</td>
+                                                                <td>{{ $performanceTaskPercentage }}%</td>
+                                                                <td>{{ number_format($ptWeighted, 2) }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Quarterly Assessment</strong></td>
+                                                                <td>{{ $qaTotal }}</td>
+                                                                <td>{{ $qaMaxTotal }}</td>
+                                                                <td>{{ number_format($qaPercentage, 2) }}%</td>
+                                                                <td>{{ $quarterlyAssessmentPercentage }}%</td>
+                                                                <td>{{ number_format($qaWeighted, 2) }}</td>
+                                                            </tr>
+                                                            <tr class="table-primary">
+                                                                <td colspan="4"><strong>Final Grade (Weighted Components)</strong></td>
+                                                                <td>100%</td>
+                                                                <td><strong>{{ number_format($finalGrade, 2) }}</strong></td>
+                                                            </tr>
+                                                            <tr class="table-secondary">
+                                                                <td colspan="4"><strong>Total Score / Total Max Score Method</strong></td>
+                                                                <td>{{ $totalScore }} / {{ $totalMaxScore }}</td>
+                                                                <td><strong>{{ number_format($averagePercentage, 2) }}%</strong></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Transmutation Details -->
+                                                <h6 class="mt-3 mb-2">{{ $term }} - Transmutation Details</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Method</th>
+                                                                <th>Initial Grade</th>
+                                                                <th>Transmutation Table</th>
+                                                                <th>Transmuted Grade</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td><strong>Weighted Components</strong></td>
+                                                                <td>{{ number_format($finalGrade, 2) }}%</td>
+                                                                <td>{{ $selectedTransmutationTable }}</td>
+                                                                <td><strong>{{ getTransmutedGrade($finalGrade, $selectedTransmutationTable) }}</strong></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><strong>Total Score / Max Score</strong></td>
+                                                                <td>{{ number_format($averagePercentage, 2) }}%</td>
+                                                                <td>{{ $selectedTransmutationTable }}</td>
+                                                                <td><strong>{{ getTransmutedGrade($averagePercentage, $selectedTransmutationTable) }}</strong></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

@@ -19,6 +19,9 @@ use App\Http\Controllers\TeacherAdmin\DashboardController as TeacherAdminDashboa
 use App\Http\Controllers\TeacherAdmin\SectionController;
 use App\Http\Controllers\TeacherAdmin\SubjectController as TeacherAdminSubjectController;
 use App\Http\Controllers\TeacherAdmin\ReportController as TeacherAdminReportController;
+use App\Http\Controllers\Teacher\ResourceController as TeacherResourceController;
+use App\Http\Controllers\Admin\ResourceController;
+use App\Http\Controllers\Admin\ResourceCategoryController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Section;
@@ -95,6 +98,19 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         // Announcement routes
         Route::resource('announcements', AnnouncementController::class);
         Route::patch('announcements/{announcement}/toggle-status', [AnnouncementController::class, 'toggleStatus'])->name('announcements.toggle-status');
+
+        // Resource Materials Management
+        Route::get('/resources', [ResourceController::class, 'index'])->name('resources.index');
+        Route::post('/resources', [ResourceController::class, 'store'])->name('resources.store');
+        Route::put('/resources/{resource}', [ResourceController::class, 'update'])->name('resources.update');
+        Route::delete('/resources/{resource}', [ResourceController::class, 'destroy'])->name('resources.destroy');
+        Route::post('/resources/{resource}/toggle-status', [ResourceController::class, 'toggleStatus'])->name('resources.toggle-status');
+        
+        // Resource Categories Management
+        Route::post('/resource-categories', [ResourceCategoryController::class, 'store'])->name('resource-categories.store');
+        Route::put('/resource-categories/{category}', [ResourceCategoryController::class, 'update'])->name('resource-categories.update');
+        Route::delete('/resource-categories/{category}', [ResourceCategoryController::class, 'destroy'])->name('resource-categories.destroy');
+        Route::post('/resource-categories/{category}/toggle-status', [ResourceCategoryController::class, 'toggleStatus'])->name('resource-categories.toggle-status');
     });
 
     // Teacher Routes
@@ -233,6 +249,9 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         // Grade Approval Routes
         Route::get('/grade-approvals', [GradeApprovalController::class, 'index'])->name('grade-approvals.index');
         Route::post('/grade-approvals/update', [GradeApprovalController::class, 'update'])->name('grade-approvals.update');
+
+        // Learning Resource Materials
+        Route::get('/resources', [TeacherResourceController::class, 'index'])->name('resources.index');
     });
 
     // Teacher Admin Routes

@@ -7,6 +7,8 @@ use App\Models\Attendance;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\ResourceMaterial;
+use App\Models\ResourceCategory;
 
 use App\Services\AttendanceSummaryService;
 use Illuminate\Http\Request;
@@ -264,6 +266,14 @@ class DashboardController extends Controller
             // Get top performing students using our new method
             $topStudents = $this->getPerformanceData(new Request(['section_id' => $recentSections->first()->id ?? null]));
 
+            // Get active resource categories for dashboard quick links
+            $resourceLinks = ResourceCategory::where('is_active', true)
+                ->withCount(['resources' => function($query) {
+                    $query->where('is_active', true);
+                }])
+                ->orderBy('name')
+                ->get();
+
             return view('teacher.dashboard', compact(
                 'stats',
                 'recentSections',
@@ -275,7 +285,8 @@ class DashboardController extends Controller
                 'todayStats',
                 'weeklyAttendanceSummary',
                 'monthlyAttendanceSummary',
-                'attendanceDates'
+                'attendanceDates',
+                'resourceLinks'
             ));
         } catch (\Exception $e) {
             Log::error('Error in teacher dashboard: ' . $e->getMessage(), [
@@ -340,6 +351,7 @@ class DashboardController extends Controller
                 ]
             ];
             $attendanceDates = [];
+            $resourceLinks = ResourceCategory::where('is_active', true)->get();
 
             return view('teacher.dashboard', compact(
                 'stats',
@@ -352,7 +364,8 @@ class DashboardController extends Controller
                 'todayStats',
                 'weeklyAttendanceSummary',
                 'monthlyAttendanceSummary',
-                'attendanceDates'
+                'attendanceDates',
+                'resourceLinks'
             ))
             ->with('error', 'There was an error loading your dashboard. Please contact the administrator.');
         }

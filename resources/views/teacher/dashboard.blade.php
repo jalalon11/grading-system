@@ -2,6 +2,134 @@
 
 @push('styles')
 <link href="{{ asset('css/dashboard.css') }}" rel="stylesheet">
+<style>
+    /* Enhanced Resource Card Styles */
+    .resource-card {
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        position: relative;
+        overflow: hidden;
+        border: none !important;
+        border-radius: 12px !important;
+    }
+
+    .resource-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .resource-header {
+        position: relative;
+        padding: 1.25rem !important;
+        border-bottom: none !important;
+    }
+
+    .resource-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+        z-index: 1;
+    }
+
+    .resource-header .d-flex {
+        position: relative;
+        z-index: 2;
+    }
+
+    .resource-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+        margin-right: 1rem !important;
+    }
+
+    .resource-icon i {
+        font-size: 1.25rem;
+    }
+
+    .resource-body {
+        padding: 1.25rem !important;
+        position: relative;
+    }
+
+    .resource-count {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .resource-count i {
+        margin-right: 0.5rem;
+    }
+
+    .resource-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .resource-card:hover::after {
+        height: 6px;
+    }
+
+    .resource-hover-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        opacity: 0;
+        transition: all 0.3s ease;
+        visibility: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .resource-hover-content {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .resource-card:hover .resource-hover-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Decorative elements */
+    .resource-decoration {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        opacity: 0.15;
+        font-size: 3rem;
+        transform: rotate(-15deg);
+        z-index: 0;
+    }
+
+    .resource-card .resource-header .badge {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -248,116 +376,82 @@
             </div>
         </div>
 
-        <!-- Student Performance Metrics -->
+        <!-- Learning Resource Materials -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar text-info me-2"></i> Student Performance Metrics</h5>
-                    <select class="form-select form-select-sm" style="width: auto;" id="performanceMetricSection">
-                        @foreach($recentSections as $section)
-                            <option value="{{ $section->id }}">{{ $section->name }} (Adviser)</option>
-                        @endforeach
-                    </select>
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle bg-info bg-opacity-10 p-2 me-3">
+                            <i class="fas fa-book-reader text-info"></i>
+                        </div>
+                        <h5 class="mb-0 fw-bold">Learning Resource Materials</h5>
+                    </div>
+                    <a href="{{ route('teacher.resources.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                        <i class="fas fa-external-link-alt me-1"></i> View All Resources
+                    </a>
                 </div>
-                <div class="card-body p-0">
-                    @if($recentSections->count() > 0)
-                        <div class="table-responsive student-performance-metrics-table">
-                            <table class="table table-hover align-middle mb-0 student-performance-table">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">Top Students</th>
-                                        <th>Average Grade</th>
-                                        <th>Attendance</th>
-                                        <th>Performance</th>
-                                        <th class="text-end pe-4">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if($topStudents->count() > 0)
-                                        @foreach($topStudents as $student)
-                                        <tr>
-                                            <td class="ps-4">
+                <div class="card-body">
+                    @if(isset($resourceLinks) && count($resourceLinks) > 0)
+                        <div class="row g-4">
+                            @foreach($resourceLinks as $category)
+                                <div class="col-md-6 col-lg-4">
+                                    <a href="{{ route('teacher.resources.index') }}?category={{ $category->id }}" class="text-decoration-none">
+                                        <div class="resource-card h-100 position-relative">
+                                            <!-- Colored accent line at bottom of card -->
+                                            <div class="position-absolute bottom-0 start-0 w-100 bg-{{ $category->color ?? 'primary' }}" style="height: 4px; transition: all 0.3s ease;"></div>
+
+                                            <!-- Card header with gradient effect -->
+                                            <div class="resource-header bg-{{ $category->color ?? 'primary' }} bg-opacity-10">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-container me-2">
-                                                        <span class="avatar bg-primary text-white rounded-circle" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                                            {{ substr($student->first_name ?? 'S', 0, 1) }}{{ substr($student->last_name ?? '', 0, 1) }}
-                                                        </span>
+                                                    <!-- Enhanced icon -->
+                                                    <div class="resource-icon bg-white">
+                                                        <i class="fas fa-{{ $category->icon ?? 'folder' }} text-{{ $category->color ?? 'primary' }}"></i>
                                                     </div>
                                                     <div>
-                                                        <div class="fw-medium">{{ $student->first_name ?? 'Student' }} {{ $student->last_name ?? '' }}</div>
-                                                        <small class="text-muted">ID: {{ $student->student_id ?? 'N/A' }}</small>
+                                                        <!-- Category name with badge -->
+                                                        <span class="badge bg-{{ $category->color ?? 'primary' }} bg-opacity-20 text-white mb-1">CATEGORY</span>
+                                                        <h5 class="mb-0 fw-bold">{{ $category->name }}</h5>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-{{ $student->grades_avg_score >= 90 ? 'success' : ($student->grades_avg_score >= 80 ? 'primary' : ($student->grades_avg_score >= 70 ? 'info' : ($student->grades_avg_score >= 60 ? 'warning' : 'danger'))) }} rounded-pill px-3 py-2">
-                                                    {{ number_format($student->grades_avg_score ?? 0, 1) }}%
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="performance-progress progress-taller">
-                                                        <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{ $student->attendance_rate ?? 0 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $student->attendance_rate ?? 0 }}%"></div>
-                                                    </div>
-                                                    <span class="text-muted small">{{ $student->attendance_rate ?? 0 }}%</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    @php
-                                                        $score = $student->grades_avg_score ?? 0;
-                                                        $stars = 0;
+                                            </div>
 
-                                                        if ($score >= 94) {
-                                                            $stars = 5;
-                                                        } elseif ($score >= 87) {
-                                                            $stars = 4;
-                                                        } elseif ($score >= 82) {
-                                                            $stars = 3;
-                                                        } elseif ($score >= 78) {
-                                                            $stars = 2;
-                                                        } elseif ($score >= 75) {
-                                                            $stars = 1;
-                                                        }
-                                                    @endphp
-                                                    @for($j = 1; $j <= 5; $j++)
-                                                        <i class="fas fa-star {{ $j <= $stars ? 'text-warning' : 'text-muted' }} me-1"></i>
-                                                    @endfor
-                                                </div>
-                                            </td>
-                                            <td class="text-end pe-4">
-                                                <a href="{{ route('teacher.students.show', $student->id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i> View
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    @else
-                                        <tr>
-                                            <td colspan="5" class="text-center py-4">
-                                                <div class="py-5">
-                                                    <div class="avatar bg-light rounded-circle mx-auto mb-3" style="width: 60px; height: 60px;">
-                                                        <i class="fas fa-user-graduate text-muted fa-2x"></i>
+                                            <!-- Card body with resource count -->
+                                            <div class="resource-body">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="resource-count bg-{{ $category->color ?? 'primary' }} bg-opacity-10 text-{{ $category->color ?? 'primary' }}">
+                                                        <i class="fas fa-layer-group"></i>
+                                                        <span>{{ $category->resources_count ?? 0 }} resources</span>
                                                     </div>
-                                                    <h6 class="text-muted">No student performance data available</h6>
-                                                    <p class="text-muted small mb-3">Add grades for students to see performance metrics</p>
-                                                    <a href="{{ route('teacher.grades.create') }}" class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-plus-circle me-1"></i> Add Grades
-                                                    </a>
+                                                    <i class="fas fa-arrow-right text-{{ $category->color ?? 'primary' }}"></i>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    @endif
-                                </tbody>
-                            </table>
+                                            </div>
+
+                                            <!-- Decorative background icon -->
+                                            <div class="resource-decoration text-{{ $category->color ?? 'primary' }}">
+                                                <i class="fas fa-{{ $category->icon ?? 'folder' }}"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            @endforeach
                         </div>
                     @else
                         <div class="text-center py-5">
-                            <div class="mb-3">
-                                <i class="fas fa-chart-line text-muted fa-3x"></i>
+                            <div class="empty-state-container position-relative mx-auto mb-4" style="width: 120px; height: 120px;">
+                                <div class="position-absolute top-0 start-0 w-100 h-100 rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-book-reader text-info fa-3x"></i>
+                                </div>
+                                <div class="position-absolute" style="bottom: 0; right: 0; transform: translate(25%, 25%);">
+                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-plus text-white fa-lg"></i>
+                                    </div>
+                                </div>
                             </div>
-                            <h6 class="text-muted">No performance data available</h6>
-                            <p class="text-muted small">Add students to your sections to see performance metrics</p>
+                            <h5 class="fw-bold text-dark mb-2">No Resource Materials Yet</h5>
+                            <p class="text-muted mb-4">Educational resources will be added by administrators soon</p>
+                            <a href="{{ route('teacher.resources.index') }}" class="btn btn-primary rounded-pill px-4 py-2">
+                                <i class="fas fa-external-link-alt me-2"></i> Go to Resources Page
+                            </a>
                         </div>
                     @endif
                 </div>
@@ -483,8 +577,6 @@
         </div>
     </div>
 </div>
-
-
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

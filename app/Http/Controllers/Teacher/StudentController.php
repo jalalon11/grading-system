@@ -195,7 +195,52 @@ class StudentController extends Controller
         // Get the selected transmutation table from the request or use default (1)
         $selectedTransmutationTable = $request->query('transmutation_table', 1);
 
-        return view('teacher.students.show', compact('student', 'selectedTransmutationTable'));
+        // Get all subjects for this student's section
+        $subjects = $student->section->subjects;
+
+        // Get MAPEH subjects and components
+        $mapehSubjects = $subjects->filter(function($subject) {
+            return $subject->is_mapeh && !$subject->mapeh_component;
+        });
+
+        $mapehComponents = $subjects->filter(function($subject) {
+            return $subject->mapeh_component;
+        });
+
+        // Create a map of MAPEH components to their parent subject
+        $mapehParentMap = [];
+        foreach ($mapehComponents as $component) {
+            $parent = $mapehSubjects->first(function($subject) use ($component) {
+                return $subject->id == $component->parent_subject_id;
+            });
+
+            if ($parent) {
+                $mapehParentMap[$component->id] = $parent->id;
+            }
+        }
+
+        // Get grade approvals for all subjects in this section
+        $gradeApprovals = \App\Models\GradeApproval::where('section_id', $student->section_id)
+            ->get()
+            ->keyBy('subject_id');
+
+        // Extend approvals to include MAPEH components if the parent is approved
+        $extendedApprovals = clone $gradeApprovals;
+        foreach ($mapehParentMap as $componentId => $parentId) {
+            if (isset($gradeApprovals[$parentId]) && $gradeApprovals[$parentId]->is_approved) {
+                // Create a virtual approval for the component
+                $componentApproval = new \App\Models\GradeApproval([
+                    'subject_id' => $componentId,
+                    'section_id' => $student->section_id,
+                    'quarter' => $gradeApprovals[$parentId]->quarter,
+                    'is_approved' => true,
+                    'inherited_from_parent' => true
+                ]);
+                $extendedApprovals[$componentId] = $componentApproval;
+            }
+        }
+
+        return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'extendedApprovals', 'mapehParentMap'));
     }
 
     /**
