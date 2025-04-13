@@ -49,6 +49,7 @@ $gradesBySubject = [];
 $terms = ['Q1', 'Q2', 'Q3', 'Q4'];
 $averageGrades = [];
 $overallAverage = ['Q1' => 0, 'Q2' => 0, 'Q3' => 0, 'Q4' => 0, 'Final' => 0];
+$mapehComponentGrades = [];
 
 // If we're viewing from an assigned section, only show grades for the assigned subject
 if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) {
@@ -58,6 +59,18 @@ if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) 
     $subjectId = is_object($subject) ? $subject->id : (is_array($subject) ? $subject['id'] : null);
     $subjectName = is_object($subject) ? $subject->name : (is_array($subject) ? $subject['name'] : 'Subject');
 
+    // Check if this is a MAPEH subject
+    $subjectObj = \App\Models\Subject::find($subjectId);
+    $isMAPEH = $subjectObj && $subjectObj->getIsMAPEHAttribute();
+
+    // If it's a MAPEH subject, also include its components
+    $includeSubjectIds = [$subjectId];
+    if ($isMAPEH && isset($subjectObj->components) && $subjectObj->components->count() > 0) {
+        foreach ($subjectObj->components as $component) {
+            $includeSubjectIds[] = $component->id;
+        }
+    }
+
     if ($filteredGrades->isEmpty()) {
         // No grades found for this subject
         $gradesBySubject = [
@@ -66,13 +79,31 @@ if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) 
                 'grades' => []
             ]
         ];
+
+        // Add MAPEH components if applicable
+        if ($isMAPEH && isset($subjectObj->components) && $subjectObj->components->count() > 0) {
+            foreach ($subjectObj->components as $component) {
+                $gradesBySubject[$component->id] = [
+                    'name' => $component->name,
+                    'grades' => []
+                ];
+            }
+        }
     } else {
         foreach($filteredGrades as $grade) {
             $gradeSubjectId = $grade->subject_id;
 
+            // Only include grades for the selected subject and its components (if MAPEH)
+            if (!in_array($gradeSubjectId, $includeSubjectIds)) {
+                continue;
+            }
+
+            // Get the actual subject name for components
+            $gradeName = $gradeSubjectId == $subjectId ? $subjectName : ($grade->subject->name ?? 'Unknown Subject');
+
             if (!isset($gradesBySubject[$gradeSubjectId])) {
                 $gradesBySubject[$gradeSubjectId] = [
-                    'name' => $subjectName,
+                    'name' => $gradeName,
                     'grades' => []
                 ];
             }
@@ -108,6 +139,29 @@ if (isset($isFromAssignedSection) && $isFromAssignedSection && isset($subject)) 
 // Calculate average grade per subject per term
 $subjectCount = count($gradesBySubject);
 
+// First, identify MAPEH subjects and their components
+$mapehSubjects = [];
+$mapehComponents = [];
+$mapehParentChildMap = [];
+
+foreach($gradesBySubject as $subjectId => $subject) {
+    $subjectObj = \App\Models\Subject::find($subjectId);
+
+    if ($subjectObj) {
+        if ($subjectObj->is_mapeh && !$subjectObj->mapeh_component) {
+            $mapehSubjects[$subjectId] = $subjectObj;
+        } elseif ($subjectObj->mapeh_component) {
+            $mapehComponents[$subjectId] = $subjectObj;
+
+            // Find parent MAPEH subject
+            if ($subjectObj->parent_subject_id) {
+                $mapehParentChildMap[$subjectObj->parent_subject_id][] = $subjectId;
+            }
+        }
+    }
+}
+
+// Now process all subjects including MAPEH and components
 foreach($gradesBySubject as $subjectId => $subject) {
     $averageGrades[$subjectId] = [];
     $termTotals = [];
@@ -127,11 +181,30 @@ foreach($gradesBySubject as $subjectId => $subject) {
         $isApproved = false;
 
         // Check if this subject has an approval in the extendedApprovals
-        if (isset($extendedApprovals[$subjectId])) {
-            $approval = $extendedApprovals[$subjectId];
-            // Make sure the approval is for the current term
-            if ($approval->quarter == $term) {
-                $isApproved = $approval->is_approved;
+        if (isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term])) {
+            $approval = $extendedApprovals[$subjectId][$term];
+            $isApproved = $approval->is_approved;
+        }
+
+        // For MAPEH components, check if parent MAPEH subject is approved
+        if (!$isApproved && isset($subjectObj) && $subjectObj->mapeh_component && $subjectObj->parent_subject_id) {
+            $parentId = $subjectObj->parent_subject_id;
+            if (isset($extendedApprovals[$parentId]) && isset($extendedApprovals[$parentId][$term])) {
+                $parentApproval = $extendedApprovals[$parentId][$term];
+                if ($parentApproval->is_approved) {
+                    $isApproved = true;
+
+                    // Create virtual approval for component if it doesn't exist
+                    if (!isset($extendedApprovals[$subjectId])) {
+                        $extendedApprovals[$subjectId] = [];
+                    }
+
+                    $extendedApprovals[$subjectId][$term] = (object)[
+                        'is_approved' => true,
+                        'inherited_from_parent' => true,
+                        'parent_id' => $parentId
+                    ];
+                }
             }
         }
 
@@ -190,6 +263,54 @@ foreach($gradesBySubject as $subjectId => $subject) {
             if ($isApproved) {
                 $termTotals[$term] += $transmutedGrade;
             }
+
+            // For MAPEH components, copy grades to parent MAPEH subject if needed
+            if (isset($subjectObj) && $subjectObj->mapeh_component && $subjectObj->parent_subject_id) {
+                $parentId = $subjectObj->parent_subject_id;
+
+                // Only include approved grades
+                if ($isApproved) {
+                    // Make sure parent exists in averageGrades
+                    if (!isset($averageGrades[$parentId])) {
+                        $averageGrades[$parentId] = [];
+                    }
+
+                    // Store component grade in parent's data for later averaging
+                    if (!isset($mapehComponentGrades[$parentId])) {
+                        $mapehComponentGrades[$parentId] = [];
+                    }
+
+                    if (!isset($mapehComponentGrades[$parentId][$term])) {
+                        $mapehComponentGrades[$parentId][$term] = [];
+                    }
+
+                    $mapehComponentGrades[$parentId][$term][$subjectId] = $transmutedGrade;
+                }
+            }
+
+            // For MAPEH parent subjects, calculate average from components if available
+            if (isset($subjectObj) && $subjectObj->is_mapeh && !$subjectObj->mapeh_component) {
+                if (isset($mapehParentChildMap[$subjectId]) && isset($mapehComponentGrades[$subjectId][$term])) {
+                    $componentGrades = $mapehComponentGrades[$subjectId][$term];
+                    if (count($componentGrades) > 0) {
+                        // Calculate average of component grades
+                        $mapehAvg = array_sum($componentGrades) / count($componentGrades);
+                        $averageGrades[$subjectId][$term] = round($mapehAvg);
+
+                        // Make sure the parent MAPEH subject is marked as approved if its components are approved
+                        if (!isset($extendedApprovals[$subjectId])) {
+                            $extendedApprovals[$subjectId] = [];
+                        }
+
+                        if (!isset($extendedApprovals[$subjectId][$term])) {
+                            $extendedApprovals[$subjectId][$term] = (object)[
+                                'is_approved' => true,
+                                'inherited_from_components' => true
+                            ];
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -205,7 +326,7 @@ foreach($gradesBySubject as $subjectId => $subject) {
     }
 
     if ($validTerms > 0) {
-        $averageGrades[$subjectId]['Final'] = round($termSum / $validTerms, 2);
+        $averageGrades[$subjectId]['Final'] = round($termSum / $validTerms, 0);
     }
 }
 
@@ -213,14 +334,34 @@ foreach($gradesBySubject as $subjectId => $subject) {
 foreach($terms as $term) {
     $validSubjects = 0;
     foreach($averageGrades as $subjectId => $grades) {
-        if (isset($grades[$term])) {
+        // Only include approved grades in the overall average
+        $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+        $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+        // Get the subject object to check if it's a MAPEH component
+        $subjectObj = \App\Models\Subject::find($subjectId);
+        $isMAPEHComponent = $subjectObj && $subjectObj->mapeh_component;
+        $parentId = $isMAPEHComponent ? $subjectObj->parent_subject_id : null;
+
+        // Check if parent MAPEH subject has approval status
+        $hasParentApproval = false;
+        $isParentApproved = false;
+        if ($isMAPEHComponent && $parentId) {
+            $hasParentApproval = isset($extendedApprovals[$parentId]) && isset($extendedApprovals[$parentId][$term]);
+            $isParentApproved = $hasParentApproval && $extendedApprovals[$parentId][$term]->is_approved;
+        }
+
+        // Only include the grade if it's approved (either directly or through parent)
+        $effectiveIsApproved = $isApproved || ($isMAPEHComponent && $isParentApproved);
+
+        if (isset($grades[$term]) && $effectiveIsApproved) {
             $overallAverage[$term] += $grades[$term];
             $validSubjects++;
         }
     }
 
     if ($validSubjects > 0) {
-        $overallAverage[$term] = round($overallAverage[$term] / $validSubjects, 2);
+        $overallAverage[$term] = round($overallAverage[$term] / $validSubjects, 0);
     }
 }
 
@@ -236,7 +377,7 @@ foreach($terms as $term) {
 }
 
 if ($validTerms > 0) {
-    $overallAverage['Final'] = round($termSum / $validTerms, 2);
+    $overallAverage['Final'] = round($termSum / $validTerms, 0);
 }
 
 // Attendance summary
@@ -1119,7 +1260,25 @@ $age = $birthDate->diff($today)->y;
                         <div class="row">
                             <div class="col-6 border-end">
                                 <div class="text-center">
-                                    <h3 class="mb-0">{{ isset($overallAverage) && isset($overallAverage['Final']) ? $overallAverage['Final'] : 'N/A' }}</h3>
+                                    @php
+                                        $allSubjectsApproved = true;
+                                        foreach($gradesBySubject as $subjectId => $subject) {
+                                            foreach($terms as $term) {
+                                                $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                                $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                                if ($hasGradeApproval && !$isApproved) {
+                                                    $allSubjectsApproved = false;
+                                                    break 2;
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @if(isset($overallAverage) && isset($overallAverage['Final']) && $allSubjectsApproved)
+                                        <h3 class="mb-0">{{ $overallAverage['Final'] }}</h3>
+                                    @else
+                                        <h3 class="mb-0 text-muted">--</h3>
+                                    @endif
                                     <small>Average</small>
                                 </div>
                             </div>
@@ -1269,40 +1428,149 @@ $age = $birthDate->diff($today)->y;
 
                                 @foreach($terms as $term)
                                     <td class="text-center">
-                                        @if(isset($averageGrades[$subjectId][$term]) && isset($gradeApprovals[$subjectId][$term]) && $gradeApprovals[$subjectId][$term])
-                                            <span class="grade-value {{ $averageGrades[$subjectId][$term] < 75 ? 'grade-failing' : '' }}">
+                                        @php
+                                            // Get the subject object
+                                            $subjectObj = \App\Models\Subject::find($subjectId);
+                                            $isMAPEHComponent = $subjectObj && $subjectObj->mapeh_component;
+                                            $parentId = $isMAPEHComponent ? $subjectObj->parent_subject_id : null;
+
+                                            // Add debugging information
+                                            $hasAverageGrade = isset($averageGrades[$subjectId][$term]);
+                                            $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                            $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                            // Check if parent MAPEH subject has approval status
+                                            $hasParentApproval = false;
+                                            $isParentApproved = false;
+                                            if ($isMAPEHComponent && $parentId) {
+                                                $hasParentApproval = isset($extendedApprovals[$parentId]) && isset($extendedApprovals[$parentId][$term]);
+                                                $isParentApproved = $hasParentApproval && $extendedApprovals[$parentId][$term]->is_approved;
+                                            }
+
+                                            $debugInfo = "Subject ID: {$subjectId}, Term: {$term}, ";
+                                            $debugInfo .= "Has Average Grade: " . ($hasAverageGrade ? 'Yes' : 'No') . ", ";
+                                            $debugInfo .= "Has Grade Approval: " . ($hasGradeApproval ? 'Yes' : 'No') . ", ";
+                                            $debugInfo .= "Is Approved: " . ($isApproved ? 'Yes' : 'No');
+
+                                            if ($isMAPEHComponent) {
+                                                $debugInfo .= ", Is MAPEH Component: Yes";
+                                                $debugInfo .= ", Parent ID: " . ($parentId ?: 'None');
+                                                $debugInfo .= ", Has Parent Approval: " . ($hasParentApproval ? 'Yes' : 'No');
+                                                $debugInfo .= ", Is Parent Approved: " . ($isParentApproved ? 'Yes' : 'No');
+                                            }
+
+                                            if ($hasGradeApproval) {
+                                                $approval = $extendedApprovals[$subjectId][$term];
+                                                $debugInfo .= ", Approval Quarter: " . $term;
+                                                $debugInfo .= ", Is Approved: " . ($approval->is_approved ? 'Yes' : 'No');
+                                                if (isset($approval->inherited_from_parent)) {
+                                                    $debugInfo .= ", Inherited From Parent: Yes";
+                                                }
+                                            }
+
+                                            // For MAPEH components, show approval status based on parent MAPEH subject
+                                            $showAsUnavailable = ($hasGradeApproval && !$isApproved) ||
+                                                                ($isMAPEHComponent && $hasParentApproval && !$isParentApproved);
+                                        @endphp
+                                        @if($hasAverageGrade && (($hasGradeApproval && $isApproved) || ($isMAPEHComponent && $hasParentApproval && $isParentApproved)))
+                                            <span class="grade-value {{ $averageGrades[$subjectId][$term] < 75 ? 'grade-failing' : '' }}" title="{{ $debugInfo }}">
                                                 {{ $averageGrades[$subjectId][$term] }}
                                             </span>
-                                        @elseif(isset($averageGrades[$subjectId][$term]) && isset($gradeApprovals[$subjectId][$term]) && !$gradeApprovals[$subjectId][$term])
-                                            <span class="text-muted">Grades Unavailable - awaiting for approval</span>
+                                        @elseif($showAsUnavailable)
+                                            <span class="text-muted" title="{{ $debugInfo }}">Grades Unavailable - awaiting for approval</span>
                                         @else
-                                            <span class="text-muted">--</span>
+                                            <span class="text-muted" title="{{ $debugInfo }}">--</span>
                                         @endif
                                     </td>
                                 @endforeach
 
                                 <td class="text-center">
                                     @php
+                                        // Get the subject object for final grade
+                                        $subjectObj = \App\Models\Subject::find($subjectId);
+                                        $isMAPEHComponent = $subjectObj && $subjectObj->mapeh_component;
+                                        $parentId = $isMAPEHComponent ? $subjectObj->parent_subject_id : null;
+
                                         $hasApprovedGrades = false;
                                         $hasAnyGrades = false;
+                                        $approvedTerms = [];
+                                        $unapprovedTerms = [];
+
                                         foreach($terms as $term) {
-                                            if (isset($gradeApprovals[$subjectId][$term])) {
+                                            $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                            $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                            // Check if parent MAPEH subject has approval status
+                                            $hasParentApproval = false;
+                                            $isParentApproved = false;
+                                            if ($isMAPEHComponent && $parentId) {
+                                                $hasParentApproval = isset($extendedApprovals[$parentId]) && isset($extendedApprovals[$parentId][$term]);
+                                                $isParentApproved = $hasParentApproval && $extendedApprovals[$parentId][$term]->is_approved;
+                                            }
+
+                                            // Consider both direct approval and parent approval for MAPEH components
+                                            $effectiveHasApproval = $hasGradeApproval || ($isMAPEHComponent && $hasParentApproval);
+                                            $effectiveIsApproved = $isApproved || ($isMAPEHComponent && $isParentApproved);
+
+                                            if ($effectiveHasApproval) {
                                                 $hasAnyGrades = true;
-                                                if ($gradeApprovals[$subjectId][$term]) {
+                                                if ($effectiveIsApproved) {
                                                     $hasApprovedGrades = true;
-                                                    break;
+                                                    $approvedTerms[] = $term;
+                                                } else {
+                                                    $unapprovedTerms[] = $term;
                                                 }
                                             }
                                         }
+
+                                        // Debug information
+                                        $finalDebugInfo = "Subject ID: {$subjectId}, ";
+                                        $finalDebugInfo .= "Has Final Average: " . (isset($averageGrades[$subjectId]['Final']) ? 'Yes' : 'No') . ", ";
+                                        $finalDebugInfo .= "Has Any Grades: " . ($hasAnyGrades ? 'Yes' : 'No') . ", ";
+                                        $finalDebugInfo .= "Has Approved Grades: " . ($hasApprovedGrades ? 'Yes' : 'No') . ", ";
+                                        $finalDebugInfo .= "Approved Terms: " . implode(', ', $approvedTerms) . ", ";
+                                        $finalDebugInfo .= "Unapproved Terms: " . implode(', ', $unapprovedTerms);
+
+                                        if ($isMAPEHComponent) {
+                                            $finalDebugInfo .= ", Is MAPEH Component: Yes";
+                                            $finalDebugInfo .= ", Parent ID: " . ($parentId ?: 'None');
+
+                                            // Check if parent has any approvals
+                                            $parentHasAnyApprovals = false;
+                                            $parentHasApprovedGrades = false;
+                                            if ($parentId) {
+                                                foreach($terms as $term) {
+                                                    $hasParentApproval = isset($extendedApprovals[$parentId]) && isset($extendedApprovals[$parentId][$term]);
+                                                    $isParentApproved = $hasParentApproval && $extendedApprovals[$parentId][$term]->is_approved;
+
+                                                    if ($hasParentApproval) {
+                                                        $parentHasAnyApprovals = true;
+                                                        if ($isParentApproved) {
+                                                            $parentHasApprovedGrades = true;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            $finalDebugInfo .= ", Parent Has Any Approvals: " . ($parentHasAnyApprovals ? 'Yes' : 'No');
+                                            $finalDebugInfo .= ", Parent Has Approved Grades: " . ($parentHasApprovedGrades ? 'Yes' : 'No');
+                                        }
+
+                                        // For MAPEH components, show as unavailable if parent MAPEH subject has unapproved grades
+                                        $showFinalAsUnavailable = ($hasAnyGrades && !$hasApprovedGrades) ||
+                                                                ($isMAPEHComponent && $parentId && isset($extendedApprovals[$parentId]) &&
+                                                                 count(array_filter($extendedApprovals[$parentId], function($approval) {
+                                                                     return !$approval->is_approved;
+                                                                 })) > 0);
                                     @endphp
                                     @if(isset($averageGrades[$subjectId]['Final']) && $hasApprovedGrades)
-                                        <span class="grade-value final-column {{ $averageGrades[$subjectId]['Final'] < 75 ? 'grade-failing' : '' }}">
+                                        <span class="grade-value final-column {{ $averageGrades[$subjectId]['Final'] < 75 ? 'grade-failing' : '' }}" title="{{ $finalDebugInfo }}">
                                             {{ $averageGrades[$subjectId]['Final'] }}
                                         </span>
-                                    @elseif($hasAnyGrades && !$hasApprovedGrades)
-                                        <span class="text-muted">Grades Unavailable - awaiting for approval</span>
+                                    @elseif($showFinalAsUnavailable)
+                                        <span class="text-muted" title="{{ $finalDebugInfo }}">Grades Unavailable - awaiting for approval</span>
                                     @else
-                                        <span class="text-muted">--</span>
+                                        <span class="text-muted" title="{{ $finalDebugInfo }}">--</span>
                                     @endif
                                 </td>
                             </tr>
@@ -1320,20 +1588,35 @@ $age = $birthDate->diff($today)->y;
                                     $hasApprovedSubjectsForTerm = false;
                                     $hasAnySubjectsForTerm = false;
                                     foreach($gradesBySubject as $subjectId => $subject) {
-                                        if (isset($gradeApprovals[$subjectId][$term])) {
+                                        $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                        $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                        if ($hasGradeApproval) {
                                             $hasAnySubjectsForTerm = true;
-                                            if ($gradeApprovals[$subjectId][$term]) {
+                                            if ($isApproved) {
                                                 $hasApprovedSubjectsForTerm = true;
                                                 break;
                                             }
                                         }
                                     }
                                 @endphp
-                                @if(isset($overallAverage) && isset($overallAverage[$term]) && $overallAverage[$term] > 0 && $hasApprovedSubjectsForTerm)
+                                @php
+                                    $allSubjectsApprovedForTerm = true;
+                                    foreach($gradesBySubject as $subjectId => $subject) {
+                                        $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                        $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                        if ($hasGradeApproval && !$isApproved) {
+                                            $allSubjectsApprovedForTerm = false;
+                                            break;
+                                        }
+                                    }
+                                @endphp
+                                @if(isset($overallAverage) && isset($overallAverage[$term]) && $overallAverage[$term] > 0 && $allSubjectsApprovedForTerm)
                                     <span class="grade-value {{ $overallAverage[$term] < 75 ? 'grade-failing' : '' }}">
                                         {{ $overallAverage[$term] }}
                                     </span>
-                                @elseif($hasAnySubjectsForTerm && !$hasApprovedSubjectsForTerm)
+                                @elseif($hasAnySubjectsForTerm && !$allSubjectsApprovedForTerm)
                                     <span class="text-muted">Grades Unavailable - awaiting for approval</span>
                                 @else
                                     <span class="text-muted">--</span>
@@ -1347,9 +1630,12 @@ $age = $birthDate->diff($today)->y;
                                 $hasAnySubjects = false;
                                 foreach($gradesBySubject as $subjectId => $subject) {
                                     foreach($terms as $term) {
-                                        if (isset($gradeApprovals[$subjectId][$term])) {
+                                        $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                        $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                        if ($hasGradeApproval) {
                                             $hasAnySubjects = true;
-                                            if ($gradeApprovals[$subjectId][$term]) {
+                                            if ($isApproved) {
                                                 $hasAnyApprovedSubjects = true;
                                                 break 2;
                                             }
@@ -1357,11 +1643,25 @@ $age = $birthDate->diff($today)->y;
                                     }
                                 }
                             @endphp
-                            @if(isset($overallAverage) && isset($overallAverage['Final']) && $overallAverage['Final'] > 0 && $hasAnyApprovedSubjects)
+                            @php
+                                $allSubjectsApproved = true;
+                                foreach($gradesBySubject as $subjectId => $subject) {
+                                    foreach($terms as $term) {
+                                        $hasGradeApproval = isset($extendedApprovals[$subjectId]) && isset($extendedApprovals[$subjectId][$term]);
+                                        $isApproved = $hasGradeApproval && $extendedApprovals[$subjectId][$term]->is_approved;
+
+                                        if ($hasGradeApproval && !$isApproved) {
+                                            $allSubjectsApproved = false;
+                                            break 2;
+                                        }
+                                    }
+                                }
+                            @endphp
+                            @if(isset($overallAverage) && isset($overallAverage['Final']) && $overallAverage['Final'] > 0 && $allSubjectsApproved)
                                 <span class="grade-value final-column {{ $overallAverage['Final'] < 75 ? 'grade-failing' : '' }}" style="font-size: 1.1rem;">
                                     {{ $overallAverage['Final'] }}
                                 </span>
-                            @elseif($hasAnySubjects && !$hasAnyApprovedSubjects)
+                            @elseif($hasAnySubjects && !$allSubjectsApproved)
                                 <span class="text-muted">Grades Unavailable - awaiting for approval</span>
                             @else
                                 <span class="text-muted">--</span>
@@ -1386,14 +1686,14 @@ $age = $birthDate->diff($today)->y;
         <!-- Academic Performance Debugging Section -->
         <div class="mt-4">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <!-- <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="fas fa-bug me-2 text-primary"></i> Grade Calculation Debugging
                     </h5>
                     <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#debuggingSection" aria-expanded="false" aria-controls="debuggingSection">
                         <i class="fas fa-code me-1"></i> Toggle Details
                     </button>
-                </div>
+                </div> -->
                 <div class="collapse" id="debuggingSection">
                     <div class="card-body">
                         <div class="alert alert-info">

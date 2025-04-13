@@ -169,9 +169,35 @@ class StudentController extends Controller
                 $selectedTransmutationTable = $request->query('transmutation_table', 1);
 
                 // Get the subject with its detailed information
-                $subject = Subject::findOrFail($assignedSubjectId);
+                $subject = Subject::with('components')->findOrFail($assignedSubjectId);
 
-                return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'isFromAssignedSection', 'subject'));
+                // Check if this is a MAPEH subject
+                $isMAPEH = $subject->getIsMAPEHAttribute();
+
+                // Get subject IDs to include in approvals (main subject + components if MAPEH)
+                $subjectIds = [$assignedSubjectId];
+                if ($isMAPEH && $subject->components->count() > 0) {
+                    foreach ($subject->components as $component) {
+                        $subjectIds[] = $component->id;
+                    }
+                }
+
+                // Get grade approvals for this subject (and components if MAPEH) in this section
+                $gradeApprovals = \App\Models\GradeApproval::where('section_id', $student->section_id)
+                    ->whereIn('subject_id', $subjectIds)
+                    ->get();
+
+                // Organize grade approvals by subject_id and quarter
+                $extendedApprovals = [];
+                foreach ($gradeApprovals as $approval) {
+                    if (!isset($extendedApprovals[$approval->subject_id])) {
+                        $extendedApprovals[$approval->subject_id] = [];
+                    }
+                    // Store the quarter as a property in the approval object
+                    $extendedApprovals[$approval->subject_id][$approval->quarter] = $approval;
+                }
+
+                return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'isFromAssignedSection', 'subject', 'extendedApprovals'));
             } catch (\Exception $e) {
                 Log::error('Error in student show: ' . $e->getMessage(), [
                     'file' => $e->getFile(),
@@ -221,24 +247,98 @@ class StudentController extends Controller
 
         // Get grade approvals for all subjects in this section
         $gradeApprovals = \App\Models\GradeApproval::where('section_id', $student->section_id)
-            ->get()
-            ->keyBy('subject_id');
+            ->get();
+
+        // Get all subjects in this section for debugging
+        $sectionSubjects = \App\Models\Subject::whereHas('sections', function($query) use ($student) {
+            $query->where('sections.id', $student->section_id);
+        })->get();
+
+        // Log the subjects in this section
+        \Illuminate\Support\Facades\Log::debug('Subjects in section ' . $student->section_id, [
+            'count' => $sectionSubjects->count(),
+            'subjects' => $sectionSubjects->map(function($subject) {
+                return [
+                    'id' => $subject->id,
+                    'name' => $subject->name
+                ];
+            })->toArray()
+        ]);
+
+        // Organize grade approvals by subject_id and quarter
+        $organizedApprovals = [];
+        foreach ($gradeApprovals as $approval) {
+            if (!isset($organizedApprovals[$approval->subject_id])) {
+                $organizedApprovals[$approval->subject_id] = [];
+            }
+            // Store the quarter as a property in the approval object
+            $organizedApprovals[$approval->subject_id][$approval->quarter] = $approval;
+        }
+
+        // Log the organized approvals
+        \Illuminate\Support\Facades\Log::debug('Organized Grade Approvals', [
+            'organizedApprovals' => $organizedApprovals
+        ]);
+
+        // Debug information about grade approvals
+        \Illuminate\Support\Facades\Log::debug('Grade Approvals for section ' . $student->section_id, [
+            'count' => $gradeApprovals->count(),
+            'approvals' => $gradeApprovals->toArray()
+        ]);
+
+        // Use the organized approvals instead of just keying by subject_id
+        // This ensures we have approvals for each quarter
+        $gradeApprovals = $organizedApprovals;
+
+        // Log the final structure
+        \Illuminate\Support\Facades\Log::debug('Final Grade Approvals Structure', [
+            'gradeApprovals' => $gradeApprovals
+        ]);
 
         // Extend approvals to include MAPEH components if the parent is approved
-        $extendedApprovals = clone $gradeApprovals;
+        $extendedApprovals = $gradeApprovals;
+
+        // Debug MAPEH parent map
+        \Illuminate\Support\Facades\Log::debug('MAPEH Parent Map', [
+            'mapehParentMap' => $mapehParentMap
+        ]);
+
+        // For each MAPEH component, check if its parent is approved for each quarter
         foreach ($mapehParentMap as $componentId => $parentId) {
-            if (isset($gradeApprovals[$parentId]) && $gradeApprovals[$parentId]->is_approved) {
-                // Create a virtual approval for the component
-                $componentApproval = new \App\Models\GradeApproval([
-                    'subject_id' => $componentId,
-                    'section_id' => $student->section_id,
-                    'quarter' => $gradeApprovals[$parentId]->quarter,
-                    'is_approved' => true,
-                    'inherited_from_parent' => true
-                ]);
-                $extendedApprovals[$componentId] = $componentApproval;
+            if (isset($gradeApprovals[$parentId])) {
+                // For each quarter that the parent is approved
+                foreach ($gradeApprovals[$parentId] as $quarter => $parentApproval) {
+                    if ($parentApproval->is_approved) {
+                        // Create a virtual approval for the component for this quarter
+                        if (!isset($extendedApprovals[$componentId])) {
+                            $extendedApprovals[$componentId] = [];
+                        }
+
+                        $componentApproval = new \App\Models\GradeApproval([
+                            'subject_id' => $componentId,
+                            'section_id' => $student->section_id,
+                            'quarter' => $quarter,
+                            'is_approved' => true,
+                            'inherited_from_parent' => true
+                        ]);
+
+                        $extendedApprovals[$componentId][$quarter] = $componentApproval;
+
+                        // Log the inheritance
+                        \Illuminate\Support\Facades\Log::debug("Inherited approval from MAPEH parent", [
+                            'componentId' => $componentId,
+                            'parentId' => $parentId,
+                            'quarter' => $quarter
+                        ]);
+                    }
+                }
             }
         }
+
+        // Log the extended approvals
+        \Illuminate\Support\Facades\Log::debug('Extended Approvals with MAPEH Components', [
+            'extendedApprovals' => $extendedApprovals
+        ]);
 
         return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'extendedApprovals', 'mapehParentMap'));
     }
