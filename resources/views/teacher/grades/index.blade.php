@@ -3,6 +3,40 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/grades.css') }}">
 <style>
+    /* Assessment Modal Styles */
+    .assessment-option {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: none !important;
+        margin-bottom: 0.5rem;
+    }
+
+    .bg-light-blue {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .bg-light-green {
+        background-color: rgba(25, 135, 84, 0.05);
+    }
+
+    .bg-light-yellow {
+        background-color: rgba(255, 193, 7, 0.05);
+    }
+
+    /* Mobile styles for assessment modal */
+    @media (max-width: 768px) {
+        .modal-dialog {
+            margin: 0.5rem;
+        }
+
+        .modal-body {
+            padding: 1rem;
+        }
+
+        .assessment-option .card-body {
+            padding: 0.75rem;
+        }
+    }
+
     .assessment-card {
         transition: transform 0.2s, box-shadow 0.2s;
         height: 100%;
@@ -433,6 +467,82 @@
 @endpush
 
 @section('content')
+<!-- Record Grade Modal -->
+<div class="modal fade" id="recordGradeModal" tabindex="-1" aria-labelledby="recordGradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="recordGradeModalLabel"><i class="fas fa-plus-circle me-2"></i> Record New Grade</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-4">Select an assessment type to create:</p>
+
+                <div class="row g-3">
+                    <!-- Written Works -->
+                    <div class="col-md-12">
+                        <a href="{{ route('teacher.grades.assessment-setup', ['subject_id' => $selectedSubject->id ?? 1, 'term' => $selectedTerm ?? 1, 'grade_type' => 'written_work', 'section_id' => $selectedSectionId ?? 1]) }}" class="text-decoration-none">
+                            <div class="card assessment-option bg-light-blue">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-pen text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">Written Works</h6>
+                                            <small class="text-muted">Quizzes, homework, and written assessments</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Performance Tasks -->
+                    <div class="col-md-12">
+                        <a href="{{ route('teacher.grades.assessment-setup', ['subject_id' => $selectedSubject->id ?? 1, 'term' => $selectedTerm ?? 1, 'grade_type' => 'performance_task', 'section_id' => $selectedSectionId ?? 1]) }}" class="text-decoration-none">
+                            <div class="card assessment-option bg-light-green">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-tasks text-success"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">Performance Tasks</h6>
+                                            <small class="text-muted">Projects, presentations, and activities</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Quarterly Assessment -->
+                    <div class="col-md-12">
+                        <a href="{{ route('teacher.grades.assessment-setup', ['subject_id' => $selectedSubject->id ?? 1, 'term' => $selectedTerm ?? 1, 'grade_type' => 'quarterly', 'section_id' => $selectedSectionId ?? 1]) }}" class="text-decoration-none">
+                            <div class="card assessment-option bg-light-yellow">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-file-alt text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">Quarterly Assessment</h6>
+                                            <small class="text-muted">Final exams and quarterly tests</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container-fluid px-4">
     <!-- Page Header -->
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -446,7 +556,7 @@
             <a href="{{ route('teacher.dashboard') }}" class="btn btn-outline-secondary me-2">
                 <i class="fas fa-home me-1"></i> Dashboard
             </a>
-            <a href="{{ route('teacher.grades.create') }}" class="btn btn-primary shadow-sm">
+            <a href="#" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#recordGradeModal">
                 <i class="fas fa-plus-circle me-1"></i> Record New Grade
             </a>
         </div>
@@ -4315,4 +4425,31 @@ $student = $studentData['student'];
                                                     @endforeach
                                             @endif
 
-@Endsection
+@push('scripts')
+<script>
+    // Record Grade Modal Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get modal elements
+        const recordGradeModal = document.getElementById('recordGradeModal');
+        const writtenWorkLink = document.getElementById('writtenWorkLink');
+        const performanceTaskLink = document.getElementById('performanceTaskLink');
+        const quarterlyLink = document.getElementById('quarterlyLink');
+
+        // Add hover effect to assessment options
+        document.querySelectorAll('.assessment-option').forEach(option => {
+            option.addEventListener('mouseenter', function() {
+                this.classList.add('shadow-sm');
+                this.style.transform = 'translateY(-3px)';
+                this.style.transition = 'transform 0.2s, box-shadow 0.2s';
+            });
+
+            option.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow-sm');
+                this.style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
+@endpush
+
+@endsection

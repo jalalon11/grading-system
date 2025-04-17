@@ -60,10 +60,10 @@
         @php
             // Get the selected transmutation table from request or session
             $selectedTableId = request('transmutation_table', session('locked_transmutation_table_id', $preferredTableId ?? 1));
-            
+
             // Get the transmuted grade using the selected table
             $transmutedGrade = getTransmutedGrade($finalGrade, $selectedTableId);
-            
+
             // Determine grade class based on transmuted grade
             $transmutedClass = 'secondary';
             if ($transmutedGrade >= 90) {
@@ -84,22 +84,14 @@
     </td>
     <td class="text-center pe-4">
         <div class="btn-group">
-            <a href="#" class="btn btn-sm btn-outline-primary" 
-               data-bs-toggle="modal" 
-               data-bs-target="#studentDetailsModal{{ $student->id }}" 
+            <a href="#" class="btn btn-sm btn-outline-primary"
+               data-bs-toggle="modal"
+               data-bs-target="#studentDetailsModal{{ $student->id }}"
                title="View Details">
                 <i class="fas fa-eye"></i>
             </a>
-            {{-- <a href="{{ route('teacher.grades.create', [
-                    'student_id' => $student->id, 
-                    'subject_id' => $selectedSubject->id, 
-                    'term' => $selectedTerm
-                ]) }}" 
-               class="btn btn-sm btn-outline-success" 
-               title="Add Grade">
-                <i class="fas fa-plus"></i>
-            </a> --}}
-            {{-- <button type="button" 
+
+            {{-- <button type="button"
                     class="btn btn-sm btn-outline-info"
                     onclick="printStudentReport({{ $student->id }})"
                     title="Print Report">
@@ -107,4 +99,4 @@
             </button> --}}
         </div>
     </td>
-</tr> 
+</tr>
