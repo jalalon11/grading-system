@@ -78,7 +78,7 @@
                 <h5 class="mb-0">
                     <i class="fas fa-clipboard-check me-2"></i> Student Scores for {{ session('assessment_name') }}
                 </h5>
-                <span class="badge bg-primary">{{ count($students) }} Students</span>
+                <span class="badge bg-primary student-count-badge">{{ count($students) }} Students</span>
             </div>
         </div>
         <div class="card-body">
@@ -399,6 +399,28 @@
             if ($('#batchGradeForm').data('submitting')) {
                 console.log('Form already being submitted, preventing button click');
                 return false;
+            }
+        });
+
+        // Fix for mobile input display issues
+        // This ensures the input field shows the full value
+        $('input[type="number"].grade-input').on('focus', function() {
+            // Force redraw of the input field
+            $(this).css('width', $(this).css('width'));
+
+            // For iOS devices, ensure the text is visible
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                $(this).attr('type', 'text');
+                $(this).attr('inputmode', 'numeric');
+                $(this).attr('pattern', '[0-9]*');
+            }
+        });
+
+        // Ensure input values are properly displayed after entry
+        $('input[type="number"].grade-input').on('blur', function() {
+            // For iOS devices, convert back to number type
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                $(this).attr('type', 'number');
             }
         });
     });
