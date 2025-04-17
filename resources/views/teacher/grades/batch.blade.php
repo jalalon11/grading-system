@@ -25,36 +25,37 @@
         <div class="row">
             <div class="col-md-6">
                 <h5 class="mb-2 fw-bold text-primary">Assessment Details</h5>
-                <div class="mb-2">
-                    <span class="text-muted me-2">Subject:</span>
-                    <span class="fw-medium">{{ $subject->name }} ({{ $subject->code }})</span>
+                <div class="mb-2 d-flex flex-wrap">
+                    <div class="info-label">Subject:</div>
+                    <div class="info-value">{{ $subject->name }} ({{ $subject->code }})
                     @if($isMAPEH)
                         <span class="badge bg-info ms-2">MAPEH</span>
                     @endif
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <span class="text-muted me-2">Section:</span>
-                    <span class="fw-medium">{{ $section->name }}</span>
+                <div class="mb-2 d-flex flex-wrap">
+                    <div class="info-label">Section:</div>
+                    <div class="info-value">{{ $section->name }}</div>
                 </div>
-                <div class="mb-2">
-                    <span class="text-muted me-2">Academic Term:</span>
-                    <span class="fw-medium">{{ $terms[$request->term] ?? $request->term }}</span>
+                <div class="mb-2 d-flex flex-wrap">
+                    <div class="info-label">Academic Term:</div>
+                    <div class="info-value">{{ $terms[$request->term] ?? $request->term }}</div>
                 </div>
             </div>
             <div class="col-md-6">
                 <h5 class="mb-2 fw-bold text-primary">Grading Information</h5>
-                <div class="mb-2">
-                    <span class="text-muted me-2">Assessment Name:</span>
-                    <span class="fw-medium">{{ session('assessment_name') }}</span>
+                <div class="mb-2 d-flex flex-wrap">
+                    <div class="info-label">Assessment Name:</div>
+                    <div class="info-value">{{ session('assessment_name') }}</div>
                 </div>
-                <div class="mb-2">
-                    <span class="text-muted me-2">Assessment Type:</span>
-                    <span class="fw-medium">{{ $gradeTypes[$request->grade_type] ?? $request->grade_type }}</span>
+                <div class="mb-2 d-flex flex-wrap">
+                    <div class="info-label">Assessment Type:</div>
+                    <div class="info-value">{{ $gradeTypes[$request->grade_type] ?? $request->grade_type }}</div>
                 </div>
                 @if(!$isMAPEH)
-                <div class="mb-2">
-                    <span class="text-muted me-2">Maximum Score:</span>
-                    <span class="fw-medium">{{ session('max_score') }} points</span>
+                <div class="mb-2 d-flex flex-wrap">
+                    <div class="info-label">Maximum Score:</div>
+                    <div class="info-value">{{ session('max_score') }} points</div>
                 </div>
                 @endif
             </div>
@@ -117,45 +118,47 @@
                         </div>
 
                         <!-- Component Navigation Tabs -->
-                        <ul class="nav nav-tabs mb-3" id="mapehTabs" role="tablist">
-                            @foreach($subject->components as $index => $component)
-                                @php
-                                    $componentClass = '';
-                                    $componentSlug = strtolower(str_replace(' ', '-', $component->name));
+                        <div class="mapeh-tabs-container">
+                            <ul class="nav nav-tabs mb-3" id="mapehTabs" role="tablist">
+                                @foreach($subject->components as $index => $component)
+                                    @php
+                                        $componentClass = '';
+                                        $componentSlug = strtolower(str_replace(' ', '-', $component->name));
 
-                                    if (stripos($component->name, 'music') !== false) {
-                                        $componentClass = 'text-primary';
-                                    } elseif (stripos($component->name, 'art') !== false) {
-                                        $componentClass = 'text-danger';
-                                    } elseif (stripos($component->name, 'physical') !== false || stripos($component->name, 'pe') !== false) {
-                                        $componentClass = 'text-success';
-                                    } elseif (stripos($component->name, 'health') !== false) {
-                                        $componentClass = 'text-warning';
-                                    }
+                                        if (stripos($component->name, 'music') !== false) {
+                                            $componentClass = 'text-primary';
+                                        } elseif (stripos($component->name, 'art') !== false) {
+                                            $componentClass = 'text-danger';
+                                        } elseif (stripos($component->name, 'physical') !== false || stripos($component->name, 'pe') !== false) {
+                                            $componentClass = 'text-success';
+                                        } elseif (stripos($component->name, 'health') !== false) {
+                                            $componentClass = 'text-warning';
+                                        }
 
-                                    // Check if this component was selected in assessment setup
-                                    $isSelectedComponent = in_array($component->id, session('selected_components', []));
-                                    $componentMaxScore = session('component_max_score.' . $component->id, 100);
-                                @endphp
+                                        // Check if this component was selected in assessment setup
+                                        $isSelectedComponent = in_array($component->id, session('selected_components', []));
+                                        $componentMaxScore = session('component_max_score.' . $component->id, 100);
+                                    @endphp
 
-                                @if($isSelectedComponent)
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link {{ $index === 0 ? 'active' : '' }} {{ $componentClass }}"
-                                            id="{{ $componentSlug }}-tab"
-                                            data-bs-toggle="tab"
-                                            data-bs-target="#{{ $componentSlug }}-content"
-                                            type="button"
-                                            role="tab"
-                                            aria-controls="{{ $componentSlug }}-content"
-                                            aria-selected="{{ $index === 0 ? 'true' : 'false' }}">
-                                        {{ $component->name }}
-                                        <input type="hidden" name="component_ids[]" value="{{ $component->id }}">
-                                        <input type="hidden" name="component_max_scores[{{ $component->id }}]" value="{{ $componentMaxScore }}">
-                                    </button>
-                                </li>
-                                @endif
-                            @endforeach
-                        </ul>
+                                    @if($isSelectedComponent)
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link {{ $index === 0 ? 'active' : '' }} {{ $componentClass }}"
+                                                id="{{ $componentSlug }}-tab"
+                                                data-bs-toggle="tab"
+                                                data-bs-target="#{{ $componentSlug }}-content"
+                                                type="button"
+                                                role="tab"
+                                                aria-controls="{{ $componentSlug }}-content"
+                                                aria-selected="{{ $index === 0 ? 'true' : 'false' }}">
+                                            {{ $component->name }}
+                                            <input type="hidden" name="component_ids[]" value="{{ $component->id }}">
+                                            <input type="hidden" name="component_max_scores[{{ $component->id }}]" value="{{ $componentMaxScore }}">
+                                        </button>
+                                    </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </div>
 
                         <!-- Debug Information -->
                         <div class="alert alert-secondary mb-3 small d-none">
@@ -195,17 +198,17 @@
 
                                     <div class="card mb-3 component-card {{ $componentClass }}">
                                         <div class="card-body py-2">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex justify-content-between align-items-center component-card-content">
                                                 <h6 class="mb-0">{{ $component->name }} - Maximum Score: {{ $componentMaxScore }}</h6>
-                                                <div>
+                                                <div class="component-actions">
                                                     <button type="button" class="btn btn-sm btn-outline-secondary fill-zeros" data-component="{{ $component->id }}">
-                                                        <i class="fas fa-eraser me-1"></i> Fill With Zeros
+                                                        <i class="fas fa-eraser me-1"></i> <span class="btn-text">Fill With Zeros</span>
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-outline-success fill-perfect" data-component="{{ $component->id }}" data-max="{{ $componentMaxScore }}">
-                                                        <i class="fas fa-check-circle me-1"></i> Fill With Perfect Scores
+                                                        <i class="fas fa-check-circle me-1"></i> <span class="btn-text">Fill With Perfect Scores</span>
                                                     </button>
                                                     <button type="button" class="btn btn-sm btn-outline-primary transfer-to-all" data-component="{{ $component->id }}">
-                                                        <i class="fas fa-exchange-alt me-1"></i> Transfer to All Components
+                                                        <i class="fas fa-exchange-alt me-1"></i> <span class="btn-text">Transfer to All Components</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -351,22 +354,22 @@
                             </table>
                         </div>
 
-                        <div class="mt-4 d-flex">
+                        <div class="mt-4 d-flex action-buttons-container">
                             <button type="button" id="fillWithZeros" class="btn btn-outline-secondary btn-sm me-2">
-                                <i class="fas fa-eraser me-1"></i> Fill All with Zeros
+                                <i class="fas fa-eraser me-1"></i> <span class="btn-text">Fill All with Zeros</span>
                             </button>
                             <button type="button" id="applyPerfect" class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-check-circle me-1"></i> Fill All with Perfect Scores
+                                <i class="fas fa-check-circle me-1"></i> <span class="btn-text">Fill All with Perfect Scores</span>
                             </button>
                         </div>
                     @endif
 
-                    <div class="mt-4 d-flex justify-content-between border-top pt-4">
+                    <div class="mt-4 d-flex justify-content-between border-top pt-4 form-action-buttons">
                         <a href="{{ route('teacher.grades.index', ['subject_id' => $subject->id, 'term' => $request->term]) }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i> Cancel
+                            <i class="fas fa-times me-1"></i> <span class="btn-text">Cancel</span>
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Save All Grades
+                            <i class="fas fa-save me-1"></i> <span class="btn-text">Save All Grades</span>
                         </button>
                     </div>
                 </form>
