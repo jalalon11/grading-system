@@ -190,7 +190,9 @@
     }
 
     .grade-input {
-        max-width: 70px;
+        min-width: 80px;
+        max-width: 100px;
+        width: 100%;
     }
 
     /* Improve table layout on mobile */
@@ -241,7 +243,7 @@
 
     /* Score column */
     .batch-table td:nth-child(3) {
-        width: 40%;
+        width: 50%;
         justify-content: flex-start;
         margin-top: 0.75rem;
     }
@@ -255,7 +257,7 @@
 
     /* Remarks column */
     .batch-table td:nth-child(4) {
-        width: 60%;
+        width: 50%;
         margin-top: 0.75rem;
     }
 
@@ -271,6 +273,7 @@
         display: flex;
         align-items: center;
         width: 100%;
+        justify-content: flex-start;
     }
 
     .score-validation {
@@ -278,6 +281,15 @@
         top: 0;
         right: 0;
         margin-left: 0.5rem;
+    }
+
+    /* Fix for number inputs on mobile */
+    input[type="number"].grade-input {
+        text-align: center;
+        padding-right: 0;
+        appearance: textfield;
+        -moz-appearance: textfield;
+        -webkit-appearance: textfield;
     }
 
     /* Make buttons more touch-friendly */
@@ -339,6 +351,21 @@
     .action-buttons-container .btn {
         padding: 0.5rem;
         min-width: auto;
+    }
+
+    /* Ensure input fields are wide enough on very small screens */
+    .grade-input {
+        min-width: 70px;
+        max-width: 90px;
+    }
+
+    /* Make score column even wider on very small screens */
+    .batch-table td:nth-child(3) {
+        width: 60%;
+    }
+
+    .batch-table td:nth-child(4) {
+        width: 40%;
     }
 }
 

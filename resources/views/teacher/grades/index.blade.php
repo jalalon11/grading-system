@@ -505,7 +505,7 @@
                                 <div class="card-body p-3">
                                     <div class="d-flex align-items-center">
                                         <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
-                                            <i class="fas fa-tasks text-success"></i>
+                                            <i class="fas fa-project-diagram text-success"></i>
                                         </div>
                                         <div>
                                             <h6 class="mb-0 fw-bold">Performance Tasks</h6>
