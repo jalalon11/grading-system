@@ -146,13 +146,12 @@ class AttendanceController extends Controller
                 ->join('sections', 'attendances.section_id', '=', 'sections.id')
                 ->where('sections.adviser_id', Auth::id())
                 ->where('sections.school_year', $currentSchoolYear)
-                ->select('date')
-                ->distinct();
+                ->select(DB::raw('DISTINCT DATE(date) as date'));
 
             $schoolDaysForYear = $schoolYearDaysQuery->count();
             $schoolDayDates = $schoolYearDaysQuery->pluck('date')->map(function($date) {
                 return Carbon::parse($date)->format('Y-m-d');
-            })->toArray();
+            })->unique()->toArray();
         }
 
         // Get current month and week summary data
