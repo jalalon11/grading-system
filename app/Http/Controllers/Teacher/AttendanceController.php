@@ -97,12 +97,63 @@ class AttendanceController extends Controller
             }
         }
 
-        // Get unique months from records for the month filter dropdown
+        // Get unique months from records for the month filter dropdown and calendar
         $availableMonths = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
             ->where('sections.adviser_id', Auth::id())
-            ->select(DB::raw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month_value, DATE_FORMAT(date, "%M %Y") as month_name'))
+            ->select(
+                DB::raw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month_value, DATE_FORMAT(date, "%M %Y") as month_name'),
+                DB::raw('YEAR(date) as year'),
+                DB::raw('MONTH(date) as month')
+            )
             ->orderBy('month_value', 'desc')
             ->get();
+
+        // Calculate the number of school days (unique dates with attendance records)
+        $schoolDaysQuery = Attendance::query()
+            ->join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id());
+
+        // Apply the same filters as the main query
+        if ($request->filled('section_id')) {
+            $schoolDaysQuery->where('attendances.section_id', $request->section_id);
+        }
+
+        if ($request->filled('month')) {
+            $monthYear = explode('-', $request->month);
+            if (count($monthYear) === 2) {
+                $year = $monthYear[0];
+                $month = $monthYear[1];
+                $schoolDaysQuery->whereYear('attendances.date', $year)
+                      ->whereMonth('attendances.date', $month);
+            }
+        }
+
+        $schoolDays = $schoolDaysQuery->select(DB::raw('COUNT(DISTINCT date) as count'))->first()->count;
+        $currentMonth = $request->filled('month') ? Carbon::createFromFormat('Y-m', $request->month)->format('F Y') : Carbon::now()->format('F Y');
+
+        // Get school days for the entire school year
+        $currentSchoolYear = null;
+        $schoolDaysForYear = 0;
+        $schoolDayDates = [];
+
+        // Get the current school year from the teacher's sections
+        $teacherSection = Section::where('adviser_id', Auth::id())->first();
+        if ($teacherSection) {
+            $currentSchoolYear = $teacherSection->school_year;
+
+            // Get all school days for the current school year
+            $schoolYearDaysQuery = Attendance::query()
+                ->join('sections', 'attendances.section_id', '=', 'sections.id')
+                ->where('sections.adviser_id', Auth::id())
+                ->where('sections.school_year', $currentSchoolYear)
+                ->select('date')
+                ->distinct();
+
+            $schoolDaysForYear = $schoolYearDaysQuery->count();
+            $schoolDayDates = $schoolYearDaysQuery->pluck('date')->map(function($date) {
+                return Carbon::parse($date)->format('Y-m-d');
+            })->toArray();
+        }
 
         // Get current month and week summary data
         $currentMonthSummary = null;
@@ -136,7 +187,12 @@ class AttendanceController extends Controller
             'sections',
             'availableMonths',
             'currentMonthSummary',
-            'currentWeekSummary'
+            'currentWeekSummary',
+            'schoolDays',
+            'currentMonth',
+            'currentSchoolYear',
+            'schoolDaysForYear',
+            'schoolDayDates'
         ));
     }
 
@@ -146,7 +202,61 @@ class AttendanceController extends Controller
     public function create()
     {
         $sections = Section::where('adviser_id', Auth::id())->get();
-        return view('teacher.attendances.create', compact('sections'));
+
+        // Calculate the number of school days (unique dates with attendance records)
+        $schoolDays = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id())
+            ->whereMonth('attendances.date', Carbon::now()->month)
+            ->whereYear('attendances.date', Carbon::now()->year)
+            ->select(DB::raw('COUNT(DISTINCT date) as count'))
+            ->first()
+            ->count;
+
+        $currentMonth = Carbon::now()->format('F Y');
+
+        return view('teacher.attendances.create', compact('sections', 'schoolDays', 'currentMonth'));
+    }
+
+    /**
+     * Check if attendance exists for a given date and section
+     */
+    public function checkAttendanceExists(Request $request)
+    {
+        $request->validate([
+            'section_id' => 'required|exists:sections,id',
+            'date' => 'required|date',
+        ]);
+
+        // Check if the section belongs to this teacher
+        $section = Section::where('id', $request->section_id)
+                          ->where('adviser_id', Auth::id())
+                          ->first();
+
+        if (!$section) {
+            return response()->json([
+                'exists' => false,
+                'message' => 'Section not found or does not belong to this teacher.'
+            ]);
+        }
+
+        // Check if attendance for this date and section already exists
+        $existingAttendance = Attendance::where('section_id', $request->section_id)
+                                        ->where('date', $request->date)
+                                        ->where('teacher_id', Auth::id())
+                                        ->first();
+
+        if ($existingAttendance) {
+            return response()->json([
+                'exists' => true,
+                'message' => 'Attendance for this date and section already exists.',
+                'edit_url' => route('teacher.attendances.edit', ['attendance' => $request->section_id, 'date' => $request->date])
+            ]);
+        }
+
+        return response()->json([
+            'exists' => false,
+            'message' => 'No attendance record exists for this date and section.'
+        ]);
     }
 
     /**
@@ -175,7 +285,8 @@ class AttendanceController extends Controller
                                         ->exists();
 
         if ($existingAttendance) {
-            return redirect()->back()->with('error', 'Attendance for this date and section already exists. Please edit the existing record.');
+            $editUrl = route('teacher.attendances.edit', ['attendance' => $validated['section_id'], 'date' => $validated['date']]);
+            return redirect()->back()->with('error', "Attendance for this date and section already exists. <a href='{$editUrl}' class='alert-link'>Click here to edit the existing record</a>.");
         }
 
         // Begin transaction
@@ -274,7 +385,18 @@ class AttendanceController extends Controller
 
         $absentCount = count($students) - ($presentCount + $lateCount + $excusedCount + $halfDayCount);
 
-        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'attendanceRemarks', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount', 'halfDayCount'));
+        // Calculate the number of school days (unique dates with attendance records)
+        $schoolDays = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id())
+            ->whereMonth('attendances.date', Carbon::parse($date)->month)
+            ->whereYear('attendances.date', Carbon::parse($date)->year)
+            ->select(DB::raw('COUNT(DISTINCT date) as count'))
+            ->first()
+            ->count;
+
+        $currentMonth = Carbon::parse($date)->format('F Y');
+
+        return view('teacher.attendances.show', compact('section', 'students', 'attendanceData', 'attendanceRemarks', 'date', 'presentCount', 'lateCount', 'absentCount', 'excusedCount', 'halfDayCount', 'schoolDays', 'currentMonth'));
     }
 
     /**
@@ -314,7 +436,18 @@ class AttendanceController extends Controller
             $attendanceRemarks[$record->student_id] = $record->remarks;
         }
 
-        return view('teacher.attendances.edit', compact('section', 'students', 'attendanceData', 'attendanceRemarks', 'date'));
+        // Calculate the number of school days (unique dates with attendance records)
+        $schoolDays = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id())
+            ->whereMonth('attendances.date', Carbon::parse($date)->month)
+            ->whereYear('attendances.date', Carbon::parse($date)->year)
+            ->select(DB::raw('COUNT(DISTINCT date) as count'))
+            ->first()
+            ->count;
+
+        $currentMonth = Carbon::parse($date)->format('F Y');
+
+        return view('teacher.attendances.edit', compact('section', 'students', 'attendanceData', 'attendanceRemarks', 'date', 'schoolDays', 'currentMonth'));
     }
 
     /**
@@ -415,7 +548,21 @@ class AttendanceController extends Controller
             $sectionId
         );
 
-        return view('teacher.attendances.weekly_summary', compact('summary', 'sections', 'sectionId'));
+        // Calculate the number of school days for the current week
+        $schoolDaysQuery = Attendance::query()
+            ->join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id())
+            ->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+
+        // Apply section filter if provided
+        if ($sectionId) {
+            $schoolDaysQuery->where('attendances.section_id', $sectionId);
+        }
+
+        $schoolDays = $schoolDaysQuery->select(DB::raw('COUNT(DISTINCT date) as count'))->first()->count;
+        $currentMonth = Carbon::now()->startOfWeek()->format('M d') . ' - ' . Carbon::now()->endOfWeek()->format('M d');
+
+        return view('teacher.attendances.weekly_summary', compact('summary', 'sections', 'sectionId', 'schoolDays', 'currentMonth'));
     }
 
     /**
@@ -443,6 +590,28 @@ class AttendanceController extends Controller
             $sectionId
         );
 
-        return view('teacher.attendances.monthly_summary', compact('summary', 'sections', 'sectionId', 'yearMonth', 'availableMonths'));
+        // Calculate the number of school days for the selected month
+        $schoolDaysQuery = Attendance::query()
+            ->join('sections', 'attendances.section_id', '=', 'sections.id')
+            ->where('sections.adviser_id', Auth::id());
+
+        // Apply section filter if provided
+        if ($sectionId) {
+            $schoolDaysQuery->where('attendances.section_id', $sectionId);
+        }
+
+        // Apply month filter
+        $monthYear = explode('-', $yearMonth);
+        if (count($monthYear) === 2) {
+            $year = $monthYear[0];
+            $month = $monthYear[1];
+            $schoolDaysQuery->whereYear('attendances.date', $year)
+                  ->whereMonth('attendances.date', $month);
+        }
+
+        $schoolDays = $schoolDaysQuery->select(DB::raw('COUNT(DISTINCT date) as count'))->first()->count;
+        $currentMonth = Carbon::createFromFormat('Y-m', $yearMonth)->format('F Y');
+
+        return view('teacher.attendances.monthly_summary', compact('summary', 'sections', 'sectionId', 'yearMonth', 'availableMonths', 'schoolDays', 'currentMonth'));
     }
 }

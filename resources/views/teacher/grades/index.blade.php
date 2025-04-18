@@ -471,9 +471,9 @@
 <div class="modal fade" id="recordGradeModal" tabindex="-1" aria-labelledby="recordGradeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="recordGradeModalLabel"><i class="fas fa-plus-circle me-2"></i> Record New Grade</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header py-3 bg-white">
+                <h5 class="modal-title mb-0 fw-bold text-primary" id="recordGradeModalLabel"><i class="fas fa-plus-circle me-2"></i> Record New Grade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p class="mb-4">Select an assessment type to create:</p>
@@ -544,16 +544,19 @@
     </div>
 </div>
 <div class="container-fluid px-4">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-graduation-cap mr-2 text-primary"></i> Grade Management
+    <!-- Page Header - Professional Mobile Centered -->
+    <div class="d-flex flex-column d-sm-flex flex-sm-row align-items-center align-items-sm-center justify-content-sm-between mb-4">
+        <div class="text-center text-sm-start mb-4 mb-sm-0 w-100 w-sm-auto">
+            <div class="d-inline-block bg-primary bg-opacity-10 rounded-3 p-2 mb-2 d-sm-none">
+                <i class="fas fa-graduation-cap text-primary fa-lg"></i>
+            </div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">
+                <i class="fas fa-graduation-cap me-2 text-primary d-none d-sm-inline-block"></i> Grade Management
             </h1>
-            <p class="text-muted">Manage and track student performance across all subjects and terms</p>
+            <p class="text-muted mb-0">Manage and track student performance across all subjects and terms</p>
         </div>
-        <div>
-            <a href="{{ route('teacher.dashboard') }}" class="btn btn-outline-secondary me-2">
+        <div class="d-flex justify-content-center justify-content-sm-end gap-2 w-100 w-sm-auto">
+            <a href="{{ route('teacher.dashboard') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-home me-1"></i> Dashboard
             </a>
             <a href="#" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#recordGradeModal">
@@ -2777,11 +2780,11 @@
             <div class="modal fade" id="wholeGradeModal{{ $studentData['student']->id }}" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">
+                        <div class="modal-header py-3 bg-white">
+                            <h5 class="modal-title mb-0 fw-bold text-primary">
                                 <i class="fas fa-user-graduate me-2"></i> {{ $studentData['student']->first_name }} {{ $studentData['student']->last_name }} - Comprehensive Grade Report
                             </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body p-0">
                             <!-- Final Average Summary -->
@@ -3539,11 +3542,11 @@ $student = $studentData['student'];
 <div class="modal fade" id="studentDetailsModal{{ $student->id }}" tabindex="-1" aria-labelledby="comprehensiveDetailsModal{{ $student->id }}" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="comprehensiveDetailsModal{{ $student->id }}">
+            <div class="modal-header py-3 bg-white">
+                <h5 class="modal-title mb-0 fw-bold text-primary" id="comprehensiveDetailsModal{{ $student->id }}">
                     <i class="fas fa-user-graduate me-2"></i> {{ $student->first_name }} {{ $student->last_name }}'s {{ $selectedSubject->name }} Performance Report
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <!-- Student Info Card -->

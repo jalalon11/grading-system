@@ -3,11 +3,11 @@
     <div class="modal-dialog">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="editAssessmentModalLabel">
+                <div class="modal-header py-3 bg-white">
+                    <h5 class="modal-title mb-0 fw-bold text-primary" id="editAssessmentModalLabel">
                         <i class="fas fa-edit me-2"></i> Edit Assessment
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editAssessmentForm" method="POST" action="{{ route('teacher.grades.update-assessment') }}">
@@ -36,7 +36,7 @@
                             <i class="fas fa-info-circle me-2"></i>
                             <strong>Note:</strong> Editing an assessment will update all student grades for this assessment.
                         </div>
-                    
+
                         <div class="modal-footer px-0 pb-0">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary">

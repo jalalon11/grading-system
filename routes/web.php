@@ -105,7 +105,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::put('/resources/{resource}', [ResourceController::class, 'update'])->name('resources.update');
         Route::delete('/resources/{resource}', [ResourceController::class, 'destroy'])->name('resources.destroy');
         Route::post('/resources/{resource}/toggle-status', [ResourceController::class, 'toggleStatus'])->name('resources.toggle-status');
-        
+
         // Resource Categories Management
         Route::post('/resource-categories', [ResourceCategoryController::class, 'store'])->name('resource-categories.store');
         Route::put('/resource-categories/{category}', [ResourceCategoryController::class, 'update'])->name('resource-categories.update');
@@ -183,6 +183,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::resource('attendances', AttendanceController::class);
         Route::get('attendance/weekly-summary', [AttendanceController::class, 'weeklySummary'])->name('attendances.weekly-summary');
         Route::get('attendance/monthly-summary', [AttendanceController::class, 'monthlySummary'])->name('attendances.monthly-summary');
+        Route::post('attendance/check-exists', [AttendanceController::class, 'checkAttendanceExists'])->name('attendances.check-exists');
 
         // API endpoint to get students by section ID
         Route::get('/sections/{section}/students', function($section) {

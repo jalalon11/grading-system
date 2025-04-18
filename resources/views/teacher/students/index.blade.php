@@ -1190,18 +1190,21 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800 d-flex align-items-center">
-                <span class="bg-primary rounded-circle p-2 me-3 text-white shadow-sm">
+    <!-- Page Header - Professional Mobile Centered -->
+    <div class="d-flex flex-column d-sm-flex flex-sm-row align-items-center align-items-sm-center justify-content-sm-between mb-4">
+        <div class="text-center text-sm-start mb-4 mb-sm-0 w-100 w-sm-auto">
+            <div class="d-inline-block bg-primary bg-opacity-10 rounded-3 p-2 mb-2 d-sm-none">
+                <i class="fas fa-user-graduate text-primary fa-lg"></i>
+            </div>
+            <h1 class="h3 mb-1 text-gray-800 fw-bold">
+                <span class=" me-3 text-primary shadow-sm d-none d-sm-inline-flex align-items-center justify-content-center">
                     <i class="fas fa-user-graduate"></i>
                 </span>
                 Student Management
             </h1>
-            <p class="text-muted mb-0 mt-1">Manage, monitor, and organize your student records effectively</p>
+            <p class="text-muted mb-0">Manage, monitor, and organize your student records effectively</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex justify-content-center justify-content-sm-end gap-2 w-100 w-sm-auto">
             <a href="{{ route('teacher.dashboard') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-home me-1"></i> Dashboard
             </a>

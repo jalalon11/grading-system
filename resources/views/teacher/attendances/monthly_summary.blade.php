@@ -57,6 +57,13 @@
                         </form>
                     </div>
 
+                    <!-- School Day Indicator -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <x-school-day-indicator :schoolDays="$schoolDays" :currentMonth="$currentMonth" />
+                        </div>
+                    </div>
+
                     @if(count($summary['dates']) > 0)
                         <!-- Monthly Overview Card -->
                         <div class="card border-0 shadow-sm mb-4">
