@@ -5,18 +5,20 @@
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-edit text-primary me-2"></i> Edit Attendance
-                        </h5>
-                        <div>
-                            <a href="{{ route('teacher.attendances.show', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-outline-info me-2">
-                                <i class="fas fa-eye me-1"></i> View Details
-                            </a>
-                            <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-1"></i> Back to Records
-                            </a>
+                <div class="card-header bg-white p-0">
+                    <div class="px-4 py-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-edit text-primary me-2"></i> Edit Attendance
+                            </h5>
+                            <div>
+                                <a href="{{ route('teacher.attendances.show', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-outline-info me-2">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </a>
+                                <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i> Back to Records
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -29,14 +31,21 @@
                         </div>
                     @endif
 
-                    <div class="alert alert-info mb-4">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <i class="fas fa-info-circle fa-2x"></i>
-                            </div>
-                            <div>
-                                <h5 class="alert-heading mb-1">Editing Attendance</h5>
-                                <p class="mb-0">Section: <strong>{{ $section->name }}</strong> | Date: <strong>{{ \Carbon\Carbon::parse($date)->format('F d, Y') }}</strong></p>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <x-school-day-indicator :schoolDays="$schoolDays" :currentMonth="$currentMonth" />
+                        </div>
+                        <div class="col-md-8">
+                            <div class="alert alert-info mb-0 h-100">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-info-circle fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="alert-heading mb-1">Editing Attendance</h5>
+                                        <p class="mb-0">Section: <strong>{{ $section->name }}</strong> | Date: <strong>{{ \Carbon\Carbon::parse($date)->format('F d, Y') }}</strong></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
