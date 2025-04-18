@@ -45,7 +45,7 @@
                 <div class="col-md-6 mb-4 mb-md-0">
                     <div class="d-flex align-items-center h-100">
                         <div class="school-days-counter text-center w-100">
-                            <div class="display-1 fw-bold text-primary mb-2">{{ $schoolDaysForYear }}</div>
+                            <div class="display-1 fw-bold text-primary mb-2">{{ $schoolDays }}</div>
                             <p class="lead mb-0">Total School Days Recorded</p>
                             <p class="text-muted">Unique days with attendance records</p>
                         </div>
