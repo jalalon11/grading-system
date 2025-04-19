@@ -361,8 +361,10 @@ class AttendanceController extends Controller
 
         // Map attendance data by student ID
         $attendanceData = [];
+        $attendanceRemarks = [];
         foreach ($students as $student) {
             $attendanceData[$student->id] = 'absent'; // Default to absent
+            $attendanceRemarks[$student->id] = null;
         }
 
         $presentCount = 0;
@@ -371,6 +373,7 @@ class AttendanceController extends Controller
         $halfDayCount = 0;
         foreach ($attendanceRecords as $record) {
             $attendanceData[$record->student_id] = $record->status;
+            $attendanceRemarks[$record->student_id] = $record->remarks;
             if ($record->status === 'present') {
                 $presentCount++;
             } elseif ($record->status === 'late') {
