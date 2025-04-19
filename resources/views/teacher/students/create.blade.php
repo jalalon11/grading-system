@@ -312,7 +312,7 @@
                                             <option value="">Select Section</option>
                                             @foreach($sections as $section)
                                                 <option value="{{ $section->id }}" {{ old('section_id') == $section->id ? 'selected' : '' }}>
-                                                    {{ $section->name }} (Grade {{ $section->grade_level }})
+                                                    {{ $section->name }} - {{ $section->grade_level }}
                                                 </option>
                                             @endforeach
                                         </select>

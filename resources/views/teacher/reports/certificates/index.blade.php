@@ -39,7 +39,7 @@
                                     <select name="section_id" id="section_id" class="form-select" required>
                                         <option value="">Select a section</option>
                                         @foreach($sections as $section)
-                                            <option value="{{ $section->id }}">{{ $section->name }} (Grade {{ $section->grade_level }})</option>
+                                            <option value="{{ $section->id }}">{{ $section->name }} - {{ $section->grade_level }}</option>
                                         @endforeach
                                     </select>
                                 </div>

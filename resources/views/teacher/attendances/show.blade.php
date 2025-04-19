@@ -12,7 +12,7 @@
                                 <div class="me-2">
                                     <i class="fas fa-clipboard-check text-primary"></i>
                                 </div>
-                                <h5 class="mb-0 fw-bold">Attendance Details</h5>
+                                <h5 class="mb-0 fw-bold text-nowrap">Attendance Details</h5>
                             </div>
                             <div class="d-flex flex-wrap gap-2 w-100 w-md-auto justify-content-between justify-content-md-end">
                                 <a href="{{ route('teacher.attendances.edit', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-primary">
@@ -208,63 +208,61 @@
                                                 <th style="width: 40%" class="text-center">Status</th>
                                             </tr>
                                         </thead>
-                                    <tbody>
-                                        @foreach($students as $index => $student)
-                                            <tr>
-                                                <td class="text-muted d-none d-md-table-cell">{{ $index + 1 }}</td>
-                                                <td class="student-name-cell">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-container me-2">
-                                                            <span class="avatar rounded-circle d-flex align-items-center justify-content-center"
-                                                                  style="width: 35px; height: 35px; background-color: #e0f2ff; color: #0d6efd;">
-                                                                {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
-                                                            </span>
+                                        <tbody>
+                                            @foreach($students as $index => $student)
+                                                <tr>
+                                                    <td class="d-none d-md-table-cell">{{ $index + 1 }}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="student-avatar bg-primary bg-opacity-10 rounded-circle me-2">
+                                                                <i class="fas fa-user text-primary"></i>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-medium">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                                                <div class="text-muted small d-md-none">{{ $student->student_id }}</div>
+                                                            </div>
                                                         </div>
-                                                        <div class="student-info">
-                                                            <div class="fw-medium text-truncate">{{ $student->surname_first }}</div>
-                                                            <div class="small text-muted d-md-none">{{ $student->student_id }}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td class="d-none d-md-table-cell">
-                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                                        {{ $student->student_id }}
-                                                    </span>
-                                                </td>
-                                                <td class="status-cell text-center">
-                                                    @if($attendanceData[$student->id] == 'present')
-                                                        <span class="badge bg-success status-badge">
-                                                            <i class="fas fa-check-circle me-1"></i> Present
+                                                    </td>
+                                                    <td class="d-none d-md-table-cell">
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                            {{ $student->student_id }}
                                                         </span>
-                                                    @elseif($attendanceData[$student->id] == 'late')
-                                                        <span class="badge bg-warning text-dark status-badge">
-                                                            <i class="fas fa-clock me-1"></i> Late
-                                                        </span>
-                                                    @elseif($attendanceData[$student->id] == 'half_day')
-                                                        <span class="badge bg-info text-dark status-badge">
-                                                            <i class="fas fa-adjust me-1"></i> Half Day
-                                                        </span>
-                                                    @elseif($attendanceData[$student->id] == 'excused')
-                                                        <div class="excused-status">
-                                                            <span class="badge bg-secondary mb-1 status-badge">
-                                                                <i class="fas fa-file-alt me-1"></i> Excused
+                                                    </td>
+                                                    <td class="status-cell text-center">
+                                                        @if($attendanceData[$student->id] == 'present')
+                                                            <span class="badge bg-success status-badge">
+                                                                <i class="fas fa-check-circle me-1"></i> Present
                                                             </span>
-                                                            @if(!empty($attendanceRemarks[$student->id]))
-                                                                <div class="excused-reason p-2 rounded border border-secondary border-opacity-25 bg-light">
-                                                                    <small class="d-block text-secondary"><i class="fas fa-comment-alt me-1"></i> <strong>Reason:</strong></small>
-                                                                    <div class="mt-1 small">{{ $attendanceRemarks[$student->id] }}</div>
+                                                        @elseif($attendanceData[$student->id] == 'late')
+                                                            <span class="badge bg-warning text-dark status-badge">
+                                                                <i class="fas fa-clock me-1"></i> Late
+                                                            </span>
+                                                        @elseif($attendanceData[$student->id] == 'half_day')
+                                                            <span class="badge bg-info text-dark status-badge">
+                                                                <i class="fas fa-adjust me-1"></i> Half Day
+                                                            </span>
+                                                        @elseif($attendanceData[$student->id] == 'absent')
+                                                            <span class="badge bg-danger status-badge">
+                                                                <i class="fas fa-times-circle me-1"></i> Absent
+                                                            </span>
+                                                        @elseif($attendanceData[$student->id] == 'excused')
+                                                            <div class="excused-status">
+                                                                <div class="d-flex align-items-center gap-2">
+                                                                    <span class="badge bg-secondary status-badge">
+                                                                        <i class="fas fa-calendar-check me-1"></i> Excused
+                                                                    </span>
+                                                                    @if(isset($attendanceRemarks[$student->id]) && !empty($attendanceRemarks[$student->id]))
+                                                                        <span class="text-muted small reason-text">
+                                                                            <i class="fas fa-comment-alt me-1"></i> {{ $attendanceRemarks[$student->id] }}
+                                                                        </span>
+                                                                    @endif
                                                                 </div>
-                                                            @endif
-                                                        </div>
-                                                    @else
-                                                        <span class="badge bg-danger status-badge">
-                                                            <i class="fas fa-times-circle me-1"></i> Absent
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
+                                                            </div>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
@@ -331,6 +329,11 @@
 
     .attendance-table-container {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .attendance-table {
+        margin-bottom: 0;
     }
 
     .attendance-table thead {
@@ -340,141 +343,110 @@
         background-color: #f8f9fa;
     }
 
+    .attendance-table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+    }
+
+    .attendance-table td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+    }
+
+    .student-avatar {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .status-badge {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 767.98px) {
+        .attendance-table-wrapper {
+            max-height: none;
+        }
+
+        .attendance-table th,
+        .attendance-table td {
+            padding: 0.5rem;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.5rem;
+            font-size: 0.8125rem;
+        }
+
+        .attendance-legend {
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
+        }
+
+        .legend-item {
+            font-size: 0.8125rem;
+        }
+
+        .excused-status {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .reason-text {
+            max-width: 100%;
+            text-align: center;
+            display: block;
+        }
+    }
+
+    /* Scrollbar styling */
     .attendance-table-wrapper::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
     }
 
     .attendance-table-wrapper::-webkit-scrollbar-track {
         background: #f1f1f1;
-        border-radius: 4px;
+        border-radius: 3px;
     }
 
     .attendance-table-wrapper::-webkit-scrollbar-thumb {
         background: #c1c1c1;
-        border-radius: 4px;
+        border-radius: 3px;
     }
 
     .attendance-table-wrapper::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
     }
 
-    /* Excused reason styles */
+    /* Excused status styles */
     .excused-status {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        text-align: left;
-        width: 100%;
+        justify-content: center;
     }
 
-    .excused-reason {
-        width: 100%;
-        max-width: 250px;
-        font-size: 0.85rem;
-        color: #495057;
-    }
-
-    /* Mobile-friendly styles */
-    @media (max-width: 767.98px) {
-        .card-header .btn {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        .attendance-stats .attendance-stat-item {
-            margin-bottom: 0.75rem !important;
-            padding: 0.75rem !important;
-        }
-
-        .detail-value {
-            font-size: 0.9rem;
-        }
-
-        .attendance-table-wrapper {
-            max-height: 400px;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 0.5rem;
-            margin: 0 -1rem;
-            width: calc(100% + 2rem);
-        }
-
-        .table-responsive {
-            margin: 0;
-            width: 100%;
-        }
-
-        .table th, .table td {
-            padding: 0.5rem;
-            vertical-align: middle;
-        }
-
-        .attendance-table td {
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
-        }
-
-        .student-name-cell {
-            max-width: 60%;
-            width: 60%;
-        }
-
-        .student-info {
-            max-width: calc(100% - 40px);
-            width: calc(100% - 40px);
-        }
-
-        .status-cell {
-            max-width: 40%;
-            width: 40%;
-        }
-
-        .attendance-table .badge {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.8rem;
-            display: inline-block;
-            width: 100%;
-            max-width: 120px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .status-badge {
-            width: 100%;
-            display: inline-block;
-        }
-
-        .excused-reason {
-            max-width: 100%;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-        }
-
-        .excused-status {
-            width: 100%;
-        }
-
-        .avatar {
-            width: 30px !important;
-            height: 30px !important;
-            font-size: 0.75rem;
-        }
-
-        .attendance-legend {
-            background-color: #f8f9fa;
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            margin-top: 0.5rem;
-        }
-
-        .legend-item {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            background-color: white;
-            border-radius: 0.25rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
+    .reason-text {
+        font-size: 0.8125rem;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 </style>
 @endpush

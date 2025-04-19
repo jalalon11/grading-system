@@ -48,7 +48,7 @@
                                         <option value="">Select a section</option>
                                         @foreach($sections as $section)
                                             <option value="{{ $section->id }}" {{ old('section_id') == $section->id ? 'selected' : '' }}>
-                                                {{ $section->name }}
+                                                {{ $section->name }} - {{ $section->grade_level }}
                                             </option>
                                         @endforeach
                                     </select>
