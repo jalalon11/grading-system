@@ -192,9 +192,9 @@
                         <span class="text-success small">
                             <i class="fas fa-check-circle me-1"></i> All Active
                         </span>
-                        <a href="{{ route('teacher-admin.sections.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">
+                        <!-- <a href="{{ route('teacher-admin.sections.index') }}" class="btn btn-sm btn-outline-primary rounded-pill">
                             <i class="fas fa-external-link-alt me-1"></i> View All
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
@@ -221,9 +221,9 @@
                         <span class="text-success small">
                             <i class="fas fa-check-circle me-1"></i> All Assigned
                         </span>
-                        <a href="{{ route('teacher-admin.subjects.index') }}" class="btn btn-sm btn-outline-success rounded-pill">
+                        <!-- <a href="{{ route('teacher-admin.subjects.index') }}" class="btn btn-sm btn-outline-success rounded-pill">
                             <i class="fas fa-external-link-alt me-1"></i> View All
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
@@ -250,9 +250,9 @@
                         <span class="text-success small">
                             <i class="fas fa-check-circle me-1"></i> All Enrolled
                         </span>
-                        <a href="{{ route('teacher.students.index') }}" class="btn btn-sm btn-outline-info rounded-pill">
+                        <!-- <a href="{{ route('teacher.students.index') }}" class="btn btn-sm btn-outline-info rounded-pill">
                             <i class="fas fa-external-link-alt me-1"></i> View All
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
