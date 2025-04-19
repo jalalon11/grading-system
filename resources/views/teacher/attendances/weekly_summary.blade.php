@@ -224,6 +224,7 @@
                                     <div class="chart-container" style="position: relative; height: 250px; width: 100%;">
                                         <canvas id="dailyAttendanceChart"></canvas>
                                     </div>
+                                </div>
                             </div>
                         </div>
 
@@ -237,33 +238,30 @@
                                     <h6 class="mb-0">Daily Records</h6>
                                 </div>
 
-                                <div>
-                                    <div class="list-group">
-                                        @foreach($summary['dates'] as $dateString => $formattedDate)
-                                            <div class="list-group-item list-group-item-action p-3">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <h6 class="mb-1">{{ $formattedDate }}</h6>
-                                                        <div class="d-flex flex-wrap gap-2 small">
-                                                            <span class="text-success">Present: {{ $summary['daily_stats'][$dateString]['present'] }}</span>
-                                                            <span class="text-danger">Absent: {{ $summary['daily_stats'][$dateString]['absent'] }}</span>
-                                                            <span class="text-warning">Late: {{ $summary['daily_stats'][$dateString]['late'] }}</span>
-                                                            <span class="text-info">Half: {{ $summary['daily_stats'][$dateString]['half_day'] }}</span>
-                                                            <span class="text-secondary">Excused: {{ $summary['daily_stats'][$dateString]['excused'] }}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <span class="badge bg-primary rounded-pill mb-2 d-block">{{ $summary['daily_stats'][$dateString]['attendance_rate'] }}%</span>
-                                                        <a href="{{ route('teacher.attendances.show', ['attendance' => $sectionId ?? $sections->first()->id, 'date' => $dateString]) }}"
-                                                           class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
+                                <div class="list-group">
+                                    @foreach($summary['dates'] as $dateString => $formattedDate)
+                                        <div class="list-group-item list-group-item-action p-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">{{ $formattedDate }}</h6>
+                                                    <div class="d-flex flex-wrap gap-2 small">
+                                                        <span class="text-success">Present: {{ $summary['daily_stats'][$dateString]['present'] }}</span>
+                                                        <span class="text-danger">Absent: {{ $summary['daily_stats'][$dateString]['absent'] }}</span>
+                                                        <span class="text-warning">Late: {{ $summary['daily_stats'][$dateString]['late'] }}</span>
+                                                        <span class="text-info">Half: {{ $summary['daily_stats'][$dateString]['half_day'] }}</span>
+                                                        <span class="text-secondary">Excused: {{ $summary['daily_stats'][$dateString]['excused'] }}</span>
                                                     </div>
                                                 </div>
+                                                <div>
+                                                    <span class="badge bg-primary rounded-pill mb-2 d-block">{{ $summary['daily_stats'][$dateString]['attendance_rate'] }}%</span>
+                                                    <a href="{{ route('teacher.attendances.show', ['attendance' => $sectionId ?? $sections->first()->id, 'date' => $dateString]) }}"
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </div>
                                             </div>
-                                        @endforeach
-                                    </div>
-                                    </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
