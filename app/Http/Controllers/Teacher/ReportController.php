@@ -101,7 +101,6 @@ class ReportController extends Controller
 
         // Get all students directly from the database to ensure they're loaded
         $students = Student::where('section_id', $section->id)
-            ->orderBy('gender')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -233,7 +232,6 @@ class ReportController extends Controller
 
         // Get all students
         $students = Student::where('section_id', $section->id)
-            ->orderBy('gender')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -457,7 +455,6 @@ class ReportController extends Controller
         if ($isAllQuarters) {
             // Get all students in the section
             $students = Student::where('section_id', $section->id)
-                ->orderBy('gender')
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
@@ -497,7 +494,6 @@ class ReportController extends Controller
 
         // Get all students in the section
         $students = Student::where('section_id', $section->id)
-            ->orderBy('gender')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();

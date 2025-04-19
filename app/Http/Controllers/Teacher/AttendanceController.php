@@ -351,7 +351,10 @@ class AttendanceController extends Controller
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
 
-        $students = Student::where('section_id', $id)->get();
+        $students = Student::where('section_id', $id)
+                          ->orderBy('last_name')
+                          ->orderBy('first_name')
+                          ->get();
 
         // Get attendance data for all students in this section on this date for this teacher
         $attendanceRecords = Attendance::where('section_id', $id)
@@ -417,7 +420,10 @@ class AttendanceController extends Controller
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
 
-        $students = Student::where('section_id', $id)->get();
+        $students = Student::where('section_id', $id)
+                          ->orderBy('last_name')
+                          ->orderBy('first_name')
+                          ->get();
 
         // Get attendance data for all students in this section on this date for this teacher
         $attendanceRecords = Attendance::where('section_id', $id)
@@ -540,21 +546,38 @@ class AttendanceController extends Controller
     public function weeklySummary(Request $request)
     {
         $sectionId = $request->filled('section_id') ? $request->section_id : null;
+        $weekDate = $request->filled('week') ? $request->week : null;
 
         // Get sections where the teacher is the adviser
         $sections = Section::where('adviser_id', Auth::id())->get();
 
-        // Get weekly attendance summary
-        $summary = $this->attendanceSummaryService->getWeeklySummary(
+        // Get all weeks with attendance records
+        $availableWeeks = $this->attendanceSummaryService->getWeeksWithAttendance(
             Auth::id(),
             $sectionId
         );
 
-        // Calculate the number of school days for the current week
+        // Get weekly attendance summary
+        $summary = $this->attendanceSummaryService->getWeeklySummary(
+            Auth::id(),
+            $sectionId,
+            $weekDate
+        );
+
+        // Determine the week range for display
+        if ($weekDate) {
+            $weekStart = Carbon::parse($weekDate)->startOfWeek();
+            $weekEnd = Carbon::parse($weekDate)->endOfWeek();
+        } else {
+            $weekStart = Carbon::now()->startOfWeek();
+            $weekEnd = Carbon::now()->endOfWeek();
+        }
+
+        // Calculate the number of school days for the selected week
         $schoolDaysQuery = Attendance::query()
             ->join('sections', 'attendances.section_id', '=', 'sections.id')
             ->where('sections.adviser_id', Auth::id())
-            ->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+            ->whereBetween('date', [$weekStart, $weekEnd]);
 
         // Apply section filter if provided
         if ($sectionId) {
@@ -562,9 +585,9 @@ class AttendanceController extends Controller
         }
 
         $schoolDays = $schoolDaysQuery->select(DB::raw('COUNT(DISTINCT date) as count'))->first()->count;
-        $currentMonth = Carbon::now()->startOfWeek()->format('M d') . ' - ' . Carbon::now()->endOfWeek()->format('M d');
+        $currentWeek = $weekStart->format('M d') . ' - ' . $weekEnd->format('M d, Y');
 
-        return view('teacher.attendances.weekly_summary', compact('summary', 'sections', 'sectionId', 'schoolDays', 'currentMonth'));
+        return view('teacher.attendances.weekly_summary', compact('summary', 'sections', 'sectionId', 'schoolDays', 'currentWeek', 'availableWeeks', 'weekDate'));
     }
 
     /**

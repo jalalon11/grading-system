@@ -25,7 +25,7 @@
                             <span class="badge bg-primary">School Year: {{ $section->school_year }}</span>
                         </div>
                     </div>
-                    
+
                     @if(empty($awards['highest_honors']) && empty($awards['high_honors']) && empty($awards['honors']))
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
@@ -60,7 +60,7 @@
                                             @foreach($awards['highest_honors'] as $index => $data)
                                                 <tr>
                                                     <td>{{ $index + 1 }}</td>
-                                                    <td>{{ $data['student']->full_name }}</td>
+                                                    <td>{{ $data['student']->surname_first }}</td>
                                                     <td>{{ $data['average'] }}</td>
                                                     <td>
                                                         <a href="{{ route('teacher.reports.certificates.preview', [
@@ -100,7 +100,7 @@
                                             @foreach($awards['high_honors'] as $index => $data)
                                                 <tr>
                                                     <td>{{ $index + 1 }}</td>
-                                                    <td>{{ $data['student']->full_name }}</td>
+                                                    <td>{{ $data['student']->surname_first }}</td>
                                                     <td>{{ $data['average'] }}</td>
                                                     <td>
                                                         <a href="{{ route('teacher.reports.certificates.preview', [
@@ -145,7 +145,7 @@
                                             @foreach($awards['honors'] as $index => $data)
                                                 <tr>
                                                     <td>{{ $index + 1 }}</td>
-                                                    <td>{{ $data['student']->full_name }}</td>
+                                                    <td>{{ $data['student']->surname_first }}</td>
                                                     <td>{{ $data['average'] }}</td>
                                                     <td>
                                                         <a href="{{ route('teacher.reports.certificates.preview', [
@@ -185,13 +185,13 @@
         letter-spacing: 0.5px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
     }
-    
+
     .certificate-generate-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 8px rgba(0, 0, 0, 0.18);
         background: linear-gradient(45deg, #20c997, #28a745);
     }
-    
+
     .certificate-generate-btn i {
         font-size: 1.1rem;
     }

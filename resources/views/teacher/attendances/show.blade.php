@@ -221,7 +221,7 @@
                                                             </span>
                                                         </div>
                                                         <div class="student-info">
-                                                            <div class="fw-medium text-truncate">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                                            <div class="fw-medium text-truncate">{{ $student->surname_first }}</div>
                                                             <div class="small text-muted d-md-none">{{ $student->student_id }}</div>
                                                         </div>
                                                     </div>
