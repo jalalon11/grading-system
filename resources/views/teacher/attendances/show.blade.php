@@ -7,17 +7,19 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white p-0">
                     <div class="px-4 py-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">
-                                <i class="fas fa-clipboard-check text-primary me-2"></i>
-                                Attendance Details
-                            </h5>
-                            <div>
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <i class="fas fa-clipboard-check text-primary"></i>
+                                </div>
+                                <h5 class="mb-0 fw-bold">Attendance Details</h5>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 w-100 w-md-auto justify-content-between justify-content-md-end">
                                 <a href="{{ route('teacher.attendances.edit', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-primary">
-                                    <i class="fas fa-edit me-1"></i> Edit Attendance
+                                    <i class="fas fa-edit me-1"></i> Edit
                                 </a>
-                                <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary ms-2">
-                                    <i class="fas fa-arrow-left me-1"></i> Back to Records
+                                <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i> Back
                                 </a>
                             </div>
                         </div>
@@ -25,30 +27,31 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <x-school-day-indicator :schoolDays="$schoolDays" :currentMonth="$currentMonth" />
-                        </div>
-                        <div class="col-md-8">
-                            <div class="alert alert-info mb-0 h-100">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <i class="fas fa-info-circle fa-2x"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="alert-heading mb-1">{{ $section->name }} - {{ \Carbon\Carbon::parse($date)->format('F d, Y') }}</h5>
-                                        <p class="mb-0">Viewing attendance records for {{ count($students) }} students in this section.</p>
+                    <div class="attendance-header mb-4">
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex flex-column flex-md-row align-items-center gap-3">
+                                <div class="attendance-date-badge d-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10 text-info">
+                                    <i class="fas fa-calendar-day fa-2x"></i>
+                                </div>
+                                <div class="text-center text-md-start">
+                                    <h5 class="alert-heading fw-bold mb-1">{{ \Carbon\Carbon::parse($date)->format('F d, Y') }}</h5>
+                                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2 align-items-center">
+                                        <span class="badge bg-primary">{{ $section->name }}</span>
+                                        <span class="badge bg-secondary">{{ count($students) }} Students</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="d-md-block d-none">
+                            <x-school-day-indicator :schoolDays="$schoolDays" :currentMonth="$currentMonth" />
+                        </div>
                     </div>
 
-                    <div class="row mb-4">
+                    <div class="row mb-4 g-3">
                         <div class="col-lg-7">
-                            <div class="card h-100">
+                            <div class="card h-100 mobile-card">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Attendance Summary</h6>
+                                    <h6 class="mb-0 text-center text-md-start"><i class="fas fa-chart-pie me-2"></i> Attendance Summary</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -116,9 +119,9 @@
                         </div>
 
                         <div class="col-lg-5">
-                            <div class="card h-100">
+                            <div class="card h-100 mobile-card">
                                 <div class="card-header bg-light">
-                                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i> Attendance Details</h6>
+                                    <h6 class="mb-0 text-center text-md-start"><i class="fas fa-info-circle me-2"></i> Attendance Details</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -177,38 +180,39 @@
                         </div>
                     </div>
 
-                    <div class="card">
+                    <div class="card mobile-card">
                         <div class="card-header bg-white">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                                <h6 class="mb-0 text-center text-md-start w-100">
                                     <i class="fas fa-users me-2"></i> Student Attendance Details
                                 </h6>
-                                <div class="text-muted small">
-                                    <span class="badge-dot bg-success me-1"></span> Present: {{ $presentCount }}
-                                    <span class="badge-dot bg-warning mx-1"></span> Late: {{ $lateCount }}
-                                    <span class="badge-dot bg-info mx-1"></span> Half Day: {{ $halfDayCount }}
-                                    <span class="badge-dot bg-danger mx-1"></span> Absent: {{ $absentCount }}
-                                    <span class="badge-dot bg-secondary mx-1"></span> Excused: {{ $excusedCount }}
+                                <div class="attendance-legend d-flex flex-wrap justify-content-center gap-2 w-100 w-md-auto">
+                                    <div class="legend-item"><span class="badge-dot bg-success me-1"></span> Present: {{ $presentCount }}</div>
+                                    <div class="legend-item"><span class="badge-dot bg-warning me-1"></span> Late: {{ $lateCount }}</div>
+                                    <div class="legend-item"><span class="badge-dot bg-info me-1"></span> Half: {{ $halfDayCount }}</div>
+                                    <div class="legend-item"><span class="badge-dot bg-danger me-1"></span> Absent: {{ $absentCount }}</div>
+                                    <div class="legend-item"><span class="badge-dot bg-secondary me-1"></span> Excused: {{ $excusedCount }}</div>
                                 </div>
                             </div>
                         </div>
 
                         @if(count($students) > 0)
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="width: 50px">#</th>
-                                            <th>Student Name</th>
-                                            <th>Student ID</th>
-                                            <th class="text-center">Status</th>
-                                        </tr>
-                                    </thead>
+                            <div class="attendance-table-wrapper">
+                                <div class="table-responsive attendance-table-container">
+                                    <table class="table table-hover align-middle mb-0 attendance-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 40px" class="d-none d-md-table-cell">#</th>
+                                                <th style="width: 60%">Student Name</th>
+                                                <th class="d-none d-md-table-cell">Student ID</th>
+                                                <th style="width: 40%" class="text-center">Status</th>
+                                            </tr>
+                                        </thead>
                                     <tbody>
                                         @foreach($students as $index => $student)
                                             <tr>
-                                                <td class="text-muted">{{ $index + 1 }}</td>
-                                                <td>
+                                                <td class="text-muted d-none d-md-table-cell">{{ $index + 1 }}</td>
+                                                <td class="student-name-cell">
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-container me-2">
                                                             <span class="avatar rounded-circle d-flex align-items-center justify-content-center"
@@ -216,40 +220,44 @@
                                                                 {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
                                                             </span>
                                                         </div>
-                                                        <div>
-                                                            <div class="fw-medium">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                                        <div class="student-info">
+                                                            <div class="fw-medium text-truncate">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                                            <div class="small text-muted d-md-none">{{ $student->student_id }}</div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td class="d-none d-md-table-cell">
                                                     <span class="badge bg-secondary bg-opacity-10 text-secondary">
                                                         {{ $student->student_id }}
                                                     </span>
                                                 </td>
-                                                <td class="text-center">
+                                                <td class="status-cell text-center">
                                                     @if($attendanceData[$student->id] == 'present')
-                                                        <span class="badge bg-success">
+                                                        <span class="badge bg-success status-badge">
                                                             <i class="fas fa-check-circle me-1"></i> Present
                                                         </span>
                                                     @elseif($attendanceData[$student->id] == 'late')
-                                                        <span class="badge bg-warning text-dark">
+                                                        <span class="badge bg-warning text-dark status-badge">
                                                             <i class="fas fa-clock me-1"></i> Late
                                                         </span>
                                                     @elseif($attendanceData[$student->id] == 'half_day')
-                                                        <span class="badge bg-info text-dark">
+                                                        <span class="badge bg-info text-dark status-badge">
                                                             <i class="fas fa-adjust me-1"></i> Half Day
                                                         </span>
                                                     @elseif($attendanceData[$student->id] == 'excused')
-                                                        <span class="badge bg-secondary">
-                                                            <i class="fas fa-file-alt me-1"></i> Excused
-                                                        </span>
-                                                        @if(!empty($attendanceRemarks[$student->id]))
-                                                            <div class="small text-muted mt-1">
-                                                                <strong>Reason:</strong> {{ $attendanceRemarks[$student->id] }}
-                                                            </div>
-                                                        @endif
+                                                        <div class="excused-status">
+                                                            <span class="badge bg-secondary mb-1 status-badge">
+                                                                <i class="fas fa-file-alt me-1"></i> Excused
+                                                            </span>
+                                                            @if(!empty($attendanceRemarks[$student->id]))
+                                                                <div class="excused-reason p-2 rounded border border-secondary border-opacity-25 bg-light">
+                                                                    <small class="d-block text-secondary"><i class="fas fa-comment-alt me-1"></i> <strong>Reason:</strong></small>
+                                                                    <div class="mt-1 small">{{ $attendanceRemarks[$student->id] }}</div>
+                                                                </div>
+                                                            @endif
+                                                        </div>
                                                     @else
-                                                        <span class="badge bg-danger">
+                                                        <span class="badge bg-danger status-badge">
                                                             <i class="fas fa-times-circle me-1"></i> Absent
                                                         </span>
                                                     @endif
@@ -257,7 +265,8 @@
                                             </tr>
                                         @endforeach
                                     </tbody>
-                                </table>
+                                    </table>
+                                </div>
                             </div>
                         @else
                             <div class="card-body py-5">
@@ -283,6 +292,11 @@
         border-radius: 50%;
     }
 
+    .legend-item {
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
     .detail-label {
         margin-bottom: 2px;
         font-size: 0.75rem;
@@ -292,6 +306,175 @@
 
     .detail-value {
         font-size: 1rem;
+    }
+
+    /* Attendance header styles */
+    .attendance-date-badge {
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+    }
+
+    /* Card styles */
+    .mobile-card {
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Table styles */
+    .attendance-table-wrapper {
+        position: relative;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .attendance-table-container {
+        overflow-x: auto;
+    }
+
+    .attendance-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f8f9fa;
+    }
+
+    .attendance-table-wrapper::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .attendance-table-wrapper::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .attendance-table-wrapper::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .attendance-table-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Excused reason styles */
+    .excused-status {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: left;
+        width: 100%;
+    }
+
+    .excused-reason {
+        width: 100%;
+        max-width: 250px;
+        font-size: 0.85rem;
+        color: #495057;
+    }
+
+    /* Mobile-friendly styles */
+    @media (max-width: 767.98px) {
+        .card-header .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .attendance-stats .attendance-stat-item {
+            margin-bottom: 0.75rem !important;
+            padding: 0.75rem !important;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+        }
+
+        .attendance-table-wrapper {
+            max-height: 400px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 0.5rem;
+            margin: 0 -1rem;
+            width: calc(100% + 2rem);
+        }
+
+        .table-responsive {
+            margin: 0;
+            width: 100%;
+        }
+
+        .table th, .table td {
+            padding: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .attendance-table td {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+        }
+
+        .student-name-cell {
+            max-width: 60%;
+            width: 60%;
+        }
+
+        .student-info {
+            max-width: calc(100% - 40px);
+            width: calc(100% - 40px);
+        }
+
+        .status-cell {
+            max-width: 40%;
+            width: 40%;
+        }
+
+        .attendance-table .badge {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            display: inline-block;
+            width: 100%;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-badge {
+            width: 100%;
+            display: inline-block;
+        }
+
+        .excused-reason {
+            max-width: 100%;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .excused-status {
+            width: 100%;
+        }
+
+        .avatar {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 0.75rem;
+        }
+
+        .attendance-legend {
+            background-color: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .legend-item {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            background-color: white;
+            border-radius: 0.25rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
     }
 </style>
 @endpush

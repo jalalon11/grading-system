@@ -7,16 +7,16 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white p-0">
                     <div class="px-4 py-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                             <h5 class="mb-0">
                                 <i class="fas fa-edit text-primary me-2"></i> Edit Attendance
                             </h5>
-                            <div>
-                                <a href="{{ route('teacher.attendances.show', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-outline-info me-2">
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('teacher.attendances.show', ['attendance' => $section->id, 'date' => $date]) }}" class="btn btn-outline-info">
                                     <i class="fas fa-eye me-1"></i> View Details
                                 </a>
                                 <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-arrow-left me-1"></i> Back to Records
+                                    <i class="fas fa-arrow-left me-1"></i> Back
                                 </a>
                             </div>
                         </div>
@@ -31,19 +31,32 @@
                         </div>
                     @endif
 
-                    <div class="row mb-4">
+                    <div class="row mb-4 g-3">
                         <div class="col-md-4">
                             <x-school-day-indicator :schoolDays="$schoolDays" :currentMonth="$currentMonth" />
                         </div>
                         <div class="col-md-8">
                             <div class="alert alert-info mb-0 h-100">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-3">
-                                        <i class="fas fa-info-circle fa-2x"></i>
+                                <div class="d-flex flex-column flex-sm-row align-items-center gap-3">
+                                    <div class="icon-box bg-info bg-opacity-10 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="fas fa-info-circle text-info fa-lg"></i>
                                     </div>
-                                    <div>
-                                        <h5 class="alert-heading mb-1">Editing Attendance</h5>
-                                        <p class="mb-0">Section: <strong>{{ $section->name }}</strong> | Date: <strong>{{ \Carbon\Carbon::parse($date)->format('F d, Y') }}</strong></p>
+                                    <div class="text-center text-sm-start w-100">
+                                        <h5 class="alert-heading mb-2 fw-bold">Editing Attendance</h5>
+                                        <div class="attendance-info-container">
+                                            <div class="attendance-info-item mb-2 mb-sm-0">
+                                                <span class="attendance-info-badge bg-primary text-white">
+                                                <i class="fas fa-users"></i>
+                                                </span>
+                                                <span class="ms-2 fw-medium">{{ $section->name }}</span>
+                                            </div>
+                                            <div class="attendance-info-item">
+                                                <span class="attendance-info-badge bg-success text-white">
+                                                    <i class="fas fa-calendar-day"></i>
+                                                </span>
+                                                <span class="ms-2 fw-medium">{{ \Carbon\Carbon::parse($date)->format('F d, Y') }}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -59,32 +72,78 @@
                         @if(count($students) > 0)
                             <div class="card">
                                 <div class="card-header bg-white">
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex flex-column gap-3">
                                         <h6 class="mb-0">
                                             <i class="fas fa-clipboard-list me-2"></i>
                                             Student Attendance ({{ count($students) }} students)
                                         </h6>
-                                        <div>
-                                            <button type="button" class="btn btn-sm btn-success me-1" id="markAllPresent">
-                                                <i class="fas fa-check-circle me-1"></i> Mark All Present
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-warning me-1 text-dark" id="markAllLate">
-                                                <i class="fas fa-clock me-1"></i> Mark All Late
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-info me-1 text-dark" id="markAllHalfDay">
-                                                <i class="fas fa-adjust me-1"></i> Mark All Half Day
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger me-1" id="markAllAbsent">
-                                                <i class="fas fa-times-circle me-1"></i> Mark All Absent
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-secondary" id="markAllExcused">
-                                                <i class="fas fa-file-alt me-1"></i> Mark All Excused
-                                            </button>
+                                        <div class="mark-all-buttons-container">
+                                            <!-- Desktop View Buttons -->
+                                            <div class="d-none d-md-block">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-success" id="markAllPresent">
+                                                        <i class="fas fa-check-circle me-1"></i> Present
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning text-dark" id="markAllLate">
+                                                        <i class="fas fa-clock me-1"></i> Late
+                                                    </button>
+                                                    <button type="button" class="btn btn-info text-dark" id="markAllHalfDay">
+                                                        <i class="fas fa-adjust me-1"></i> Half Day
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger" id="markAllAbsent">
+                                                        <i class="fas fa-times-circle me-1"></i> Absent
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary" id="markAllExcused">
+                                                        <i class="fas fa-file-alt me-1"></i> Excused
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mobile View Buttons -->
+                                            <div class="d-md-none">
+                                                <div class="mark-all-mobile-header mb-2 text-center">
+                                                    <span class="small text-muted">Mark all students as:</span>
+                                                </div>
+                                                <div class="mark-all-mobile-buttons">
+                                                    <div class="row g-2">
+                                                        <div class="col-4">
+                                                            <button type="button" class="btn btn-sm btn-outline-light text-success w-100 mark-all-mobile-btn" id="markAllPresentMobile">
+                                                                <div class="mark-all-btn-dot bg-success mb-1"></div>
+                                                                Present
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <button type="button" class="btn btn-sm btn-outline-light text-warning w-100 mark-all-mobile-btn" id="markAllLateMobile">
+                                                                <div class="mark-all-btn-dot bg-warning mb-1"></div>
+                                                                Late
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <button type="button" class="btn btn-sm btn-outline-light text-info w-100 mark-all-mobile-btn" id="markAllHalfDayMobile">
+                                                                <div class="mark-all-btn-dot bg-info mb-1"></div>
+                                                                Half Day
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <button type="button" class="btn btn-sm btn-outline-light text-danger w-100 mark-all-mobile-btn" id="markAllAbsentMobile">
+                                                                <div class="mark-all-btn-dot bg-danger mb-1"></div>
+                                                                Absent
+                                                            </button>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <button type="button" class="btn btn-sm btn-outline-light text-secondary w-100 mark-all-mobile-btn" id="markAllExcusedMobile">
+                                                                <div class="mark-all-btn-dot bg-secondary mb-1"></div>
+                                                                Excused
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="card-body p-0">
-                                    <div class="table-responsive">
+                                    <div class="table-responsive attendance-table-container">
                                         <table class="table table-hover align-middle mb-0 attendance-table">
                                             <thead class="table-light">
                                                 <tr>
@@ -189,18 +248,19 @@
                                         </table>
                                     </div>
                                 </div>
+
                                 <div class="card-footer bg-light">
-                                    <div class="d-flex align-items-center text-muted small">
-                                        <div class="me-3">
+                                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start align-items-center text-muted small gap-3">
+                                        <div>
                                             <span class="status-badge status-present"></span> Present
                                         </div>
-                                        <div class="me-3">
+                                        <div>
                                             <span class="status-badge status-late"></span> Late
                                         </div>
-                                        <div class="me-3">
+                                        <div>
                                             <span class="status-badge status-absent"></span> Absent
                                         </div>
-                                        <div class="me-3">
+                                        <div>
                                             <span class="status-badge status-excused"></span> Excused
                                         </div>
                                         <div>
@@ -224,11 +284,11 @@
                             </div>
                         @endif
 
-                        <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mt-4">
+                            <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary order-2 order-sm-1">
                                 <i class="fas fa-times me-1"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
+                            <button type="submit" class="btn btn-primary btn-lg order-1 order-sm-2">
                                 <i class="fas fa-save me-1"></i> Update Attendance
                             </button>
                         </div>
@@ -283,70 +343,196 @@
         background-color: #17a2b8;
         border-color: #17a2b8;
     }
+
+    /* Attendance info styles */
+    .attendance-info-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .attendance-info-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .attendance-info-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        font-size: 0.8rem;
+    }
+
+    @media (min-width: 576px) {
+        .attendance-info-container {
+            flex-direction: row;
+            gap: 1.5rem;
+        }
+    }
+
+    /* Table scrolling improvements */
+    .attendance-table-container {
+        position: relative;
+        max-height: 70vh;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .attendance-table-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .attendance-table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .attendance-table-container::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+
+    .attendance-table-container::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
+
+    .attendance-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #f8f9fa;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+    }
+
+
+
+    /* No visual highlighting for current row */
+
+    /* Mobile-friendly styles */
+    @media (max-width: 767.98px) {
+        .mark-all-mobile-btn {
+            border: 1px solid rgba(0,0,0,0.1);
+            background-color: #f8f9fa;
+            padding: 0.5rem 0.25rem;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 60px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .mark-all-mobile-btn:hover, .mark-all-mobile-btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+        }
+
+        .mark-all-btn-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .card-header h6 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .attendance-options {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .form-check-inline {
+            margin-right: 0;
+        }
+
+        .excused-reason-container {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Mark all present
+        // Function to mark all with a specific status
+        function markAllWithStatus(status) {
+            document.querySelectorAll(`input[value="${status}"]`).forEach(radio => {
+                radio.checked = true;
+            });
+
+            // Handle excused reason fields visibility
+            if (status === 'excused') {
+                document.querySelectorAll('.excused-reason-container, .mobile-excused-reason-container').forEach(container => {
+                    container.classList.remove('d-none');
+                });
+            } else {
+                document.querySelectorAll('.excused-reason-container, .mobile-excused-reason-container').forEach(container => {
+                    container.classList.add('d-none');
+                });
+            }
+
+            updateAttendanceSummary();
+        }
+
+        // Mark all present - Desktop
         document.getElementById('markAllPresent').addEventListener('click', function() {
-            document.querySelectorAll('input[value="present"]').forEach(radio => {
-                radio.checked = true;
-            });
-            // Hide all excused reason fields
-            document.querySelectorAll('.excused-reason-container').forEach(container => {
-                container.classList.add('d-none');
-            });
-            updateAttendanceSummary();
+            markAllWithStatus('present');
         });
 
-        // Mark all late
+        // Mark all present - Mobile
+        document.getElementById('markAllPresentMobile').addEventListener('click', function() {
+            markAllWithStatus('present');
+        });
+
+        // Mark all late - Desktop
         document.getElementById('markAllLate').addEventListener('click', function() {
-            document.querySelectorAll('input[value="late"]').forEach(radio => {
-                radio.checked = true;
-            });
-            // Hide all excused reason fields
-            document.querySelectorAll('.excused-reason-container').forEach(container => {
-                container.classList.add('d-none');
-            });
-            updateAttendanceSummary();
+            markAllWithStatus('late');
         });
 
-        // Mark all half day
+        // Mark all late - Mobile
+        document.getElementById('markAllLateMobile').addEventListener('click', function() {
+            markAllWithStatus('late');
+        });
+
+        // Mark all half day - Desktop
         document.getElementById('markAllHalfDay').addEventListener('click', function() {
-            document.querySelectorAll('input[value="half_day"]').forEach(radio => {
-                radio.checked = true;
-            });
-            // Hide all excused reason fields
-            document.querySelectorAll('.excused-reason-container').forEach(container => {
-                container.classList.add('d-none');
-            });
-            updateAttendanceSummary();
+            markAllWithStatus('half_day');
         });
 
-        // Mark all absent
+        // Mark all half day - Mobile
+        document.getElementById('markAllHalfDayMobile').addEventListener('click', function() {
+            markAllWithStatus('half_day');
+        });
+
+        // Mark all absent - Desktop
         document.getElementById('markAllAbsent').addEventListener('click', function() {
-            document.querySelectorAll('input[value="absent"]').forEach(radio => {
-                radio.checked = true;
-            });
-            // Hide all excused reason fields
-            document.querySelectorAll('.excused-reason-container').forEach(container => {
-                container.classList.add('d-none');
-            });
-            updateAttendanceSummary();
+            markAllWithStatus('absent');
         });
 
-        // Mark all excused
+        // Mark all absent - Mobile
+        document.getElementById('markAllAbsentMobile').addEventListener('click', function() {
+            markAllWithStatus('absent');
+        });
+
+        // Mark all excused - Desktop
         document.getElementById('markAllExcused').addEventListener('click', function() {
-            document.querySelectorAll('input[value="excused"]').forEach(radio => {
-                radio.checked = true;
-            });
-            // Show all excused reason fields
-            document.querySelectorAll('.excused-reason-container').forEach(container => {
-                container.classList.remove('d-none');
-            });
-            updateAttendanceSummary();
+            markAllWithStatus('excused');
+        });
+
+        // Mark all excused - Mobile
+        document.getElementById('markAllExcusedMobile').addEventListener('click', function() {
+            markAllWithStatus('excused');
         });
 
         // Track changes to attendance status
@@ -368,6 +554,8 @@
                 }
             });
         });
+
+        // Table is now pure scrollable with no additional navigation
 
         // Update attendance summary when page loads
         updateAttendanceSummary();
