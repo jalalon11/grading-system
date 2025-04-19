@@ -63,7 +63,6 @@ class CertificateController extends Controller
 
         // Get all students in the section
         $students = Student::where('section_id', $section->id)
-            ->orderBy('gender')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -450,7 +449,6 @@ class CertificateController extends Controller
 
         // Get all students in the section
         $students = Student::where('section_id', $section->id)
-            ->orderBy('gender')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();

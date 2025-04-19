@@ -56,7 +56,7 @@
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
                                             <td>{{ $student->student_id }}</td>
-                                            <td>{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</td>
+                                            <td>{{ $student->surname_first }}</td>
                                             <td>{{ $student->gender }}</td>
                                             <td>
                                                 @if(isset($isAllQuarters) && $isAllQuarters)

@@ -44,9 +44,18 @@ class Student extends Model
      */
     public function getFullNameAttribute(): string
     {
-        return $this->first_name . ' ' . 
-               ($this->middle_name ? $this->middle_name . ' ' : '') . 
+        return $this->first_name . ' ' .
+               ($this->middle_name ? $this->middle_name . ' ' : '') .
                $this->last_name;
+    }
+
+    /**
+     * Get the student's name in surname-first format
+     */
+    public function getSurnameFirstAttribute(): string
+    {
+        return $this->last_name . ', ' . $this->first_name .
+               ($this->middle_name ? ' ' . substr($this->middle_name, 0, 1) . '.' : '');
     }
 
     /**
@@ -90,7 +99,7 @@ class Student extends Model
             $this->attributes['gender'] = $value;
         }
     }
-    
+
     /**
      * Get the gender attribute.
      *
