@@ -15,7 +15,7 @@
                 </div>
                 <div class="card-body pt-0">
                     <p class="text-muted mb-4">Complete the form below to generate a comprehensive class record report.</p>
-                    
+
                     <div class="bg-light p-4 rounded-3 mb-4">
                         <div class="d-flex align-items-center mb-3">
                             <div class="report-icon">
@@ -27,7 +27,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <form id="classRecordForm" action="{{ route('teacher.reports.generate-class-record') }}" method="POST" target="_blank" class="needs-validation" novalidate>
                         @csrf
                         <div class="row g-3">
@@ -38,7 +38,7 @@
                                     <select name="section_id" id="section_id" class="form-select @error('section_id') is-invalid @enderror" required>
                                         <option value="">Select Section</option>
                                         @foreach($sections as $section)
-                                        <option value="{{ $section->id }}">{{ $section->name }}</option>
+                                        <option value="{{ $section->id }}">{{ $section->name }} - {{ $section->grade_level }}</option>
                                         @endforeach
                                     </select>
                                     @error('section_id')
@@ -47,7 +47,7 @@
                                 </div>
                                 <div class="form-text">Select the class section for which you want to generate the report</div>
                             </div>
-                            
+
                             <div class="col-md-12 mb-3">
                                 <label for="subject_id" class="form-label fw-semibold">Subject</label>
                                 <div class="input-group">
@@ -61,7 +61,7 @@
                                 </div>
                                 <div class="form-text">Choose the subject for the selected class section</div>
                             </div>
-                            
+
                             <!-- MAPEH Component Selection (initially hidden) -->
                             <div class="col-md-12 mb-3" id="mapeh_component_container" style="display: none;">
                                 <label for="mapeh_component_id" class="form-label fw-semibold">MAPEH Component</label>
@@ -73,7 +73,7 @@
                                 </div>
                                 <div class="form-text">For MAPEH subjects, select which component to generate a class record for</div>
                             </div>
-                            
+
                             <div class="col-md-12 mb-4">
                                 <label for="quarter" class="form-label fw-semibold">Quarter</label>
                                 <div class="input-group">
@@ -92,7 +92,7 @@
                                 <div class="form-text">Select the grading period for the report</div>
                             </div>
                         </div>
-                        
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary py-2">
                                 <i class="fas fa-file-alt me-2"></i> Generate Class Record Report
@@ -115,24 +115,24 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .report-icon i {
         font-size: 1.5rem;
     }
-    
+
     .form-label {
         color: #495057;
     }
-    
+
     .input-group-text {
         color: #495057;
         border-color: #ced4da;
     }
-    
+
     .form-select, .form-control {
         border-color: #ced4da;
     }
-    
+
     .form-text {
         font-size: 0.85rem;
     }
@@ -147,12 +147,12 @@
         const mapehComponentContainer = document.getElementById('mapeh_component_container');
         const mapehComponentSelect = document.getElementById('mapeh_component_id');
         const classRecordForm = document.getElementById('classRecordForm');
-        
+
         // Detect iOS device and modify form method
         function isIOS() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         }
-        
+
         if (isIOS()) {
             classRecordForm.method = "GET";
             classRecordForm.action = "{{ route('teacher.reports.generate-class-record-get') }}";
@@ -162,10 +162,10 @@
                 csrfToken.parentNode.removeChild(csrfToken);
             }
         }
-        
+
         // Keep track of MAPEH components for each subject
         let mapehComponents = {};
-        
+
         // Function to load subjects for a section
         function loadSubjects(sectionId) {
             if (!sectionId) {
@@ -173,10 +173,10 @@
                 subjectSelect.disabled = true;
                 return;
             }
-            
+
             subjectSelect.disabled = true;
             subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
-            
+
             fetch(`{{ route('teacher.reports.section-subjects') }}?section_id=${sectionId}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -186,32 +186,32 @@
             .then(response => response.json())
             .then(data => {
                 subjectSelect.innerHTML = '<option value="">Select Subject</option>';
-                
+
                 data.forEach(subject => {
                     const option = document.createElement('option');
                     option.value = subject.id;
                     option.textContent = subject.name;
-                    
+
                     // Add a data attribute to indicate if this is a MAPEH subject
                     if (subject.components && subject.components.length === 4) {
                         // Check if it has the MAPEH components
                         const componentNames = subject.components.map(c => c.name.toLowerCase());
-                        const isMAPEH = 
+                        const isMAPEH =
                             (componentNames.some(name => name.includes('music')) &&
                              componentNames.some(name => name.includes('art')) &&
                              (componentNames.some(name => name.includes('physical')) || componentNames.some(name => name.includes('pe'))) &&
                              componentNames.some(name => name.includes('health')));
-                             
+
                         if (isMAPEH) {
                             option.dataset.isMapeh = 'true';
                             // Store the components for this subject ID
                             mapehComponents[subject.id] = subject.components;
                         }
                     }
-                    
+
                     subjectSelect.appendChild(option);
                 });
-                
+
                 subjectSelect.disabled = false;
             })
             .catch(error => {
@@ -219,18 +219,18 @@
                 subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
             });
         }
-        
+
         // Function to handle subject change
         function handleSubjectChange() {
             const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
             const isMapeh = selectedOption.dataset.isMapeh === 'true';
-            
+
             // If it's a MAPEH subject, show the component selection
             if (isMapeh) {
                 mapehComponentContainer.style.display = 'block';
                 mapehComponentSelect.disabled = false;
                 mapehComponentSelect.innerHTML = '<option value="">Select MAPEH Component</option>';
-                
+
                 // Add the components as options
                 const subjectId = selectedOption.value;
                 if (mapehComponents[subjectId]) {
@@ -247,36 +247,36 @@
                 mapehComponentSelect.disabled = true;
             }
         }
-        
+
         // Event listener for section change
         sectionSelect.addEventListener('change', function() {
             loadSubjects(this.value);
             // Reset MAPEH component display
             mapehComponentContainer.style.display = 'none';
         });
-        
+
         // Event listener for subject change
         subjectSelect.addEventListener('change', handleSubjectChange);
-        
+
         // Form submission handler to use the correct subject_id
         document.querySelector('form').addEventListener('submit', function(e) {
             const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
             const isMapeh = selectedOption.dataset.isMapeh === 'true';
-            
+
             if (isMapeh && mapehComponentSelect.value) {
                 // If a MAPEH component is selected, use that ID instead
                 subjectSelect.disabled = true; // Disable to avoid sending the parent subject ID
                 mapehComponentSelect.name = 'subject_id'; // Ensure this has the correct name
             }
         });
-        
+
         // Form validation
         (function() {
             'use strict';
-            
+
             // Fetch all forms we want to apply validation styles to
             const forms = document.querySelectorAll('.needs-validation');
-            
+
             // Loop over them and prevent submission
             Array.from(forms).forEach(function (form) {
                 form.addEventListener('submit', function (event) {
@@ -284,11 +284,11 @@
                         event.preventDefault();
                         event.stopPropagation();
                     }
-                    
+
                     form.classList.add('was-validated');
                 }, false);
             });
         })();
     });
 </script>
-@endpush 
+@endpush
