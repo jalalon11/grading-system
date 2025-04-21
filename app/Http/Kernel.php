@@ -55,5 +55,7 @@ class Kernel extends HttpKernel
         'no.teacher.admin' => \App\Http\Middleware\NoTeacherAdminMiddleware::class,
         'check.school.status' => \App\Http\Middleware\CheckSchoolStatus::class,
         'registration.key' => \App\Http\Middleware\RegistrationKeyMiddleware::class,
+        'throttle.payments' => \App\Http\Middleware\ThrottlePaymentSubmissions::class,
+        'payment.throttle' => \App\Http\Middleware\ThrottlePaymentSubmissions::class,
     ];
-} 
+}

@@ -16,5 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->reportable(function (\Throwable $e) {
+            //
+        });
+
+        $exceptions->renderable(function (\Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException $e, $request) {
+            if ($request->is('teacher-admin/payments') || $request->is('*/payments')) {
+                return response()->view('errors.429', [], 429);
+            }
+        });
     })->create();

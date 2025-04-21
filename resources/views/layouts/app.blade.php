@@ -29,6 +29,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Animate.css for animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
     <!-- jQuery for sidebar toggle -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -198,6 +201,44 @@
             font-weight: 500;
             font-size: 0.95rem;
             border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        /* Notification badge styling */
+        #sidebar .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Collapsed sidebar badge positioning */
+        #sidebar.active li a .badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.65rem;
+            padding: 0.25rem 0.5rem;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Mobile specific notification badge styling */
+        @media (max-width: 768px) {
+            #sidebar .badge {
+                font-size: 0.75rem;
+            }
+
+            #sidebar.active li a .badge {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                font-size: 0.7rem;
+                min-width: 20px;
+                height: 20px;
+            }
         }
 
         #sidebar.active ul li a {
@@ -841,6 +882,14 @@
                         <i class="fas fa-bullhorn"></i> <span>Announcements</span>
                     </a>
                 </li>
+                <li class="{{ Request::is('admin/payments*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.payments.index') }}" class="position-relative">
+                        <i class="fas fa-credit-card"></i> <span>Payments</span>
+                        @if(isset($pendingPaymentsCount) && $pendingPaymentsCount > 0)
+                            <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $pendingPaymentsCount }}</span>
+                        @endif
+                    </a>
+                </li>
                 @elseif(Auth::user()->role === 'teacher')
                 <li class="{{ Request::is('teacher/dashboard') ? 'active' : '' }}">
                     <a href="{{ route('teacher.dashboard') }}">
@@ -897,6 +946,11 @@
                         <li class="{{ Request::is('teacher-admin/reports*') ? 'active' : '' }}">
                             <a href="{{ route('teacher-admin.reports.index') }}">
                                 <i class="fas fa-chart-bar"></i> <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('teacher-admin/payments*') ? 'active' : '' }}">
+                            <a href="{{ route('teacher-admin.payments.index') }}">
+                                <i class="fas fa-credit-card"></i> <span>Payments</span>
                             </a>
                         </li>
                     </ul>

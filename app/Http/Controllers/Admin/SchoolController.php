@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class SchoolController extends Controller
 {
@@ -77,7 +78,7 @@ class SchoolController extends Controller
     {
         // Log the received data
         Log::info('School creation request data:', $request->all());
-        
+
         // Validate school data
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -115,16 +116,16 @@ class SchoolController extends Controller
                 'grade_levels' => json_encode($request->grade_levels),
                 'school_division_id' => $request->school_division_id,
             ];
-            
+
             // Handle logo upload
             if ($request->hasFile('logo')) {
                 $logo = $request->file('logo');
-                
+
                 try {
                     // Store the file in R2 storage
                     $path = $logo->store('school_logos', 'r2');
                     $schoolData['logo_path'] = $path;
-                    
+
                     Log::info('School logo uploaded successfully', [
                         'path' => $path,
                         'disk' => 'r2'
@@ -139,20 +140,20 @@ class SchoolController extends Controller
 
             // Create the school
             $school = School::create($schoolData);
-            
+
             Log::info('Created school:', ['id' => $school->id, 'name' => $school->name]);
 
             // Create teachers for this school if present
             if (isset($request->teachers) && is_array($request->teachers)) {
                 Log::info('Teachers data for school ' . $school->name . ':', $request->teachers);
-                
+
                 foreach ($request->teachers as $teacherData) {
                     // Skip empty teacher entries
                     if (empty($teacherData['name']) || empty($teacherData['email']) || empty($teacherData['password'])) {
                         Log::info('Skipping empty teacher data');
                         continue;
                     }
-                    
+
                     $user = User::create([
                         'name' => $teacherData['name'],
                         'email' => $teacherData['email'],
@@ -160,7 +161,7 @@ class SchoolController extends Controller
                         'role' => 'teacher',
                         'school_id' => $school->id,
                     ]);
-                    
+
                     Log::info('Created teacher:', ['id' => $user->id, 'name' => $user->name, 'school_id' => $user->school_id]);
                 }
             } else {
@@ -171,7 +172,7 @@ class SchoolController extends Controller
             Log::info('Successfully completed school creation transaction');
 
             return redirect()->route('admin.schools.index')
-                ->with('success', 'School created successfully' . 
+                ->with('success', 'School created successfully' .
                 (isset($request->teachers) ? ' with teachers.' : '.'));
         } catch (\Exception $e) {
             DB::rollBack();
@@ -196,7 +197,7 @@ class SchoolController extends Controller
             ->where('is_teacher_admin', true)
             ->where('school_id', $school->id)
             ->get();
-            
+
         return view('admin.schools.show', compact('school', 'teachers', 'teacherAdmins'));
     }
 
@@ -216,12 +217,12 @@ class SchoolController extends Controller
     public function update(Request $request, string $id)
     {
         $school = School::findOrFail($id);
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => [
                 'required',
-                'string', 
+                'string',
                 'max:50',
                 Rule::unique('schools')->ignore($school->id)
             ],
@@ -232,7 +233,7 @@ class SchoolController extends Controller
             'grade_levels' => 'required|array|min:1',
             'grade_levels.*' => 'required|in:K,1,2,3,4,5,6,7,8,9,10,11,12',
         ]);
-        
+
         $updateData = [
             'name' => $request->name,
             'code' => $request->code,
@@ -242,14 +243,14 @@ class SchoolController extends Controller
             'grade_levels' => json_encode($request->grade_levels),
             'is_active' => $request->has('is_active') ? 1 : 0,
         ];
-        
+
         // Handle logo upload
         if ($request->hasFile('logo')) {
             // Delete the old logo if it exists
             if ($school->logo_path) {
                 // Use the configured filesystem disk
                 $disk = config('filesystems.disk'); // Get the default disk ('r2' in cloud)
-                
+
                 try {
                     Storage::disk($disk)->delete($school->logo_path);
                     Log::info('Deleted old school logo', [
@@ -265,14 +266,14 @@ class SchoolController extends Controller
                     // Optionally, log the error but don't stop the update process
                 }
             }
-            
+
             $logo = $request->file('logo');
-            
+
             try {
                 // Store the file in R2 storage
                 $path = $logo->store('school_logos', 'r2');
                 $updateData['logo_path'] = $path;
-                
+
                 Log::info('School logo uploaded successfully', [
                     'path' => $path,
                     'disk' => 'r2'
@@ -284,9 +285,9 @@ class SchoolController extends Controller
                 throw $e;
             }
         }
-        
+
         $school->update($updateData);
-        
+
         return redirect()->route('admin.schools.index')
             ->with('success', 'School updated successfully.');
     }
@@ -298,12 +299,12 @@ class SchoolController extends Controller
     {
         try {
             $school = School::findOrFail($id);
-            
+
             // Handle associated teachers if needed
             // This would depend on your application's structure and business rules
-            
+
             $school->delete();
-            
+
             return redirect()->route('admin.schools.index')
                 ->with('success', 'School deleted successfully.');
         } catch (\Exception $e) {
@@ -320,7 +321,7 @@ class SchoolController extends Controller
         try {
             $school = School::findOrFail($id);
             $school->update(['is_active' => false]);
-            
+
             return redirect()->route('admin.schools.show', $school->id)
                 ->with('success', 'School has been disabled successfully.');
         } catch (\Exception $e) {
@@ -337,12 +338,72 @@ class SchoolController extends Controller
         try {
             $school = School::findOrFail($id);
             $school->update(['is_active' => true]);
-            
+
             return redirect()->route('admin.schools.show', $school->id)
                 ->with('success', 'School has been enabled successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Unable to enable school: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show billing settings for a school
+     */
+    public function showBilling(string $id)
+    {
+        $school = School::findOrFail($id);
+        return view('admin.schools.billing', compact('school'));
+    }
+
+    /**
+     * Update billing settings for a school
+     */
+    public function updateBilling(Request $request, string $id)
+    {
+        $school = School::findOrFail($id);
+
+        $request->validate([
+            'subscription_status' => 'required|in:trial,active,expired',
+            'billing_cycle' => 'required|in:monthly,yearly',
+            'monthly_price' => 'required|numeric|min:0',
+            'yearly_price' => 'required|numeric|min:0',
+            'trial_ends_at' => 'nullable|date',
+            'subscription_ends_at' => 'nullable|date',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $school->subscription_status = $request->subscription_status;
+            $school->billing_cycle = $request->billing_cycle;
+            $school->monthly_price = $request->monthly_price;
+            $school->yearly_price = $request->yearly_price;
+
+            // Handle trial end date
+            if ($request->has('remove_trial_ends_at') && $request->remove_trial_ends_at) {
+                $school->trial_ends_at = null;
+            } elseif ($request->trial_ends_at) {
+                $school->trial_ends_at = Carbon::parse($request->trial_ends_at);
+            }
+
+            // Handle subscription end date
+            if ($request->has('remove_subscription_ends_at') && $request->remove_subscription_ends_at) {
+                $school->subscription_ends_at = null;
+            } elseif ($request->subscription_ends_at) {
+                $school->subscription_ends_at = Carbon::parse($request->subscription_ends_at);
+            }
+
+            $school->save();
+
+            DB::commit();
+
+            return redirect()->route('admin.schools.billing', $school->id)
+                ->with('success', 'Billing settings updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Unable to update billing settings: ' . $e->getMessage());
         }
     }
 }

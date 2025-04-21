@@ -65,7 +65,7 @@
                     <div class="mb-3 pb-3 border-bottom">
                         <label class="text-muted">Grade Levels:</label>
                         <div>
-                            @php 
+                            @php
                                 $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels : json_decode($school->grade_levels) ?? [];
                             @endphp
                             @if(count($gradeLevels) > 0)
@@ -88,28 +88,45 @@
                         <p class="mb-0 fw-bold">{{ $school->principal ?: 'No principal assigned' }}</p>
                     </div>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-between py-3">
-                    <span class="text-muted">Status: 
-                        @if($school->is_active ?? true)
-                            <span class="badge bg-success">Active</span>
-                        @else
-                            <span class="badge bg-danger">Inactive</span>
-                        @endif
-                    </span>
-                    <div>
-                        @if($school->is_active ?? true)
-                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disableSchoolModal">
-                                <i class="fas fa-ban me-1"></i> Disable
-                            </button>
-                        @else
-                            <form action="{{ route('admin.schools.enable', $school->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                    <i class="fas fa-check-circle me-1"></i> Enable
+                <div class="card-footer bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Status:
+                            @if($school->is_active ?? true)
+                                <span class="badge bg-success">Active</span>
+                            @else
+                                <span class="badge bg-danger">Inactive</span>
+                            @endif
+                        </span>
+                        <div>
+                            @if($school->is_active ?? true)
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#disableSchoolModal">
+                                    <i class="fas fa-ban me-1"></i> Disable
                                 </button>
-                            </form>
-                        @endif
+                            @else
+                                <form action="{{ route('admin.schools.enable', $school->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check-circle me-1"></i> Enable
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Subscription:
+                            @if($school->onTrial())
+                                <span class="badge bg-info">Trial</span>
+                                <small class="text-muted">({{ $school->remaining_trial_days === 'Unlimited' ? 'Unlimited' : $school->remaining_trial_days . ' remaining' }})</small>
+                            @elseif($school->hasActiveSubscription())
+                                <span class="badge bg-success">Active</span>
+                            @else
+                                <span class="badge bg-danger">Expired</span>
+                            @endif
+                        </span>
+                        <a href="{{ route('admin.schools.billing', $school->id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-cog me-1"></i> Billing Settings
+                        </a>
                     </div>
                 </div>
             </div>
@@ -324,4 +341,4 @@
     height: 32px;
 }
 </style>
-@endsection 
+@endsection
