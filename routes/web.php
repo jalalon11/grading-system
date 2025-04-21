@@ -22,6 +22,8 @@ use App\Http\Controllers\TeacherAdmin\ReportController as TeacherAdminReportCont
 use App\Http\Controllers\Teacher\ResourceController as TeacherResourceController;
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\ResourceCategoryController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\TeacherAdmin\PaymentController as TeacherAdminPaymentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Section;
@@ -82,6 +84,14 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::resource('schools', SchoolController::class);
         Route::patch('schools/{school}/disable', [SchoolController::class, 'disable'])->name('schools.disable');
         Route::patch('schools/{school}/enable', [SchoolController::class, 'enable'])->name('schools.enable');
+        Route::get('schools/{school}/billing', [SchoolController::class, 'showBilling'])->name('schools.billing');
+        Route::patch('schools/{school}/billing', [SchoolController::class, 'updateBilling'])->name('schools.update-billing');
+
+        // Payment Management
+        Route::get('payments', [AdminPaymentController::class, 'index'])->name('payments.index');
+        Route::get('payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
+        Route::post('payments/{payment}/approve', [AdminPaymentController::class, 'approve'])->name('payments.approve');
+        Route::post('payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
         Route::resource('teachers', TeacherController::class);
         Route::post('teachers/{teacher}/reset-password', [TeacherController::class, 'resetPassword'])->name('teachers.reset-password');
         Route::resource('teacher-admins', TeacherAdminController::class);
@@ -289,6 +299,12 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             Route::get('/reports/consolidated-grades', [TeacherAdminReportController::class, 'consolidatedGrades'])->name('reports.consolidated-grades');
             Route::post('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades');
             Route::get('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades-get');
+
+            // Payment Management
+            Route::get('/payments', [TeacherAdminPaymentController::class, 'index'])->name('payments.index');
+            Route::get('/payments/create', [TeacherAdminPaymentController::class, 'create'])->name('payments.create');
+            Route::post('/payments', [TeacherAdminPaymentController::class, 'store'])->middleware('throttle:3,60')->name('payments.store');
+            Route::get('/payments/{payment}', [TeacherAdminPaymentController::class, 'show'])->name('payments.show');
         });
 
 
