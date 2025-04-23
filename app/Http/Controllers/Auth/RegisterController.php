@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -31,6 +32,26 @@ class RegisterController extends Controller
      * @var string
      */
     protected $redirectTo = '/home';
+
+    /**
+     * Get the post registration redirect path for the user.
+     *
+     * @return string
+     */
+    protected function redirectPath()
+    {
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            if ($user->role === 'admin') {
+                return route('admin.dashboard');
+            } elseif ($user->role === 'teacher') {
+                return route('teacher.dashboard');
+            }
+        }
+
+        return $this->redirectTo;
+    }
 
     /**
      * Handle a registration request for the application.
@@ -97,8 +118,13 @@ class RegisterController extends Controller
 
         // If we have key info, use it to set role, school_id, and teacher admin status
         if (!empty($keyInfo)) {
-            // Set role and teacher admin status based on key type
-            if (isset($keyInfo['key_type']) && $keyInfo['key_type']) {
+            // Check if this is a master key registration
+            if (isset($keyInfo['is_master']) && $keyInfo['is_master'] === true) {
+                // If it's a master key, set role to admin
+                $role = 'admin';
+            }
+            // Otherwise, handle regular teacher/teacher_admin keys
+            else if (isset($keyInfo['key_type']) && $keyInfo['key_type']) {
                 if ($keyInfo['key_type'] === 'teacher_admin') {
                     $role = 'teacher';
                     $isTeacherAdmin = true;
