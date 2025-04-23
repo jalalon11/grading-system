@@ -223,16 +223,14 @@
                                                 <i class="fas fa-copy me-1"></i> Use This Example
                                             </button>
                                         </div>
-                                        <pre class="mb-0 bg-light p-2 rounded code-sample">Mathematics 7, MATH-007, Grade 7, Basic mathematics for 7th grade
-Science 7, SCI-007, Grade 7, General science including basic physics and chemistry
-English 7, ENG-007, Grade 7, English language and literature
-Filipino 7, FIL-007, Grade 7
-History 7, HIST-007, Grade 7, Philippine history and culture</pre>
+                                        <pre class="mb-0 bg-light p-2 rounded code-sample">Mathematics 7, MATH-007, 7, Basic mathematics for 7th grade
+Science 7, SCI-007, 7
+</pre>
                                     </div>
                                     
                                     <div class="form-group mb-3">
                                         <label for="batch_subjects" class="form-label fw-bold">Subjects (one per line) <span class="text-danger">*</span></label>
-                                        <textarea class="form-control @error('batch_subjects') is-invalid @enderror" id="batch_subjects" name="batch_subjects" rows="10" placeholder="Mathematics 7, MATH-007, 7, Basic mathematics course&#10;Science 7, SCI-007, 7, General science course&#10;English 7, ENG-007, 7, English language and literature&#10;Filipino 7, FIL-007, 7, Filipino language and literature&#10;History 7, HIST-007, 7, Philippine history and culture">{{ old('batch_subjects') }}</textarea>
+                                        <textarea class="form-control @error('batch_subjects') is-invalid @enderror" id="batch_subjects" name="batch_subjects" rows="10" placeholder="Mathematics 7, MATH-007, 7, &#10;History 7, HIST-007, 7, Philippine history and culture">{{ old('batch_subjects') }}</textarea>
                                         @error('batch_subjects')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

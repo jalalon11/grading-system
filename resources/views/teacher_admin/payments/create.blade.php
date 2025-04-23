@@ -22,16 +22,16 @@
             <div class="card border-0 shadow payment-steps-card">
                 <div class="card-body p-0">
                     <div class="payment-steps d-flex">
-                        <div class="payment-step active flex-fill text-center p-3 position-relative">
+                        <div class="payment-step active flex-fill text-center p-3 position-relative" id="step1">
                             <div class="step-number">1</div>
                             <div class="step-title">Select Plan</div>
                         </div>
-                        <div class="payment-step flex-fill text-center p-3 position-relative">
+                        <div class="payment-step flex-fill text-center p-3 position-relative" id="step2">
                             <div class="step-number">2</div>
                             <div class="step-title d-none d-sm-block">Select Payment Method</div>
                             <div class="step-title d-block d-sm-none">Payment Method</div>
                         </div>
-                        <div class="payment-step flex-fill text-center p-3 position-relative">
+                        <div class="payment-step flex-fill text-center p-3 position-relative" id="step3">
                             <div class="step-number">3</div>
                             <div class="step-title d-none d-sm-block">Enter Reference Number</div>
                             <div class="step-title d-block d-sm-none">Reference #</div>
@@ -45,9 +45,9 @@
     <div class="row">
         <div class="col-lg-10 mx-auto">
             <div class="card border-0 shadow-lg rounded-3 overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom border-light">
+                <div class="card-header bg-primary bg-gradient text-white py-3">
                     <h5 class="mb-0 fw-bold">
-                        <i class="fas fa-money-bill-wave text-success me-2"></i>
+                        <i class="fas fa-money-bill-wave text-white me-2"></i>
                         Payment Details
                     </h5>
                 </div>
@@ -183,7 +183,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="billing-option h-100 position-relative">
-                                        <div class="ribbon ribbon-top-right d-none d-md-block"><span>Best Value</span></div>
+                                        <div class="ribbon ribbon-top-right d-none d-md-block"><span style="background-color: #0d6efd;">Best Value</span></div>
                                         <input class="billing-option-input" type="radio" name="billing_cycle" id="yearly" value="yearly">
                                         <label class="billing-option-label" for="yearly">
                                             <div class="billing-option-inner p-3 p-md-4 h-100">
@@ -218,8 +218,8 @@
                                     <div class="payment-method-option">
                                         <input class="payment-method-input" type="radio" name="payment_method" id="bank_transfer" value="bank_transfer">
                                         <label class="payment-method-label" for="bank_transfer">
-                                            <div class="payment-method-icon">
-                                                <i class="fas fa-university"></i>
+                                            <div class="payment-method-icon payment-icon-custom">
+                                                <img src="{{ asset('images/bdo_icon.png') }}" alt="BDO" class="img-fluid payment-logo">
                                             </div>
                                             <div class="payment-method-title">Bank Transfer</div>
                                         </label>
@@ -229,8 +229,8 @@
                                     <div class="payment-method-option">
                                         <input class="payment-method-input" type="radio" name="payment_method" id="gcash" value="gcash">
                                         <label class="payment-method-label" for="gcash">
-                                            <div class="payment-method-icon bg-info">
-                                                <i class="fas fa-mobile-alt"></i>
+                                            <div class="payment-method-icon payment-icon-custom">
+                                                <img src="{{ asset('images/gcash_icon.png') }}" alt="GCash" class="img-fluid payment-logo">
                                             </div>
                                             <div class="payment-method-title">GCash</div>
                                         </label>
@@ -240,8 +240,8 @@
                                     <div class="payment-method-option">
                                         <input class="payment-method-input" type="radio" name="payment_method" id="paymaya" value="paymaya">
                                         <label class="payment-method-label" for="paymaya">
-                                            <div class="payment-method-icon bg-primary">
-                                                <i class="fas fa-wallet"></i>
+                                            <div class="payment-method-icon payment-icon-custom">
+                                                <img src="{{ asset('images/maya_icon.png') }}" alt="PayMaya" class="img-fluid payment-logo">
                                             </div>
                                             <div class="payment-method-title">PayMaya</div>
                                         </label>
@@ -271,26 +271,26 @@
                             <!-- Bank Transfer Instructions -->
                             <div id="bank_transfer_instructions" class="payment-instruction-block" style="display: none;">
                                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                                    <div class="card-header bg-primary bg-gradient text-white py-3">
+                                    <div class="card-header text-white py-3" style="background: #204399;">
                                         <h6 class="mb-0 fw-bold"><i class="fas fa-university me-2"></i>Bank Transfer Instructions</h6>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="alert alert-light border-0 rounded-3 mb-4">
                                             <div class="d-flex">
-                                                <div class="me-3 fs-3 text-primary"><i class="fas fa-info-circle"></i></div>
+                                                <div class="me-3 fs-3" style="color: #204399;"><i class="fas fa-info-circle"></i></div>
                                                 <div>
-                                                    <p class="mb-0">Please transfer the exact amount to the bank account below. After completing the transfer, enter the reference number from your receipt.</p>
+                                                    <p class="mb-0">Please transfer the exact amount to the bank account below using online banking or over-the-counter deposit. After completing the transfer, enter the reference number from your receipt.</p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div class="row g-4 align-items-center">
-                                            <div class="col-md-7">
+                                        <div class="row">
+                                            <div class="col-md-12">
                                                 <div class="card bg-light border-0 rounded-3 h-100">
                                                     <div class="card-body p-4">
-                                                        <h6 class="fw-bold mb-3 text-primary">Bank Account Details</h6>
+                                                        <h6 class="fw-bold mb-3" style="color: #204399;"><i class="fas fa-university me-2"></i>Bank Account Details</h6>
                                                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                                            <div class="icon-circle bg-primary text-white me-3">
+                                                            <div class="icon-circle text-white me-3" style="background-color: #204399;">
                                                                 <i class="fas fa-university"></i>
                                                             </div>
                                                             <div>
@@ -299,25 +299,25 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                                            <div class="icon-circle bg-primary text-white me-3">
+                                                            <div class="icon-circle text-white me-3" style="background-color: #204399;">
                                                                 <i class="fas fa-user"></i>
                                                             </div>
                                                             <div>
                                                                 <div class="text-muted small">Account Name</div>
-                                                                <div class="fw-bold">Grading System Inc.</div>
+                                                                <div class="fw-bold">Vincent Jhanrey Jalalon</div>
                                                             </div>
                                                         </div>
                                                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                                            <div class="icon-circle bg-primary text-white me-3">
+                                                            <div class="icon-circle text-white me-3" style="background-color: #204399;">
                                                                 <i class="fas fa-hashtag"></i>
                                                             </div>
                                                             <div>
                                                                 <div class="text-muted small">Account Number</div>
-                                                                <div class="fw-bold">1234-5678-9012</div>
+                                                                <div class="fw-bold">4895 0415 0302 6316</div>
                                                             </div>
                                                         </div>
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="icon-circle bg-primary text-white me-3">
+                                                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                                            <div class="icon-circle text-white me-3" style="background-color: #204399;">
                                                                 <i class="fas fa-map-marker-alt"></i>
                                                             </div>
                                                             <div>
@@ -325,19 +325,14 @@
                                                                 <div class="fw-bold">Main Branch</div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="card bg-white border-0 shadow-sm rounded-3 text-center">
-                                                    <div class="card-body p-4">
-                                                        <h6 class="fw-bold mb-3 text-primary">Scan QR Code</h6>
-                                                        <div class="qr-code-container mb-3 p-3 bg-light rounded-3 d-inline-block">
-                                                            <img src="{{ asset('images/bankQR.jpg') }}" alt="Bank QR Code" class="img-fluid qr-code-img" style="max-height: 180px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/bankQR.jpg') }}" data-qr-title="Bank QR Code">
+                                                        <div class="alert alert-warning mt-3 mb-0">
+                                                            <div class="d-flex">
+                                                                <div class="me-3"><i class="fas fa-exclamation-triangle"></i></div>
+                                                                <div>
+                                                                    <p class="mb-0">Bank QR codes have limited validity. Please use the account details above to make your transfer.</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/bankQR.jpg') }}" data-qr-title="Bank QR Code">
-                                                            <i class="fas fa-search-plus me-1"></i> Enlarge QR Code
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -349,13 +344,13 @@
                             <!-- GCash Instructions -->
                             <div id="gcash_instructions" class="payment-instruction-block" style="display: none;">
                                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                                    <div class="card-header bg-info bg-gradient text-white py-3">
-                                        <h6 class="mb-0 fw-bold"><i class="fas fa-mobile-alt me-2"></i>GCash Payment Instructions</h6>
+                                    <div class="card-header bg-primary bg-gradient text-white py-3">
+                                        <h6 class="mb-0 fw-bold"><i class="fas fa-wallet me-2"></i>GCash Payment Instructions</h6>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="alert alert-light border-0 rounded-3 mb-4">
                                             <div class="d-flex">
-                                                <div class="me-3 fs-3 text-info"><i class="fas fa-info-circle"></i></div>
+                                                <div class="me-3 fs-3 text-primary"><i class="fas fa-info-circle"></i></div>
                                                 <div>
                                                     <p class="mb-0">Please send the exact amount to the GCash account below or scan the QR code using your GCash app. After completing the payment, enter the reference number from your receipt.</p>
                                                 </div>
@@ -366,9 +361,9 @@
                                             <div class="col-md-6">
                                                 <div class="card bg-light border-0 rounded-3 h-100">
                                                     <div class="card-body p-4">
-                                                        <h6 class="fw-bold mb-3 text-info">GCash Account Details</h6>
+                                                        <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-wallet me-2"></i>GCash Account Details</h6>
                                                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                                            <div class="icon-circle bg-info text-white me-3">
+                                                            <div class="icon-circle bg-primary text-white me-3">
                                                                 <i class="fas fa-mobile-alt"></i>
                                                             </div>
                                                             <div>
@@ -377,7 +372,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex align-items-center">
-                                                            <div class="icon-circle bg-info text-white me-3">
+                                                            <div class="icon-circle bg-primary text-white me-3">
                                                                 <i class="fas fa-user"></i>
                                                             </div>
                                                             <div>
@@ -391,11 +386,11 @@
                                             <div class="col-md-6">
                                                 <div class="card bg-white border-0 shadow-sm rounded-3 text-center">
                                                     <div class="card-body p-4">
-                                                        <h6 class="fw-bold mb-3 text-info">Scan QR Code</h6>
+                                                        <h6 class="fw-bold mb-3 text-primary"><i class="fas fa-qrcode me-2"></i>Scan QR Code</h6>
                                                         <div class="qr-code-container mb-3 p-3 bg-light rounded-3 d-inline-block">
                                                             <img src="{{ asset('images/gcashQR.jpg') }}" alt="GCash QR Code" class="img-fluid qr-code-img" style="max-height: 180px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/gcashQR.jpg') }}" data-qr-title="GCash QR Code">
                                                         </div>
-                                                        <button type="button" class="btn btn-sm btn-info text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/gcashQR.jpg') }}" data-qr-title="GCash QR Code">
+                                                        <button type="button" class="btn btn-sm btn-primary text-white rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/gcashQR.jpg') }}" data-qr-title="GCash QR Code">
                                                             <i class="fas fa-search-plus me-1"></i> Enlarge QR Code
                                                         </button>
                                                     </div>
@@ -409,13 +404,13 @@
                             <!-- PayMaya Instructions -->
                             <div id="paymaya_instructions" class="payment-instruction-block" style="display: none;">
                                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-                                    <div class="card-header bg-primary bg-gradient text-white py-3">
+                                    <div class="card-header text-white py-3" style="background: #1c9e77;">
                                         <h6 class="mb-0 fw-bold"><i class="fas fa-wallet me-2"></i>PayMaya Payment Instructions</h6>
                                     </div>
                                     <div class="card-body p-4">
                                         <div class="alert alert-light border-0 rounded-3 mb-4">
                                             <div class="d-flex">
-                                                <div class="me-3 fs-3 text-primary"><i class="fas fa-info-circle"></i></div>
+                                                <div class="me-3 fs-3" style="color: #1c9e77;"><i class="fas fa-info-circle"></i></div>
                                                 <div>
                                                     <p class="mb-0">Please send the exact amount to the PayMaya account below or scan the QR code using your PayMaya app. After completing the payment, enter the reference number from your receipt.</p>
                                                 </div>
@@ -426,9 +421,9 @@
                                             <div class="col-md-6">
                                                 <div class="card bg-light border-0 rounded-3 h-100">
                                                     <div class="card-body p-4">
-                                                        <h6 class="fw-bold mb-3 text-primary">PayMaya Account Details</h6>
+                                                        <h6 class="fw-bold mb-3" style="color: #1c9e77;"><i class="fas fa-wallet me-2"></i>PayMaya Account Details</h6>
                                                         <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                                            <div class="icon-circle bg-primary text-white me-3">
+                                                            <div class="icon-circle text-white me-3" style="background-color: #1c9e77;">
                                                                 <i class="fas fa-mobile-alt"></i>
                                                             </div>
                                                             <div>
@@ -437,7 +432,7 @@
                                                             </div>
                                                         </div>
                                                         <div class="d-flex align-items-center">
-                                                            <div class="icon-circle bg-primary text-white me-3">
+                                                            <div class="icon-circle text-white me-3" style="background-color: #1c9e77;">
                                                                 <i class="fas fa-user"></i>
                                                             </div>
                                                             <div>
@@ -451,11 +446,11 @@
                                             <div class="col-md-6">
                                                 <div class="card bg-white border-0 shadow-sm rounded-3 text-center">
                                                     <div class="card-body p-4">
-                                                        <h6 class="fw-bold mb-3 text-primary">Scan QR Code</h6>
+                                                        <h6 class="fw-bold mb-3" style="color: #1c9e77;">Scan QR Code</h6>
                                                         <div class="qr-code-container mb-3 p-3 bg-light rounded-3 d-inline-block">
                                                             <img src="{{ asset('images/mayaQR.jpg') }}" alt="PayMaya QR Code" class="img-fluid qr-code-img" style="max-height: 180px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/mayaQR.jpg') }}" data-qr-title="PayMaya QR Code">
                                                         </div>
-                                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/mayaQR.jpg') }}" data-qr-title="PayMaya QR Code">
+                                                        <button type="button" class="btn btn-sm text-white rounded-pill px-3" style="background-color: #1c9e77;" data-bs-toggle="modal" data-bs-target="#qrModal" data-qr-src="{{ asset('images/mayaQR.jpg') }}" data-qr-title="PayMaya QR Code">
                                                             <i class="fas fa-search-plus me-1"></i> Enlarge QR Code
                                                         </button>
                                                     </div>
@@ -478,7 +473,7 @@
                                                 <div class="me-3 fs-3 text-secondary"><i class="fas fa-envelope"></i></div>
                                                 <div>
                                                     <h6 class="fw-bold mb-2">Contact Administrator</h6>
-                                                    <p class="mb-0">Please contact the administrator at <strong>admin@gradingsystem.com</strong> for alternative payment methods. After making the payment, please enter the reference number provided to you below.</p>
+                                                    <p class="mb-0">Please contact the administrator at <strong>vinz0799@gmail.com</strong> for alternative payment methods. After making the payment, please enter the reference number provided to you below.</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -489,7 +484,7 @@
 
                         <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
                             <div class="card-header bg-primary bg-gradient text-white py-3">
-                                <h5 class="mb-0 fw-bold"><i class="fas fa-receipt me-2"></i>Payment Details</h5>
+                                <h5 class="mb-0 fw-bold"><i class="fas fa-receipt me-2"></i>Payment Reference Details</h5>
                             </div>
                             <div class="card-body p-3 p-md-4">
                                 <div class="row g-3 g-md-4">
@@ -565,8 +560,11 @@
                             <a href="{{ route('teacher-admin.payments.index') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4 w-100 w-md-auto order-2 order-md-1">
                                 <i class="fas fa-arrow-left me-2"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 w-100 w-md-auto order-1 order-md-2" id="submit-payment-btn">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 w-100 w-md-auto order-1 order-md-2 position-relative" id="submit-payment-btn">
                                 <i class="fas fa-paper-plane me-2"></i> Submit Payment
+                                <span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle pulse-dot">
+                                    <span class="visually-hidden">New alerts</span>
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -795,6 +793,19 @@
     transition: all 0.3s ease;
 }
 
+.payment-icon-custom {
+    background-color: transparent;
+    padding: 0;
+    overflow: hidden;
+}
+
+.payment-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
 .payment-method-input:checked + .payment-method-label .payment-method-icon {
     transform: scale(1.1);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -924,7 +935,57 @@
     margin-bottom: 0;
 }
 
-/* Animation Classes - Removed */
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.pulse-dot {
+    animation: pulse 2s infinite;
+}
+
+.pulse-button {
+    position: relative;
+    overflow: visible;
+}
+
+.pulse-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50px;
+    box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.7);
+    animation: pulse-button 1.5s infinite;
+}
+
+@keyframes pulse-button {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(78, 115, 223, 0.7);
+    }
+    70% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(78, 115, 223, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(78, 115, 223, 0);
+    }
+}
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
@@ -1129,6 +1190,20 @@
                 if (this.checked) {
                     // Update payment steps
                     updatePaymentSteps(1);
+
+                    // Update the QR modal amount if it's open
+                    const amountText = document.getElementById('qrAmountText');
+                    if (amountText) {
+                        if (this.value === 'monthly') {
+                            // Get the monthly price from the DOM
+                            const monthlyPrice = document.querySelector('#monthly').closest('.billing-option').querySelector('.amount').textContent.trim();
+                            amountText.textContent = '₱' + monthlyPrice;
+                        } else if (this.value === 'yearly') {
+                            // Get the yearly price from the DOM
+                            const yearlyPrice = document.querySelector('#yearly').closest('.billing-option').querySelector('.amount').textContent.trim();
+                            amountText.textContent = '₱' + yearlyPrice;
+                        }
+                    }
                 }
             });
         });
@@ -1230,8 +1305,13 @@
             function checkReferenceNumber() {
                 const value = referenceNumberInput.value.trim();
                 if (value.length > 0) {
-                    // If reference number has a value, mark step 3 as active
+                    // If reference number has a value, mark step 3 as active and completed
                     updatePaymentSteps(3);
+                    // Show the pulse animation on the submit button
+                    document.getElementById('submit-payment-btn').classList.add('pulse-button');
+                    // Make step 3 completed
+                    paymentSteps[2].classList.add('completed');
+                    paymentSteps[2].querySelector('.step-number').innerHTML = '<i class="fas fa-check"></i>';
                 } else {
                     // If reference number is empty, go back to step 2 if a payment method is selected
                     const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
@@ -1240,6 +1320,11 @@
                     } else {
                         updatePaymentSteps(1);
                     }
+                    // Hide the pulse animation on the submit button
+                    document.getElementById('submit-payment-btn').classList.remove('pulse-button');
+                    // Remove completed state from step 3
+                    paymentSteps[2].classList.remove('completed');
+                    paymentSteps[2].querySelector('.step-number').textContent = '3';
                 }
             }
 
@@ -1325,7 +1410,46 @@
                 console.log('QR Title:', qrTitle);
 
                 // Set modal content
-                modalTitle.textContent = qrTitle || 'QR Code';
+                const modalHeader = document.getElementById('qrModalHeader');
+                const downloadBtn = document.getElementById('qrDownloadBtn');
+
+                // Set the modal header and download button color based on payment method
+                if (qrTitle && qrTitle.includes('GCash')) {
+                    // Primary color for GCash
+                    modalHeader.style.background = '#4e73df';
+                    downloadBtn.style.background = '#4e73df';
+                    document.getElementById('qrPaymentAmount').className = 'alert alert-primary rounded-3 border-0 mb-3';
+                } else if (qrTitle && qrTitle.includes('PayMaya')) {
+                    // Green color for PayMaya
+                    modalHeader.style.background = '#1c9e77';
+                    downloadBtn.style.background = '#1c9e77';
+                    document.getElementById('qrPaymentAmount').style.background = '#e8f5f0';
+                    document.getElementById('qrPaymentAmount').style.color = '#1c9e77';
+                } else if (qrTitle && qrTitle.includes('Bank')) {
+                    // BDO blue for Bank
+                    modalHeader.style.background = '#204399';
+                    downloadBtn.style.background = '#204399';
+                    document.getElementById('qrPaymentAmount').style.background = '#e9ecf6';
+                    document.getElementById('qrPaymentAmount').style.color = '#204399';
+                }
+
+                // Get the selected billing cycle and update the payment amount
+                const selectedBillingCycle = document.querySelector('input[name="billing_cycle"]:checked');
+                const amountText = document.getElementById('qrAmountText');
+
+                if (selectedBillingCycle) {
+                    if (selectedBillingCycle.value === 'monthly') {
+                        // Get the monthly price from the DOM
+                        const monthlyPrice = document.querySelector('#monthly').closest('.billing-option').querySelector('.amount').textContent.trim();
+                        amountText.textContent = '₱' + monthlyPrice;
+                    } else if (selectedBillingCycle.value === 'yearly') {
+                        // Get the yearly price from the DOM
+                        const yearlyPrice = document.querySelector('#yearly').closest('.billing-option').querySelector('.amount').textContent.trim();
+                        amountText.textContent = '₱' + yearlyPrice;
+                    }
+                }
+
+                modalTitle.innerHTML = '<i class="fas fa-qrcode me-2"></i>' + (qrTitle || 'QR Code');
                 if (qrSrc) {
                     modalImage.src = qrSrc;
                     currentQrSrc = qrSrc;
@@ -1377,8 +1501,46 @@
                     // Set modal content
                     const modalTitle = qrModal.querySelector('.modal-title');
                     const modalImage = qrModal.querySelector('.qr-zoom-image');
+                    const modalHeader = document.getElementById('qrModalHeader');
+                    const downloadBtn = document.getElementById('qrDownloadBtn');
 
-                    modalTitle.textContent = qrTitle || 'QR Code';
+                    // Set the modal header and download button color based on payment method
+                    if (qrTitle.includes('GCash')) {
+                        // Primary color for GCash
+                        modalHeader.style.background = '#4e73df';
+                        downloadBtn.style.background = '#4e73df';
+                        document.getElementById('qrPaymentAmount').className = 'alert alert-primary rounded-3 border-0 mb-3';
+                    } else if (qrTitle.includes('PayMaya')) {
+                        // Green color for PayMaya
+                        modalHeader.style.background = '#1c9e77';
+                        downloadBtn.style.background = '#1c9e77';
+                        document.getElementById('qrPaymentAmount').style.background = '#e8f5f0';
+                        document.getElementById('qrPaymentAmount').style.color = '#1c9e77';
+                    } else if (qrTitle.includes('Bank')) {
+                        // BDO blue for Bank
+                        modalHeader.style.background = '#204399';
+                        downloadBtn.style.background = '#204399';
+                        document.getElementById('qrPaymentAmount').style.background = '#e9ecf6';
+                        document.getElementById('qrPaymentAmount').style.color = '#204399';
+                    }
+
+                    // Get the selected billing cycle and update the payment amount
+                    const selectedBillingCycle = document.querySelector('input[name="billing_cycle"]:checked');
+                    const amountText = document.getElementById('qrAmountText');
+
+                    if (selectedBillingCycle) {
+                        if (selectedBillingCycle.value === 'monthly') {
+                            // Get the monthly price from the DOM
+                            const monthlyPrice = document.querySelector('#monthly').closest('.billing-option').querySelector('.amount').textContent.trim();
+                            amountText.textContent = '₱' + monthlyPrice;
+                        } else if (selectedBillingCycle.value === 'yearly') {
+                            // Get the yearly price from the DOM
+                            const yearlyPrice = document.querySelector('#yearly').closest('.billing-option').querySelector('.amount').textContent.trim();
+                            amountText.textContent = '₱' + yearlyPrice;
+                        }
+                    }
+
+                    modalTitle.innerHTML = '<i class="fas fa-qrcode me-2"></i>' + (qrTitle || 'QR Code');
                     modalImage.src = qrSrc;
                     currentQrSrc = qrSrc;
 
@@ -1398,7 +1560,7 @@
 <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-            <div class="modal-header bg-primary bg-gradient text-white border-0">
+            <div class="modal-header text-white border-0" id="qrModalHeader">
                 <h5 class="modal-title fw-bold" id="qrModalLabel"><i class="fas fa-qrcode me-2"></i>QR Code</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -1424,6 +1586,15 @@
                     </div>
                     <div class="col-md-4 p-4 border-start">
                         <h6 class="fw-bold mb-3">QR Code Instructions</h6>
+                        <div class="alert alert-primary rounded-3 border-0 mb-3" id="qrPaymentAmount">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3 fs-4"><i class="fas fa-money-bill-wave"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Payment Amount</h6>
+                                    <p class="mb-0 fs-5 fw-bold" id="qrAmountText">₱0.00</p>
+                                </div>
+                            </div>
+                        </div>
                         <div class="mb-4">
                             <p class="mb-3">Scan this QR code using your payment app to quickly make a payment.</p>
                             <ol class="ps-3 mb-0">
@@ -1433,8 +1604,17 @@
                                 <li>Complete the payment in your app</li>
                             </ol>
                         </div>
+                        <div class="alert alert-warning rounded-3 border-0 mb-4">
+                            <div class="d-flex">
+                                <div class="me-3 fs-4"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div>
+                                    <h6 class="fw-bold mb-1">Important</h6>
+                                    <p class="mb-0 small">After making the payment, don't forget to enter the reference number below to complete your subscription.</p>
+                                </div>
+                            </div>
+                        </div>
                         <div class="d-grid gap-2">
-                            <a href="#" class="btn btn-primary rounded-pill download-qr-btn">
+                            <a href="#" class="btn rounded-pill download-qr-btn text-white" id="qrDownloadBtn">
                                 <i class="fas fa-download me-2"></i> Download QR Code
                             </a>
                             <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">

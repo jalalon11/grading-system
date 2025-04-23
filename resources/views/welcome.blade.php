@@ -459,6 +459,7 @@
                     </div>
                     <div class="hidden md:flex items-center space-x-4">
                         <a href="#features" class="text-gray-700 hover:text-gray-900">Features</a>
+                        <a href="#pricing" class="text-gray-700 hover:text-gray-900">Pricing</a>
                         <a href="#benefits" class="text-gray-700 hover:text-gray-900">Benefits</a>
                         <a href="#developer" class="text-gray-700 hover:text-gray-900">Developer</a>
                         @auth
@@ -481,6 +482,7 @@
             <!-- Mobile menu -->
             <div id="mobile-menu" class="hidden md:hidden bg-white py-2 px-4">
                 <a href="#features" class="block py-2 text-gray-700">Features</a>
+                <a href="#pricing" class="block py-2 text-gray-700">Pricing</a>
                 <a href="#benefits" class="block py-2 text-gray-700">Benefits</a>
                 <a href="#developer" class="block py-2 text-gray-700">Developer</a>
                 @auth
@@ -632,6 +634,191 @@
                             <p class="feature-description">
                                 Tailor the grading system to match your specific requirements and institutional policies.
                             </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="py-20 bg-[#F4F6F6]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Section Header -->
+                <div class="text-center mb-16">
+                    <span class="inline-block px-4 py-2 rounded-full bg-[#1C2833] text-[#F4F6F6] text-sm font-semibold mb-4">Pricing Plans</span>
+                    <h2 class="text-4xl font-bold text-[#1C2833] mb-4">Simple, Transparent Pricing</h2>
+                    <p class="text-xl text-[#2E4053] max-w-2xl mx-auto">Choose the perfect plan based on your school's grade levels. Start with a free trial, no credit card required.</p>
+                </div>
+
+                <!-- Trial Banner -->
+                <div class="bg-gradient-to-r from-[#1C2833] to-[#2E4053] rounded-2xl p-8 mb-12 max-w-4xl mx-auto shadow-lg">
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="flex items-center mb-6 md:mb-0">
+                            <div class="bg-[#F4F6F6] bg-opacity-20 rounded-full p-3 mr-4">
+                                <i class="fas fa-gift text-[#F4F6F6] text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-[#F4F6F6] mb-2">3-Month Free Trial</h3>
+                                <p class="text-[#AAB7B8]">Experience all premium features with no commitment</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('login') }}" class="bg-[#F4F6F6] text-[#1C2833] px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-colors">
+                            Start Free Trial
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Billing Toggle -->
+                <div class="flex justify-center mb-12">
+                    <div class="bg-[#F4F6F6] p-1 rounded-xl shadow-sm inline-flex">
+                        <button type="button" class="px-6 py-2 text-sm font-medium rounded-lg bg-[#1C2833] text-[#F4F6F6] transition-colors">
+                            Monthly Billing
+                        </button>
+                        <button type="button" class="px-6 py-2 text-sm font-medium rounded-lg text-[#2E4053] transition-colors">
+                            Annual Billing
+                            <span class="ml-2 px-2 py-1 text-xs bg-[#2E4053] rounded-full text-[#F4F6F6]">Save 20%</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pricing Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- Elementary Plan -->
+                    <div class="bg-[#F4F6F6] rounded-2xl shadow-lg border border-[#AAB7B8] overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-[#1C2833] mb-2">Elementary</h3>
+                            <p class="text-[#2E4053] mb-6">Kindergarten to Grade 6</p>
+                            <div class="mb-6">
+                                <span class="text-4xl font-bold text-[#1C2833]">₱2,300</span>
+                                <span class="text-[#2E4053]">/month</span>
+                                <div class="text-sm text-[#2E4053] mt-1">or ₱22,080/year</div>
+                            </div>
+                            <ul class="space-y-4 mb-8">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Unlimited students</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Advanced analytics</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Custom reports</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Priority support</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Core Functionality</span>
+                                </li>
+                            </ul>
+                            <div class="mt-6 p-4 bg-[#1C2833] bg-opacity-5 rounded-lg">
+                                <div class="flex flex-col items-center">
+                                    <div class="flex items-center justify-center space-x-4">
+                                        <i class="fas fa-book text-[#1C2833] text-2xl"></i>
+                                        <i class="fas fa-book-open text-[#1C2833] text-2xl"></i>
+                                        <i class="fas fa-book-reader text-[#1C2833] text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- High School Plan -->
+                    <div class="bg-[#F4F6F6] rounded-2xl shadow-xl border-2 border-[#1C2833] overflow-hidden transform hover:scale-105 transition-transform duration-300 relative">
+                        <div class="absolute top-0 right-0 bg-[#1C2833] text-[#F4F6F6] px-4 py-1 rounded-bl-lg text-sm font-semibold">
+                            Most Popular
+                        </div>
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-[#1C2833] mb-2">High School</h3>
+                            <p class="text-[#2E4053] mb-6">Grade 7 to Grade 12</p>
+                            <div class="mb-6">
+                                <span class="text-4xl font-bold text-[#1C2833]">₱2,500</span>
+                                <span class="text-[#2E4053]">/month</span>
+                                <div class="text-sm text-[#2E4053] mt-1">or ₱24,000/year</div>
+                            </div>
+                            <ul class="space-y-4 mb-8">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Unlimited students</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Advanced analytics</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Custom reports</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Priority support</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Core Functionality</span>
+                                </li>
+                            </ul>
+                            <div class="mt-6 p-4 bg-[#1C2833] bg-opacity-5 rounded-lg">
+                                <div class="flex flex-col items-center">
+                                    <div class="flex items-center justify-center space-x-4">
+                                        <i class="fas fa-book text-[#1C2833] text-2xl"></i>
+                                        <i class="fas fa-book-open text-[#1C2833] text-2xl"></i>
+                                        <i class="fas fa-book-reader text-[#1C2833] text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Complete System Plan -->
+                    <div class="bg-[#F4F6F6] rounded-2xl shadow-lg border border-[#AAB7B8] overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-[#1C2833] mb-2">Complete System</h3>
+                            <p class="text-[#2E4053] mb-6">Kindergarten to Grade 12</p>
+                            <div class="mb-6">
+                                <span class="text-4xl font-bold text-[#1C2833]">₱4,700</span>
+                                <span class="text-[#2E4053]">/month</span>
+                                <div class="text-sm text-[#2E4053] mt-1">or ₱45,120/year</div>
+                            </div>
+                            <ul class="space-y-4 mb-8">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Unlimited students</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Advanced analytics</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Custom reports</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Priority support</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Core Functionality</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-[#1C2833] mr-3"></i>
+                                    <span class="text-[#2E4053]">Free 3 months</span>
+                                </li>
+                            </ul>
+                            <div class="mt-6 p-4 bg-[#1C2833] bg-opacity-5 rounded-lg">
+                                <div class="flex flex-col items-center">
+                                    <div class="flex items-center justify-center space-x-4">
+                                        <i class="fas fa-book text-[#1C2833] text-2xl"></i>
+                                        <i class="fas fa-book-open text-[#1C2833] text-2xl"></i>
+                                        <i class="fas fa-book-reader text-[#1C2833] text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -903,6 +1090,7 @@
                         <ul class="space-y-2">
                             <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Home</a></li>
                             <li><a href="#features" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Features</a></li>
+                            <li><a href="#pricing" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Pricing</a></li>
                             <li><a href="#benefits" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Benefits</a></li>
                             <li><a href="#developer" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Developer</a></li>
                             <li><a href="{{ route('login') }}" class="text-gray-400 hover:text-white transition-colors flex items-center"><i class="fas fa-chevron-right text-xs mr-2"></i> Login</a></li>
@@ -986,6 +1174,48 @@
                         }
                     });
                 });
+
+                // Pricing tabs functionality
+                const elementaryTab = document.getElementById('elementary-tab');
+                const highschoolTab = document.getElementById('highschool-tab');
+                const completeTab = document.getElementById('complete-tab');
+
+                // Function to handle tab switching
+                function switchTab(activeTab, inactiveTabs) {
+                    // Activate the selected tab
+                    activeTab.classList.remove('bg-white', 'text-gray-700');
+                    activeTab.classList.add('bg-blue-600', 'text-white');
+
+                    // Deactivate other tabs
+                    inactiveTabs.forEach(tab => {
+                        tab.classList.remove('bg-blue-600', 'text-white');
+                        tab.classList.add('bg-white', 'text-gray-700');
+                    });
+                }
+
+                // Set up event listeners for tabs
+                elementaryTab.addEventListener('click', function() {
+                    switchTab(elementaryTab, [highschoolTab, completeTab]);
+                });
+
+                highschoolTab.addEventListener('click', function() {
+                    switchTab(highschoolTab, [elementaryTab, completeTab]);
+                });
+
+                completeTab.addEventListener('click', function() {
+                    switchTab(completeTab, [elementaryTab, highschoolTab]);
+                });
+
+            });
+
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('pricing', () => ({
+                    billing: 'monthly',
+                    init() {
+                        // Initialize the billing state
+                        this.billing = 'monthly';
+                    }
+                }));
             });
         </script>
     </body>
