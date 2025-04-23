@@ -146,4 +146,46 @@ class PaymentController extends Controller
 
         return view('teacher_admin.payments.show', compact('payment', 'school', 'hasPendingPayment', 'hasActiveSubscription'));
     }
+
+    /**
+     * Get the remaining subscription time as JSON
+     */
+    public function getRemainingTime()
+    {
+        $user = Auth::user();
+        $school = $user->school;
+
+        if (!$school) {
+            return response()->json(['error' => 'No school associated with this user'], 404);
+        }
+
+        $remainingTime = $school->hasActiveSubscription() ? $school->remaining_subscription_time : null;
+
+        return response()->json([
+            'remaining_time' => $remainingTime,
+            'has_active_subscription' => $school->hasActiveSubscription(),
+            'subscription_ends_at' => $school->subscription_ends_at ? $school->subscription_ends_at->format('Y-m-d H:i:s') : null
+        ]);
+    }
+
+    /**
+     * Generate a printable receipt for a payment
+     */
+    public function receipt(Payment $payment)
+    {
+        $user = Auth::user();
+        $school = $user->school;
+
+        if ($payment->school_id !== $school->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Only allow generating receipts for completed payments
+        if ($payment->status !== 'completed' && $payment->status !== 'failed') {
+            return redirect()->route('teacher-admin.payments.show', $payment)
+                ->with('warning', 'Receipts are only available for processed payments.');
+        }
+
+        return view('teacher_admin.payments.receipt', compact('payment', 'school'));
+    }
 }

@@ -37,6 +37,11 @@ Route::get('/', function () {
 // Announcement routes for public access
 Route::get('/api/announcements', [\App\Http\Controllers\AnnouncementViewController::class, 'getActiveAnnouncements'])->name('api.announcements');
 
+// Image proxy route
+Route::get('/image-proxy/{path}', [\App\Http\Controllers\ImageProxyController::class, 'proxyImage'])
+    ->where('path', '.*')
+    ->name('image.proxy');
+
 // Custom auth routes instead of Auth::routes()
 // Login routes
 Route::get('login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
@@ -305,6 +310,8 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             Route::get('/payments/create', [TeacherAdminPaymentController::class, 'create'])->name('payments.create');
             Route::post('/payments', [TeacherAdminPaymentController::class, 'store'])->middleware('throttle:3,60')->name('payments.store');
             Route::get('/payments/{payment}', [TeacherAdminPaymentController::class, 'show'])->name('payments.show');
+            Route::get('/payments/{payment}/receipt', [TeacherAdminPaymentController::class, 'receipt'])->name('payments.receipt');
+            Route::get('/subscription/remaining-time', [TeacherAdminPaymentController::class, 'getRemainingTime'])->name('subscription.remaining-time');
         });
 
 

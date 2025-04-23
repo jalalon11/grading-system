@@ -36,7 +36,7 @@
                     <form method="POST" action="{{ route('admin.schools.update', $school->id) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
-                        
+
                         <div class="mb-4">
                             <h6 class="text-muted mb-3">Basic Information</h6>
                             <div class="row g-3">
@@ -81,7 +81,7 @@
                                     <label for="logo" class="form-label fw-bold">School Logo</label>
                                     <div class="mb-2">
                                         @if($school->logo_path)
-                                            <img src="{{ asset($school->logo_path) }}" class="img-thumbnail" alt="School Logo" style="max-height: 100px;">
+                                            <img src="{{ $school->logo_url }}" class="img-thumbnail" alt="School Logo" style="max-height: 100px;">
                                             <p class="form-text">Current logo</p>
                                         @else
                                             <p class="form-text">No logo uploaded</p>
@@ -118,7 +118,7 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <div class="row">
-                                                @php 
+                                                @php
                                                     $gradelevels = old('grade_levels', $school->grade_levels) ?? [];
                                                     if (!is_array($gradelevels)) {
                                                         $gradelevels = json_decode($gradelevels) ?? [];
@@ -421,4 +421,4 @@
         });
     });
 </script>
-@endpush 
+@endpush

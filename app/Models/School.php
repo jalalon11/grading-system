@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class School extends Model
@@ -58,9 +59,10 @@ class School extends Model
         }
 
         try {
-            return Storage::disk('r2')->url($this->logo_path);
+            // Use our proxy route to serve the image
+            return route('image.proxy', ['path' => $this->logo_path]);
         } catch (\Exception $e) {
-            \Log::error('Error getting logo URL: ' . $e->getMessage());
+            Log::error('Error getting logo URL: ' . $e->getMessage());
             return null;
         }
     }

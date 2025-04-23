@@ -14,6 +14,12 @@ class Kernel extends ConsoleKernel
     {
         // Check subscription status daily at midnight
         $schedule->command('subscription:check')->daily();
+
+        // Cache school logos daily at 1 AM
+        $schedule->command('app:cache-school-logos')->dailyAt('01:00');
+
+        // Clean up old cached images monthly
+        $schedule->command('app:clean-image-cache --days=30')->monthly();
     }
 
     /**
