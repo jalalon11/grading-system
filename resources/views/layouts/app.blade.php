@@ -890,6 +890,7 @@
                         @endif
                     </a>
                 </li>
+                <!-- Database Backups option removed -->
                 @elseif(Auth::user()->role === 'teacher')
                 <li class="{{ Request::is('teacher/dashboard') ? 'active' : '' }}">
                     <a href="{{ route('teacher.dashboard') }}">

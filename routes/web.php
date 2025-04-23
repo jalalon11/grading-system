@@ -23,6 +23,7 @@ use App\Http\Controllers\Teacher\ResourceController as TeacherResourceController
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\ResourceCategoryController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\TeacherAdmin\PaymentController as TeacherAdminPaymentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -120,6 +121,8 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::put('/resources/{resource}', [ResourceController::class, 'update'])->name('resources.update');
         Route::delete('/resources/{resource}', [ResourceController::class, 'destroy'])->name('resources.destroy');
         Route::post('/resources/{resource}/toggle-status', [ResourceController::class, 'toggleStatus'])->name('resources.toggle-status');
+
+        // Database Backup Management routes have been removed
 
         // Resource Categories Management
         Route::post('/resource-categories', [ResourceCategoryController::class, 'store'])->name('resource-categories.store');

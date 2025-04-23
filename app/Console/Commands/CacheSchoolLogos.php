@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\School;
+use App\Jobs\CacheSchoolLogoJob;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 
@@ -14,7 +15,10 @@ class CacheSchoolLogos extends Command
      *
      * @var string
      */
-    protected $signature = 'app:cache-school-logos';
+    protected $signature = 'app:cache-school-logos
+                            {--queue : Queue the logo caching process instead of running it immediately}
+                            {--limit= : Limit the number of logos to process at once}
+                            {--deployment : Run in deployment mode (minimal processing)}';
 
     /**
      * The console command description.
@@ -35,9 +39,30 @@ class CacheSchoolLogos extends Command
         File::ensureDirectoryExists($cacheDir);
 
         // Get all schools with logos
-        $schools = School::whereNotNull('logo_path')->get();
+        $query = School::whereNotNull('logo_path');
 
+        // If running in deployment mode, only process a minimal set
+        if ($this->option('deployment')) {
+            $this->info('Running in deployment mode - minimal processing');
+            // Just create the directory and exit
+            return Command::SUCCESS;
+        }
+
+        // Apply limit if specified
+        if ($this->option('limit')) {
+            $limit = (int) $this->option('limit');
+            $query = $query->limit($limit);
+            $this->info("Limited to processing {$limit} school logos");
+        }
+
+        $schools = $query->get();
         $this->info("Found {$schools->count()} schools with logos.");
+
+        // If queue option is selected, dispatch jobs instead of processing immediately
+        if ($this->option('queue')) {
+            $this->queueLogoProcessing($schools);
+            return Command::SUCCESS;
+        }
 
         // Calculate current cache size before update
         $initialSize = $this->calculateCacheSize($cacheDir);
@@ -142,5 +167,27 @@ class CacheSchoolLogos extends Command
         $bytes /= pow(1024, $pow);
 
         return round($bytes, 2) . ' ' . $units[$pow];
+    }
+
+    /**
+     * Queue the logo processing as background jobs
+     *
+     * @param \Illuminate\Database\Eloquent\Collection $schools
+     * @return void
+     */
+    private function queueLogoProcessing($schools): void
+    {
+        $this->info("Queuing {$schools->count()} school logos for background processing");
+        $queued = 0;
+
+        foreach ($schools as $school) {
+            if ($school->logo_path) {
+                // Dispatch a job to process this logo in the background
+                CacheSchoolLogoJob::dispatch($school->id);
+                $queued++;
+            }
+        }
+
+        $this->info("Queued {$queued} school logos for background processing");
     }
 }
