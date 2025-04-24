@@ -22,9 +22,10 @@ class StudentController extends Controller
             // Get sections associated with the current teacher
             $sections = Section::where('adviser_id', Auth::id())->pluck('id');
 
-            // Get students in these sections
+            // Get all students in these sections, including inactive ones
             $students = Student::whereIn('section_id', $sections)
                 ->with('section')
+                ->orderBy('is_active', 'desc') // Active students first
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
@@ -44,9 +45,10 @@ class StudentController extends Controller
             $assignedSections = Section::whereIn('id', $assignedSectionIds)
                 ->get();
 
-            // Get students from these assigned sections
+            // Get students from these assigned sections, including inactive ones
             $assignedStudents = Student::whereIn('section_id', $assignedSectionIds)
                 ->with('section')
+                ->orderBy('is_active', 'desc') // Active students first
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
@@ -197,7 +199,14 @@ class StudentController extends Controller
                     $extendedApprovals[$approval->subject_id][$approval->quarter] = $approval;
                 }
 
-                return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'isFromAssignedSection', 'subject', 'extendedApprovals'));
+                $view = view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'isFromAssignedSection', 'subject', 'extendedApprovals'));
+
+                // Add a warning message if the student is disabled
+                if (!$student->is_active) {
+                    $view->with('warning', 'This student is currently disabled and will not appear in reports or grade entries.');
+                }
+
+                return $view;
             } catch (\Exception $e) {
                 Log::error('Error in student show: ' . $e->getMessage(), [
                     'file' => $e->getFile(),
@@ -214,6 +223,8 @@ class StudentController extends Controller
         $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
 
         // Find the student and ensure they belong to one of the teacher's sections
+        // Note: We don't filter by is_active here because we need to be able to view disabled students
+        // when specifically requested by ID
         $student = Student::whereIn('section_id', $sectionIds)
             ->with(['section.subjects', 'section.adviser', 'grades.subject', 'attendances'])
             ->findOrFail($id);
@@ -340,7 +351,14 @@ class StudentController extends Controller
             'extendedApprovals' => $extendedApprovals
         ]);
 
-        return view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'extendedApprovals', 'mapehParentMap'));
+        // Add a warning message if the student is disabled
+        $view = view('teacher.students.show', compact('student', 'selectedTransmutationTable', 'extendedApprovals', 'mapehParentMap'));
+
+        if (!$student->is_active) {
+            $view->with('warning', 'This student is currently disabled and will not appear in reports or grade entries.');
+        }
+
+        return $view;
     }
 
     /**
@@ -395,7 +413,7 @@ class StudentController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Disable the specified student instead of deleting.
      */
     public function destroy(string $id)
     {
@@ -405,16 +423,31 @@ class StudentController extends Controller
         // Find the student and ensure they belong to one of the teacher's sections
         $student = Student::whereIn('section_id', $sectionIds)->findOrFail($id);
 
-        // Check if student has grades or attendance records
-        if ($student->grades()->count() > 0 || $student->attendances()->count() > 0) {
-            return redirect()->route('teacher.students.index')
-                ->with('error', 'Cannot delete student with grades or attendance records.');
-        }
-
-        $student->delete();
+        // Instead of deleting, mark the student as inactive
+        $student->is_active = false;
+        $student->save();
 
         return redirect()->route('teacher.students.index')
-            ->with('success', 'Student deleted successfully.');
+            ->with('success', 'Student disabled successfully. The student will no longer appear in reports.');
+    }
+
+    /**
+     * Reactivate a disabled student.
+     */
+    public function reactivate(string $id)
+    {
+        // Get sections associated with the current teacher
+        $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
+
+        // Find the student and ensure they belong to one of the teacher's sections
+        $student = Student::whereIn('section_id', $sectionIds)->findOrFail($id);
+
+        // Mark the student as active
+        $student->is_active = true;
+        $student->save();
+
+        return redirect()->route('teacher.students.index')
+            ->with('success', 'Student reactivated successfully. The student will now appear in reports and grade entries.');
     }
 
     /**
@@ -428,14 +461,17 @@ class StudentController extends Controller
         $sectionId = $request->input('section_id', 'all');
 
         if ($sectionId === 'all') {
-            // Get all students for the teacher
-            $students = Student::with('section')->whereHas('section', function($query) {
-                $query->where('adviser_id', Auth::id());
-            })->get();
+            // Get only active students for the teacher
+            $students = Student::with('section')
+                ->where('is_active', true)
+                ->whereHas('section', function($query) {
+                    $query->where('adviser_id', Auth::id());
+                })->get();
         } else {
-            // Get students for a specific section
+            // Get only active students for a specific section
             $students = Student::with('section')
                 ->where('section_id', $sectionId)
+                ->where('is_active', true)
                 ->whereHas('section', function($query) {
                     $query->where('adviser_id', Auth::id());
                 })

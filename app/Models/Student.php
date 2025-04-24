@@ -28,6 +28,7 @@ class Student extends Model
         'guardian_name',
         'guardian_contact',
         'section_id',
+        'is_active',
     ];
 
     /**
@@ -37,6 +38,7 @@ class Student extends Model
      */
     protected $casts = [
         'birth_date' => 'date',
+        'is_active' => 'boolean',
     ];
 
     /**

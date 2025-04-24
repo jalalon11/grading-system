@@ -1517,7 +1517,7 @@
                             <div class="col-xl-3 col-md-6 mb-3 student-item"
                                  data-name="{{ strtolower($student->last_name . ' ' . $student->first_name) }}"
                                  data-student-id="{{ strtolower($student->student_id) }}">
-                                <div class="card student-card shadow-sm h-100">
+                                <div class="card student-card shadow-sm h-100 {{ !$student->is_active ? 'opacity-50' : '' }}">
                                     <div class="card-body">
                                         <div class="d-flex align-items-center mb-3">
                                             @php
@@ -1537,7 +1537,12 @@
                                                 {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
                                             </div>
                                             <div>
-                                                <h6 class="mb-0 fw-bold">{{ $student->last_name }}, {{ $student->first_name }}</h6>
+                                                <h6 class="mb-0 fw-bold">
+                                                    {{ $student->last_name }}, {{ $student->first_name }}
+                                                    @if(!$student->is_active)
+                                                        <span class="badge bg-secondary ms-1">Disabled</span>
+                                                    @endif
+                                                </h6>
                                                 <div class="mt-1">
                                                     <div class="student-info-badge">
                                                         <i class="fas fa-id-card text-primary"></i> {{ $student->student_id }}
@@ -1577,9 +1582,18 @@
                                             <a href="{{ route('teacher.students.edit', $student->id) }}" class="btn btn-sm btn-outline-warning me-1 btn-action" title="Edit Student">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger btn-action" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $student->id }}" title="Delete Student">
-                                                <i class="fas fa-trash"></i>
+                                            @if($student->is_active)
+                                            <button type="button" class="btn btn-sm btn-outline-warning btn-action" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $student->id }}" title="Disable Student">
+                                                <i class="fas fa-user-slash"></i>
                                             </button>
+                                            @else
+                                            <form action="{{ route('teacher.students.reactivate', $student->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-success btn-action" title="Reactivate Student">
+                                                    <i class="fas fa-user-check"></i>
+                                                </button>
+                                            </form>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -2254,7 +2268,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel{{ $student->id }}">Confirm Delete</h5>
+                <h5 class="modal-title" id="deleteModalLabel{{ $student->id }}">Confirm Disable Student</h5>
                 <button type="button" class="btn-close close-delete-btn" aria-label="Close" style="position: relative; z-index: 1057;"></button>
             </div>
             <div class="modal-body">
@@ -2262,19 +2276,19 @@
                     <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
                         <i class="fas fa-exclamation-triangle text-danger fa-3x"></i>
                     </div>
-                    <h5>Are you sure you want to delete this student?</h5>
+                    <h5>Are you sure you want to disable this student?</h5>
                 </div>
                 <div class="alert alert-warning">
-                    <p class="mb-0"><strong>{{ $student->full_name ?? $student->first_name . ' ' . $student->last_name }}</strong> will be permanently removed from your records.</p>
+                    <p class="mb-0"><strong>{{ $student->full_name ?? $student->first_name . ' ' . $student->last_name }}</strong> will be disabled and will no longer appear in reports or grade entries.</p>
                 </div>
-                <p class="text-danger small"><i class="fas fa-info-circle me-1"></i> This action cannot be undone.</p>
+                <p class="text-info small"><i class="fas fa-info-circle me-1"></i> The student's records will be preserved but hidden from reports.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary cancel-delete-btn" style="position: relative; z-index: 1057;">Cancel</button>
                 <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" style="position: relative; z-index: 1057;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger" style="position: relative; z-index: 1057;">Yes, Delete Student</button>
+                    <button type="submit" class="btn btn-warning" style="position: relative; z-index: 1057;">Yes, Disable Student</button>
                 </form>
             </div>
         </div>

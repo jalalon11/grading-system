@@ -99,8 +99,9 @@ class ReportController extends Controller
         // Dump for debugging
         error_log('Selected section: ' . $section->name . ', ID: ' . $section->id);
 
-        // Get all students directly from the database to ensure they're loaded
+        // Get only active students from the database to ensure they're loaded
         $students = Student::where('section_id', $section->id)
+            ->where('is_active', true)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -230,8 +231,9 @@ class ReportController extends Controller
         $section = Section::findOrFail($validated['section_id']);
         $subject = Subject::findOrFail($validated['subject_id']);
 
-        // Get all students
+        // Get only active students
         $students = Student::where('section_id', $section->id)
+            ->where('is_active', true)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -453,8 +455,9 @@ class ReportController extends Controller
 
         // If 'all' is selected for quarter, we'll handle it differently
         if ($isAllQuarters) {
-            // Get all students in the section
+            // Get only active students in the section
             $students = Student::where('section_id', $section->id)
+                ->where('is_active', true) // Only include active students
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
@@ -492,8 +495,9 @@ class ReportController extends Controller
             return back()->with('error', 'You can only generate grade slips for sections where you are the adviser.');
         }
 
-        // Get all students in the section
+        // Get only active students in the section
         $students = Student::where('section_id', $section->id)
+            ->where('is_active', true)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();

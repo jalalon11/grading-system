@@ -243,6 +243,7 @@ class GradeController extends Controller
                         ->toArray();
 
                     $sectionStudents = Student::where('section_id', $selectedSectionId)
+                        ->where('is_active', true)
                         ->with(['grades' => function ($query) use ($sectionSubjectIds, $selectedTerm) {
                             $query->whereIn('subject_id', $sectionSubjectIds)
                                   ->where('term', $selectedTerm)
@@ -471,10 +472,12 @@ class GradeController extends Controller
                 ]);
             }
 
-            // Get students for the selected section
+            // Get only active students for the selected section
             $students = [];
             if ($sectionId) {
-                $students = Student::where('section_id', $sectionId)->get();
+                $students = Student::where('section_id', $sectionId)
+                    ->where('is_active', true)
+                    ->get();
 
                 Log::info('Students retrieved for section', [
                     'section_id' => $sectionId,
@@ -827,8 +830,10 @@ class GradeController extends Controller
             // Load the section
             $section = Section::findOrFail($request->section_id);
 
-            // Get students for the section
-            $students = Student::where('section_id', $request->section_id)->get();
+            // Get only active students for the section
+            $students = Student::where('section_id', $request->section_id)
+                ->where('is_active', true)
+                ->get();
 
             Log::info('Students retrieved for section', [
                 'section_id' => $request->section_id,
@@ -1051,6 +1056,18 @@ class GradeController extends Controller
                     foreach ($request->student_ids as $studentId) {
                         // Check if a score was provided for this student and component
                         if (isset($componentScores[$componentId][$studentId])) {
+                            // Verify student belongs to the section and is active
+                            $student = Student::where('id', $studentId)
+                                ->where('section_id', $request->section_id)
+                                ->where('is_active', true)
+                                ->first();
+
+                            // Skip if student is not active
+                            if (!$student) {
+                                Log::warning("Student $studentId is not active or not in section {$request->section_id}");
+                                continue;
+                            }
+
                             $score = $componentScores[$componentId][$studentId];
 
                             // Validate the score against max score
@@ -1095,9 +1112,10 @@ class GradeController extends Controller
                 // Process regular subject grades
                 $gradesAdded = 0;
                 foreach ($request->student_ids as $index => $studentId) {
-                    // Check if the student belongs to the section
+                    // Check if the student belongs to the section and is active
                     $student = Student::where('id', $studentId)
                         ->where('section_id', $request->section_id)
+                        ->where('is_active', true)
                         ->firstOrFail();
 
                     // Only create grade if score is provided
@@ -1805,6 +1823,7 @@ class GradeController extends Controller
             $students = [];
             if ($selectedSubject && $selectedSectionId) {
                 $sectionStudents = Student::where('section_id', $selectedSectionId)
+                    ->where('is_active', true)
                     ->with(['grades' => function($query) use ($selectedSubject, $selectedTerm) {
                         $query->where('subject_id', $selectedSubject->id)
                               ->where('term', $selectedTerm);
