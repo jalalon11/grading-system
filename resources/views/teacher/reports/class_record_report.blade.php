@@ -1863,6 +1863,12 @@
                             $qaScore = '';
                             $qaPS = '';
                             $qaWS = '';
+                            $hasQuarterlyAssessment = false;
+                            $qaMaxScore = 0;
+
+                            // Check if quarterly assessment exists
+                            $hasQuarterlyAssessment = $quarterlyAssessments->count() > 0;
+
                             if ($studentQuarterly) {
                                 $qaScore = $studentQuarterly->score;
                                 $qaMaxScore = $studentQuarterly->max_score;
@@ -1870,18 +1876,25 @@
                                 $qaPS = ($qaScore / $qaMaxScore) * 100;
                                 // Calculate WS as actual contribution to final grade
                                 $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
+                            } elseif ($hasQuarterlyAssessment) {
+                                // If assessment exists but student doesn't have a score yet
+                                $qaMaxScore = $quarterlyAssessments->first()->max_score;
                             }
                         @endphp
 
-                        <td class="qa-score editable-cell"
+                        <td class="{{ $hasQuarterlyAssessment ? 'qa-score editable-cell' : 'qa-score' }}"
                             data-student-id="{{ $student->id }}"
                             data-subject-id="{{ $subject->id }}"
                             data-quarter="{{ $quarter }}"
                             data-grade-type="quarterly"
                             data-assessment-name="Quarterly Assessment"
                             data-assessment-index="1"
-                            data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
-                            {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
+                            data-max-score="{{ $qaMaxScore }}">
+                            @if($hasQuarterlyAssessment)
+                                {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
+                            @else
+                                <small class="text-danger" style="font-size: 8px;">No assessment</small>
+                            @endif
                         </td>
                         <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
                         <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
@@ -2063,6 +2076,12 @@
                             $qaScore = '';
                             $qaPS = '';
                             $qaWS = '';
+                            $hasQuarterlyAssessment = false;
+                            $qaMaxScore = 0;
+
+                            // Check if quarterly assessment exists
+                            $hasQuarterlyAssessment = $quarterlyAssessments->count() > 0;
+
                             if ($studentQuarterly) {
                                 $qaScore = $studentQuarterly->score;
                                 $qaMaxScore = $studentQuarterly->max_score;
@@ -2070,18 +2089,25 @@
                                 $qaPS = ($qaScore / $qaMaxScore) * 100;
                                 // Calculate WS as actual contribution to final grade
                                 $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
+                            } elseif ($hasQuarterlyAssessment) {
+                                // If assessment exists but student doesn't have a score yet
+                                $qaMaxScore = $quarterlyAssessments->first()->max_score;
                             }
                         @endphp
 
-                        <td class="qa-score editable-cell"
+                        <td class="{{ $hasQuarterlyAssessment ? 'qa-score editable-cell' : 'qa-score' }}"
                             data-student-id="{{ $student->id }}"
                             data-subject-id="{{ $subject->id }}"
                             data-quarter="{{ $quarter }}"
                             data-grade-type="quarterly"
                             data-assessment-name="Quarterly Assessment"
                             data-assessment-index="1"
-                            data-max-score="{{ $studentQuarterly ? $studentQuarterly->max_score : 100 }}">
-                            {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
+                            data-max-score="{{ $qaMaxScore }}">
+                            @if($hasQuarterlyAssessment)
+                                {{ $qaScore !== '' ? number_format($qaScore, 0) : '' }}
+                            @else
+                                <small class="text-danger" style="font-size: 8px;">No assessment</small>
+                            @endif
                         </td>
                         <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
                         <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
@@ -2855,6 +2881,10 @@
                     const quarterlyAssessments = @json($quarterlyAssessments);
                     if (quarterlyAssessments.length > 0) {
                         maxScoreValue = quarterlyAssessments[0].max_score;
+                    } else {
+                        // No quarterly assessment exists, show error
+                        showToast('Error', 'No quarterly assessment has been created yet. Please create a quarterly assessment first.', 'error');
+                        return false; // Prevent editing
                     }
                 }
 
