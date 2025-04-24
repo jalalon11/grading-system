@@ -19,6 +19,7 @@ use App\Http\Controllers\TeacherAdmin\DashboardController as TeacherAdminDashboa
 use App\Http\Controllers\TeacherAdmin\SectionController;
 use App\Http\Controllers\TeacherAdmin\SubjectController as TeacherAdminSubjectController;
 use App\Http\Controllers\TeacherAdmin\ReportController as TeacherAdminReportController;
+use App\Http\Controllers\TeacherAdmin\SchoolController as TeacherAdminSchoolController;
 use App\Http\Controllers\Teacher\ResourceController as TeacherResourceController;
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\ResourceCategoryController;
@@ -311,6 +312,9 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             Route::get('/reports/consolidated-grades', [TeacherAdminReportController::class, 'consolidatedGrades'])->name('reports.consolidated-grades');
             Route::post('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades');
             Route::get('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades-get');
+
+            // School Overview
+            Route::get('/school', [TeacherAdminSchoolController::class, 'index'])->name('school.index');
 
             // Payment Management
             Route::get('/payments', [TeacherAdminPaymentController::class, 'index'])->name('payments.index');

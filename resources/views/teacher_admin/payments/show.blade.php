@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <!-- Payment Status Timeline -->
+    <!-- Payment Status Timeline -->   
     <div class="row mb-4">
         <div class="col-lg-8 mx-auto">
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
@@ -95,7 +95,7 @@
                                         <p class="small mt-2 mb-0"><i class="fas fa-info-circle me-1"></i> Admin approval notes are available in the Additional Information section below.</p>
                                     @endif
 
-                                    @if($school->hasActiveSubscription() && $school->subscription_ends_at)
+                                    <!-- @if($school->hasActiveSubscription() && $school->subscription_ends_at)
                                         <div class="mt-3">
                                             <div class="subscription-timer-container p-2 bg-light rounded-3 d-inline-block">
                                                 <div class="d-flex align-items-center">
@@ -107,7 +107,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    @endif
+                                    @endif -->
                                 </div>
                             </div>
                         </div>

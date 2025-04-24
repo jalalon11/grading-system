@@ -34,6 +34,10 @@
                             <i class="fas fa-exclamation-triangle me-2"></i>
                             This payment is pending approval. Please review the details and approve or reject it.
                         </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> Approving this payment will update the school's billing cycle to <strong>{{ ucfirst($payment->billing_cycle) }}</strong> based on the teacher admin's selection.
+                        </div>
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <form action="{{ route('admin.payments.approve', $payment) }}" method="POST">
@@ -64,6 +68,7 @@
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle me-2"></i>
                             This payment has been approved and the school's subscription is active until {{ $payment->subscription_end_date->format('F d, Y') }}.
+                            The school's billing cycle has been set to <strong>{{ ucfirst($payment->billing_cycle) }}</strong>.
                         </div>
                     @else
                         <div class="alert alert-danger">
@@ -117,9 +122,9 @@
                                     <td class="fw-bold ps-0">School Code</td>
                                     <td>{{ $payment->school->code }}</td>
                                 </tr>
-                                <tr>
+                                <tr class="table-primary">
                                     <td class="fw-bold ps-0">Billing Cycle</td>
-                                    <td>{{ ucfirst($payment->billing_cycle) }}</td>
+                                    <td><strong>{{ ucfirst($payment->billing_cycle) }}</strong> {{ $payment->status === 'pending' ? '(will be applied to school upon approval)' : '(applied to school)' }}</td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold ps-0">Subscription Start</td>

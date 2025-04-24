@@ -1070,6 +1070,11 @@
                                 <i class="fas fa-tachometer-alt"></i> <span>Admin Dashboard</span>
                             </a>
                         </li>
+                        <li class="{{ Request::is('teacher-admin/school*') ? 'active' : '' }}">
+                            <a href="{{ route('teacher-admin.school.index') }}">
+                                <i class="fas fa-school"></i> <span>School</span>
+                            </a>
+                        </li>
                         <li class="{{ Request::is('teacher-admin/sections*') ? 'active' : '' }}">
                             <a href="{{ route('teacher-admin.sections.index') }}">
                                 <i class="fas fa-door-open"></i> <span>Manage Sections</span>
@@ -1083,11 +1088,6 @@
                         <li class="{{ Request::is('teacher-admin/reports*') ? 'active' : '' }}">
                             <a href="{{ route('teacher-admin.reports.index') }}">
                                 <i class="fas fa-chart-bar"></i> <span>Reports</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('teacher-admin/payments*') ? 'active' : '' }}">
-                            <a href="{{ route('teacher-admin.payments.index') }}">
-                                <i class="fas fa-credit-card"></i> <span>Payments</span>
                             </a>
                         </li>
                     </ul>
@@ -1378,5 +1378,8 @@
             });
         });
     </script>
+
+    <!-- End of body scripts -->
+    @stack('scripts-end')
 </body>
 </html>

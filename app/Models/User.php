@@ -80,11 +80,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get sections where this user is the homeroom teacher
+     * Get sections where this user is the adviser (homeroom teacher)
      */
     public function sections(): HasMany
     {
-        return $this->hasMany(Section::class);
+        return $this->hasMany(Section::class, 'adviser_id');
     }
 
     /**

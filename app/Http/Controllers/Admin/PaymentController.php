@@ -66,7 +66,14 @@ class PaymentController extends Controller
             $school->subscription_status = 'active';
             $school->subscription_ends_at = $payment->subscription_end_date;
             $school->is_active = true; // Reactivate the school
+
+            // Update the school's billing cycle to match the payment's billing cycle
+            $school->billing_cycle = $payment->billing_cycle;
+
             $school->save();
+
+            // Log the billing cycle update
+            Log::info("School {$school->name} (ID: {$school->id}) billing cycle updated to {$payment->billing_cycle} based on payment selection.");
 
             // Log the reactivation
             Log::info("School {$school->name} (ID: {$school->id}) has been reactivated after payment approval.");
@@ -74,7 +81,7 @@ class PaymentController extends Controller
             DB::commit();
 
             return redirect()->route('admin.payments.show', $payment)
-                ->with('success', 'Payment approved successfully. The school subscription has been updated.');
+                ->with('success', 'Payment approved successfully. The school subscription and billing cycle have been updated to ' . ucfirst($payment->billing_cycle) . '.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'An error occurred while approving the payment: ' . $e->getMessage());
