@@ -668,17 +668,10 @@
                     </div>
                 </div>
 
-                <!-- Billing Toggle -->
-                <div class="flex justify-center mb-12">
-                    <div class="bg-[#F4F6F6] p-1 rounded-xl shadow-sm inline-flex">
-                        <button type="button" class="px-6 py-2 text-sm font-medium rounded-lg bg-[#1C2833] text-[#F4F6F6] transition-colors">
-                            Monthly Billing
-                        </button>
-                        <button type="button" class="px-6 py-2 text-sm font-medium rounded-lg text-[#2E4053] transition-colors">
-                            Annual Billing
-                            <span class="ml-2 px-2 py-1 text-xs bg-[#2E4053] rounded-full text-[#F4F6F6]">Save 20%</span>
-                        </button>
-                    </div>
+                <!-- Billing Options Header -->
+                <div class="text-center mb-12">
+                    <h3 class="text-2xl font-bold text-[#1C2833] mb-3">Choose Your Billing Option</h3>
+                    <p class="text-[#2E4053] max-w-2xl mx-auto">We offer both monthly and annual billing plans. Save 20% with annual billing!</p>
                 </div>
 
                 <!-- Pricing Cards -->
@@ -689,9 +682,20 @@
                             <h3 class="text-2xl font-bold text-[#1C2833] mb-2">Elementary</h3>
                             <p class="text-[#2E4053] mb-6">Kindergarten to Grade 6</p>
                             <div class="mb-6">
-                                <span class="text-4xl font-bold text-[#1C2833]">₱2,300</span>
-                                <span class="text-[#2E4053]">/month</span>
-                                <div class="text-sm text-[#2E4053] mt-1">or ₱22,080/year</div>
+                                <div class="mb-2">
+                                    <span class="text-4xl font-bold text-[#1C2833]">₱2,300</span>
+                                    <span class="text-[#2E4053]">/month</span>
+                                </div>
+                                <div class="bg-gradient-to-r from-[#1C2833] to-[#2E4053] p-3 rounded-lg text-white relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 bg-yellow-500 text-[#1C2833] px-3 py-1 rounded-bl-lg text-xs font-bold">
+                                        SAVE 20%
+                                    </div>
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        <span class="font-medium">Annual Billing</span>
+                                    </div>
+                                    <div class="text-2xl font-bold">₱22,080<span class="text-sm font-normal">/year</span></div>
+                                </div>
                             </div>
                             <ul class="space-y-4 mb-8">
                                 <li class="flex items-center">
@@ -736,9 +740,20 @@
                             <h3 class="text-2xl font-bold text-[#1C2833] mb-2">High School</h3>
                             <p class="text-[#2E4053] mb-6">Grade 7 to Grade 12</p>
                             <div class="mb-6">
-                                <span class="text-4xl font-bold text-[#1C2833]">₱2,500</span>
-                                <span class="text-[#2E4053]">/month</span>
-                                <div class="text-sm text-[#2E4053] mt-1">or ₱24,000/year</div>
+                                <div class="mb-2">
+                                    <span class="text-4xl font-bold text-[#1C2833]">₱2,500</span>
+                                    <span class="text-[#2E4053]">/month</span>
+                                </div>
+                                <div class="bg-gradient-to-r from-[#1C2833] to-[#2E4053] p-3 rounded-lg text-white relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 bg-yellow-500 text-[#1C2833] px-3 py-1 rounded-bl-lg text-xs font-bold">
+                                        SAVE 20%
+                                    </div>
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        <span class="font-medium">Annual Billing</span>
+                                    </div>
+                                    <div class="text-2xl font-bold">₱24,000<span class="text-sm font-normal">/year</span></div>
+                                </div>
                             </div>
                             <ul class="space-y-4 mb-8">
                                 <li class="flex items-center">
@@ -780,9 +795,20 @@
                             <h3 class="text-2xl font-bold text-[#1C2833] mb-2">Complete System</h3>
                             <p class="text-[#2E4053] mb-6">Kindergarten to Grade 12</p>
                             <div class="mb-6">
-                                <span class="text-4xl font-bold text-[#1C2833]">₱4,700</span>
-                                <span class="text-[#2E4053]">/month</span>
-                                <div class="text-sm text-[#2E4053] mt-1">or ₱45,120/year</div>
+                                <div class="mb-2">
+                                    <span class="text-4xl font-bold text-[#1C2833]">₱4,700</span>
+                                    <span class="text-[#2E4053]">/month</span>
+                                </div>
+                                <div class="bg-gradient-to-r from-[#1C2833] to-[#2E4053] p-3 rounded-lg text-white relative overflow-hidden">
+                                    <div class="absolute top-0 right-0 bg-yellow-500 text-[#1C2833] px-3 py-1 rounded-bl-lg text-xs font-bold">
+                                        SAVE 20%
+                                    </div>
+                                    <div class="flex items-center mb-1">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        <span class="font-medium">Annual Billing</span>
+                                    </div>
+                                    <div class="text-2xl font-bold">₱45,120<span class="text-sm font-normal">/year</span></div>
+                                </div>
                             </div>
                             <ul class="space-y-4 mb-8">
                                 <li class="flex items-center">
