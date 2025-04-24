@@ -35,7 +35,7 @@ class SectionController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return view('teacher_admin.sections.index', ['sections' => collect()])
                 ->with('error', 'Error loading sections. Please try again or contact support.');
         }
@@ -54,12 +54,12 @@ class SectionController extends Controller
             // Get grade levels with fallback
             $school = Auth::user()->school;
             $gradeLevels = [];
-            
+
             if ($school) {
                 // Parse grade levels from school settings
-                $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels : 
+                $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels :
                              (is_string($school->grade_levels) ? json_decode($school->grade_levels, true) : []);
-                
+
                 // If still empty, use default grades
                 if (empty($gradeLevels)) {
                     $gradeLevels = range(7, 12);
@@ -68,14 +68,14 @@ class SectionController extends Controller
                 // Default grade levels
                 $gradeLevels = range(7, 12);
             }
-            
+
             return view('teacher_admin.sections.create', compact('teachers', 'gradeLevels'));
         } catch (\Exception $e) {
             Log::error('Error loading section creation form: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return redirect()->route('teacher-admin.sections.index')
                 ->with('error', 'Failed to load section creation form. Please try again.');
         }
@@ -97,10 +97,10 @@ class SectionController extends Controller
                 'batch_sections_exists' => $request->has('batch_sections'),
                 'batch_sections_hidden_exists' => $request->has('batch_sections_hidden'),
             ]);
-            
+
             // Check if this is a batch entry - accept both string '1' and integer 1
             $isBatch = $request->has('is_batch') && ($request->is_batch == '1' || $request->is_batch == 1);
-            
+
             if ($isBatch) {
                 // Process batch section creation
                 Log::info('Processing batch section creation', [
@@ -110,10 +110,10 @@ class SectionController extends Controller
                     'batch_sections_value' => $request->input('batch_sections'),
                     'batch_sections_hidden_value' => $request->input('batch_sections_hidden')
                 ]);
-                
+
                 // Get batch data from either parameter
                 $batchSectionsData = null;
-                
+
                 if ($request->has('batch_sections_json') && !empty($request->input('batch_sections_json'))) {
                     // Handle JSON-encoded data
                     $batchSectionsData = json_decode($request->input('batch_sections_json'), true);
@@ -125,53 +125,53 @@ class SectionController extends Controller
                     $batchSectionsData = urldecode($request->input('batch_sections_hidden'));
                     Log::info('Using batch_sections_hidden parameter', ['data' => $batchSectionsData]);
                 }
-                
+
                 // Debug - check if batch data was found
                 if (empty($batchSectionsData)) {
                     return back()->withInput()->with('error', 'Batch sections data is missing. Please try again.');
                 }
-                
+
                 // Use the batch data for validation and processing
                 $validated = ['batch_sections' => $batchSectionsData];
-                
+
                 // Parse the batch input
                 $sections = [];
-                
+
                 // Convert the batch data to a string if it's not already one
                 if (is_array($batchSectionsData)) {
                     $batchSectionsData = $batchSectionsData;
                 }
-                
+
                 $lines = explode("\n", trim($batchSectionsData));
                 $createdCount = 0;
                 $errors = [];
-                
+
                 Log::info('Batch parsing', [
                     'lines_count' => count($lines),
                     'first_line' => count($lines) > 0 ? $lines[0] : 'none',
                     'data_type' => gettype($batchSectionsData)
                 ]);
-                
+
                 // First, validate all inputs before adding to database
                 $allValid = true;
                 $allTeachersValid = true;
                 $processedLines = [];
-                
+
                 foreach ($lines as $index => $line) {
                     $line = trim($line);
                     if (empty($line)) continue;
-                    
+
                     Log::info('Processing raw line', ['line' => $line]);
-                    
+
                     // Split by comma and trim each part to handle extra spaces
                     // Use a safer explode to handle potential commas in quotes (not perfect but safer)
                     $parts = array_map('trim', explode(',', $line));
-                    
+
                     // Filter out empty parts that might result from double commas
                     $parts = array_values(array_filter($parts, function($part) {
                         return !empty($part);
                     }));
-                    
+
                     Log::info('Parsed line ' . ($index + 1), [
                         'line' => $line,
                         'parts' => $parts,
@@ -183,18 +183,18 @@ class SectionController extends Controller
                             'school_year' => $parts[3]
                         ] : 'insufficient parts'
                     ]);
-                    
+
                     // Check if we have all the required parts
                     if (count($parts) < 4) {
                         $errors[] = "Line " . ($index + 1) . ": Invalid format, expected 'Name, Grade Level, Adviser ID, School Year'. Found " . count($parts) . " parts instead of 4.";
                         $allValid = false;
                         continue;
                     }
-                    
+
                     // Extract data
                     $name = $parts[0];
                     $gradeLevel = $parts[1];
-                    
+
                     // Ensure adviser ID is a valid integer
                     $adviserId = trim($parts[2]);
                     if (!is_numeric($adviserId)) {
@@ -203,22 +203,22 @@ class SectionController extends Controller
                         continue;
                     }
                     $adviserId = (int)$adviserId;
-                    
+
                     $schoolYear = $parts[3];
-                    
+
                     // Validate adviser exists and belongs to the same school
                     $teacher = User::where('id', $adviserId)
                         ->where('school_id', Auth::user()->school_id)
                         ->where('role', 'teacher')
                         ->first();
-                    
+
                     if (!$teacher) {
                         $errors[] = "Line " . ($index + 1) . ": Invalid adviser ID {$adviserId}. No teacher with this ID found in your school.";
                         $allValid = false;
                         $allTeachersValid = false;
                         continue;
                     }
-                    
+
                     // Add valid section to be processed
                     $processedLines[] = [
                         'name' => $name,
@@ -231,60 +231,60 @@ class SectionController extends Controller
                         'updated_at' => now(),
                     ];
                 }
-                
+
                 // If validation failed, return with all errors
                 if (!$allValid) {
                     Log::warning('Batch section creation validation failed', [
                         'errors' => $errors,
                         'all_teachers_valid' => $allTeachersValid
                     ]);
-                    
+
                     // Add extra information if teacher IDs are invalid
                     if (!$allTeachersValid) {
                         // Get available teacher IDs
                         $availableTeachers = User::where('school_id', Auth::user()->school_id)
                             ->where('role', 'teacher')
                             ->get(['id', 'name']);
-                        
+
                         $errors[] = "Available teacher IDs in your system: " . $availableTeachers->map(function($teacher) {
                             return "ID {$teacher->id}: {$teacher->name}";
                         })->implode(', ');
                     }
-                    
+
                     return back()
                         ->withInput()
                         ->with('error', 'Batch entry validation failed. Please check the errors below.')
                         ->with('batch_errors', $errors);
                 }
-                
+
                 // Begin transaction
                 DB::beginTransaction();
-                
+
                 try {
                     // Now insert all valid records
                     foreach ($processedLines as $sectionData) {
                         DB::table('sections')->insert($sectionData);
                         $createdCount++;
                     }
-                    
+
                     // Commit the transaction
                     DB::commit();
-                    
+
                     Log::info('Batch section creation completed successfully', [
                         'created' => $createdCount
                     ]);
-                    
+
                     return redirect()->route('teacher-admin.sections.index')
                         ->with('success', "$createdCount sections created successfully.");
                 } catch (\Exception $e) {
                     // Rollback the transaction on error
                     DB::rollBack();
-                    
+
                     Log::error('Error during batch section insertion', [
                         'error' => $e->getMessage(),
                         'trace' => $e->getTraceAsString()
                     ]);
-                    
+
                     return back()
                         ->withInput()
                         ->with('error', 'Database error: ' . $e->getMessage());
@@ -298,12 +298,12 @@ class SectionController extends Controller
                     'adviser_id' => 'required|exists:users,id',
                     'school_year' => 'required|string|max:20',
                 ]);
-                
+
                 Log::info('Creating new section', ['data' => $validated]);
-                
+
                 // Begin transaction
                 DB::beginTransaction();
-                
+
                 // Create the section directly with DB query builder
                 $sectionId = DB::table('sections')->insertGetId([
                     'name' => $request->name,
@@ -315,13 +315,13 @@ class SectionController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-                
+
                 // Log success
                 Log::info('Section created successfully', ['section_id' => $sectionId]);
-                
+
                 // Commit transaction
                 DB::commit();
-                
+
                 return redirect()->route('teacher-admin.sections.index')
                     ->with('success', 'Section created successfully.');
             }
@@ -330,13 +330,13 @@ class SectionController extends Controller
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
-            
+
             Log::error('Failed to create section: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()->withInput()
                 ->with('error', 'Failed to create section: ' . $e->getMessage());
         }
@@ -350,28 +350,72 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('view', $section);
-            
+
             // Load relationships
             $section->load(['adviser', 'subjects']);
             $section->loadCount('students');
-            
+
             // Get teachers for the same school
             $teachers = User::where('school_id', Auth::user()->school_id)
                 ->where('role', 'teacher')
                 ->get();
-                
-            // Get active subjects for the same school
+
+            // Get active subjects for the same school that match the section's grade level
+            $numericGradeLevel = preg_replace('/[^0-9]/', '', $section->grade_level);
+
+            Log::info('Fetching subjects for section', [
+                'section_id' => $section->id,
+                'section_name' => $section->name,
+                'section_grade_level' => $section->grade_level,
+                'extracted_numeric_grade' => $numericGradeLevel
+            ]);
+
             $subjects = Subject::where('school_id', Auth::user()->school_id)
                 ->where('is_active', true)
+                ->where('is_component', false) // Exclude MAPEH component subjects
+                ->where(function($query) use ($section, $numericGradeLevel) {
+                    // Match subjects with the same grade level (either as string or number) or subjects with null grade level
+                    $query->where('grade_level', $section->grade_level)
+                          ->orWhere('grade_level', $numericGradeLevel)
+                          ->orWhereNull('grade_level');
+                })
                 ->get();
-    
+
+            // Get MAPEH subjects with their components for debugging
+            $mapehSubjects = Subject::where('school_id', Auth::user()->school_id)
+                ->where('is_active', true)
+                ->whereHas('components')
+                ->with('components')
+                ->get();
+
+            Log::info('Subjects found for section', [
+                'section_id' => $section->id,
+                'count' => $subjects->count(),
+                'subject_ids' => $subjects->pluck('id')->toArray(),
+                'subject_names' => $subjects->pluck('name')->toArray(),
+                'subject_grade_levels' => $subjects->pluck('grade_level')->toArray(),
+                'mapeh_subjects_count' => $mapehSubjects->count(),
+                'mapeh_subjects' => $mapehSubjects->map(function($subject) {
+                    return [
+                        'id' => $subject->id,
+                        'name' => $subject->name,
+                        'components' => $subject->components->map(function($component) {
+                            return [
+                                'id' => $component->id,
+                                'name' => $component->name
+                            ];
+                        })->toArray()
+                    ];
+                })->toArray()
+            ]);
+
             return view('teacher_admin.sections.show', compact('section', 'teachers', 'subjects'));
         } catch (\Exception $e) {
             Log::error('Error viewing section: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return redirect()->route('teacher-admin.sections.index')
                 ->with('error', 'Failed to view section details. Please try again.');
         }
@@ -385,21 +429,21 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('update', $section);
-            
+
             // Get teachers for the same school
             $teachers = User::where('school_id', Auth::user()->school_id)
                 ->where('role', 'teacher')
                 ->get();
-    
+
             // Get grade levels with fallback
             $school = Auth::user()->school;
             $gradeLevels = [];
-            
+
             if ($school) {
                 // Parse grade levels from school settings
-                $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels : 
+                $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels :
                              (is_string($school->grade_levels) ? json_decode($school->grade_levels, true) : []);
-                
+
                 // If still empty, use default grades
                 if (empty($gradeLevels)) {
                     $gradeLevels = range(7, 12);
@@ -408,14 +452,14 @@ class SectionController extends Controller
                 // Default grade levels
                 $gradeLevels = range(7, 12);
             }
-    
+
             return view('teacher_admin.sections.edit', compact('section', 'teachers', 'gradeLevels'));
         } catch (\Exception $e) {
             Log::error('Error loading section edit form: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return redirect()->route('teacher-admin.sections.index')
                 ->with('error', 'Failed to load section edit form. Please try again.');
         }
@@ -429,7 +473,7 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('update', $section);
-            
+
             // Validate the input
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -437,12 +481,12 @@ class SectionController extends Controller
                 'adviser_id' => 'required|exists:users,id',
                 'school_year' => 'required|string|max:20',
             ]);
-            
+
             Log::info('Updating section', ['section_id' => $section->id, 'data' => $validated]);
-            
+
             // Begin transaction
             DB::beginTransaction();
-            
+
             // Update the section using DB query builder
             DB::table('sections')
                 ->where('id', $section->id)
@@ -453,25 +497,25 @@ class SectionController extends Controller
                     'school_year' => $request->school_year,
                     'updated_at' => now(),
                 ]);
-            
+
             // Log success
             Log::info('Section updated successfully', ['section_id' => $section->id]);
-            
+
             // Commit transaction
             DB::commit();
-            
+
             return redirect()->route('teacher-admin.sections.index')
                 ->with('success', 'Section updated successfully.');
         } catch (\Exception $e) {
             // Rollback transaction
             DB::rollBack();
-            
+
             Log::error('Failed to update section: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()->withInput()
                 ->with('error', 'Failed to update section: ' . $e->getMessage());
         }
@@ -485,39 +529,39 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('delete', $section);
-            
+
             Log::info('Deleting section', ['section_id' => $section->id]);
-            
+
             // Begin transaction
             DB::beginTransaction();
-            
+
             // First, detach all subject relationships
             DB::table('section_subject')
                 ->where('section_id', $section->id)
                 ->delete();
-            
+
             // Then delete the section
             DB::table('sections')
                 ->where('id', $section->id)
                 ->delete();
-            
+
             // Log success
             Log::info('Section deleted successfully', ['section_id' => $section->id]);
-            
+
             // Commit transaction
             DB::commit();
-            
+
             return redirect()->route('teacher-admin.sections.index')
                 ->with('success', 'Section deleted successfully.');
         } catch (\Exception $e) {
             // Rollback transaction
             DB::rollBack();
-            
+
             Log::error('Failed to delete section: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return back()->with('error', 'Failed to delete section: ' . $e->getMessage());
         }
     }
@@ -530,26 +574,26 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('update', $section);
-            
+
             // Validate the input
             $validated = $request->validate([
                 'subjects' => 'required|array',
                 'subjects.*.subject_id' => 'required|exists:subjects,id',
                 'subjects.*.teacher_id' => 'required|exists:users,id',
             ]);
-            
+
             Log::info('Assigning subjects to section', [
-                'section_id' => $section->id, 
+                'section_id' => $section->id,
                 'subjects' => $request->subjects
             ]);
-            
+
             // Begin transaction
             DB::beginTransaction();
-            
+
             // Instead of clearing all existing subjects, we'll determine which ones to add or update
             $existingSubjectIds = $section->subjects->pluck('id')->toArray();
             $newSubjectIds = collect($request->subjects)->pluck('subject_id')->toArray();
-            
+
             // Loop through new subject assignments
             foreach ($request->subjects as $subject) {
                 // Check if this subject is already assigned to this section
@@ -557,7 +601,7 @@ class SectionController extends Controller
                     ->where('section_id', $section->id)
                     ->where('subject_id', $subject['subject_id'])
                     ->first();
-                
+
                 if ($existingPivot) {
                     // Update the existing subject-teacher assignment
                     DB::table('section_subject')
@@ -578,28 +622,28 @@ class SectionController extends Controller
                     ]);
                 }
             }
-            
+
             // Log success
             Log::info('Subjects assigned successfully', ['section_id' => $section->id]);
-            
+
             // Commit transaction
             DB::commit();
-            
+
             return redirect()->route('teacher-admin.sections.show', $section)
                 ->with('success', 'Subjects assigned successfully.');
         } catch (\Exception $e) {
             // Rollback transaction
             DB::rollBack();
-            
+
             Log::error('Failed to assign subjects: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return back()->with('error', 'Failed to assign subjects: ' . $e->getMessage());
         }
     }
-    
+
     /**
      * Toggle the active status of a section.
      */
@@ -608,10 +652,10 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('update', $section);
-            
+
             // Toggle the is_active field
             $newStatus = !$section->is_active;
-            
+
             // Update using query builder
             DB::table('sections')
                 ->where('id', $section->id)
@@ -619,11 +663,11 @@ class SectionController extends Controller
                     'is_active' => $newStatus,
                     'updated_at' => now(),
                 ]);
-            
+
             // Log success
             $statusText = $newStatus ? 'activated' : 'deactivated';
             Log::info("Section {$statusText}", ['section_id' => $section->id]);
-            
+
             return redirect()->route('teacher-admin.sections.index')
                 ->with('success', "Section {$statusText} successfully.");
         } catch (\Exception $e) {
@@ -631,7 +675,7 @@ class SectionController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return back()->with('error', 'Failed to update section status: ' . $e->getMessage());
         }
     }
@@ -644,20 +688,20 @@ class SectionController extends Controller
         try {
             // Authorize the request
             $this->authorize('update', $section);
-            
+
             // Validate the input
             $validated = $request->validate([
                 'adviser_id' => 'required|exists:users,id'
             ]);
-            
+
             Log::info('Updating section adviser', [
                 'section_id' => $section->id,
                 'new_adviser_id' => $request->adviser_id
             ]);
-            
+
             // Begin transaction
             DB::beginTransaction();
-            
+
             // Update the section adviser
             DB::table('sections')
                 ->where('id', $section->id)
@@ -665,24 +709,24 @@ class SectionController extends Controller
                     'adviser_id' => $request->adviser_id,
                     'updated_at' => now(),
                 ]);
-            
+
             // Log success
             Log::info('Section adviser updated successfully', ['section_id' => $section->id]);
-            
+
             // Commit transaction
             DB::commit();
-            
+
             return redirect()->route('teacher-admin.sections.show', $section)
                 ->with('success', 'Section adviser has been updated successfully.');
         } catch (\Exception $e) {
             // Rollback transaction
             DB::rollBack();
-            
+
             Log::error('Failed to update section adviser: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             return back()->with('error', 'Failed to update section adviser: ' . $e->getMessage());
         }
     }

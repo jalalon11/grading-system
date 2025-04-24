@@ -25,14 +25,14 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    
+
                     @if(session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    
+
                     <div class="row">
                         <div class="col-lg-4 col-md-6 mb-4">
                             <div class="card h-100 border-0 shadow-sm">
@@ -58,7 +58,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-lg-4 col-md-6 mb-4">
                             <div class="card h-100 border-0 shadow-sm">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -98,7 +98,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-lg-4 col-md-12 mb-4">
                             <div class="card h-100 border-0 shadow-sm">
                                 <div class="card-header bg-light">
@@ -109,11 +109,11 @@
                                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assignSubjectsModal">
                                             <i class="fas fa-book me-1"></i> Assign Subjects
                                         </button>
-                                        
+
                                         <a href="{{ route('teacher-admin.sections.edit', $section) }}" class="btn btn-warning">
                                             <i class="fas fa-edit me-1"></i> Edit Section Details
                                         </a>
-                                        
+
                                         <form action="{{ route('teacher-admin.sections.toggle-status', $section) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
@@ -122,7 +122,7 @@
                                                 {{ $section->is_active ? 'Deactivate' : 'Activate' }} Section
                                             </button>
                                         </form>
-                                        
+
                                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                                             <i class="fas fa-trash-alt me-1"></i> Delete Section
                                         </button>
@@ -131,7 +131,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="card border-0 shadow-sm mt-2">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Assigned Subjects</h5>
@@ -153,7 +153,15 @@
                                         <tbody>
                                             @foreach($section->subjects as $subject)
                                                 <tr>
-                                                    <td>{{ $subject->name }}</td>
+                                                    <td>
+                                                        {{ $subject->name }}
+                                                        @if($subject->grade_level)
+                                                            <small class="text-muted">(Grade {{ $subject->grade_level }})</small>
+                                                        @endif
+                                                        @if($subject->getIsMAPEHAttribute())
+                                                            <span class="badge bg-info ms-1">MAPEH</span>
+                                                        @endif
+                                                    </td>
                                                     <td>
                                                         @php
                                                             $teacher = App\Models\User::find($subject->pivot->teacher_id ?? 0);
@@ -202,9 +210,9 @@
                         <strong>Note:</strong> You can assign multiple subjects to this section. Existing subject assignments will be preserved.
                         If you assign a subject that's already in this section, only the teacher assignment will be updated.
                     </div>
-                    
+
                     <p class="mb-3">Select subjects and assign teachers to this section.</p>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-bordered" id="subjectsTable">
                             <thead class="table-light">
@@ -218,9 +226,14 @@
                                 <tr class="subject-row">
                                     <td>
                                         <select class="form-select subject-select" name="subjects[0][subject_id]" required>
-                                            <option value="" selected disabled>Select Subject</option>
+                                            <option value="" selected disabled>Select Subject ({{ $section->grade_level }} Only)</option>
                                             @foreach($subjects as $subject)
-                                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                                <option value="{{ $subject->id }}">
+                                                    {{ $subject->name }}
+                                                    @if($subject->grade_level)
+                                                        ({{ $subject->grade_level }})
+                                                    @endif
+                                                </option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -241,7 +254,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <button type="button" class="btn btn-secondary btn-sm mt-2" id="addSubjectRow">
                         <i class="fas fa-plus-circle me-1"></i> Add Another Subject
                     </button>
@@ -300,7 +313,7 @@
                 </div>
                 <div class="modal-body">
                     <p class="text-muted mb-3">Select a new adviser for this section. The current adviser is <strong>{{ $section->adviser->name ?? 'not assigned' }}</strong>.</p>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Select New Adviser</label>
                         <select name="adviser_id" class="form-select" required>
@@ -328,16 +341,24 @@
 <script>
     $(document).ready(function() {
         let rowCount = 1;
-        
+
         // Add new subject row
         $('#addSubjectRow').click(function() {
             let newRow = `
                 <tr class="subject-row">
                     <td>
                         <select class="form-select subject-select" name="subjects[${rowCount}][subject_id]" required>
-                            <option value="" selected disabled>Select Subject</option>
+                            <option value="" selected disabled>Select Subject (Grade {{ $section->grade_level }} Only)</option>
                             @foreach($subjects as $subject)
-                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
+                                <option value="{{ $subject->id }}">
+                                    {{ $subject->name }}
+                                    @if($subject->grade_level)
+                                        (Grade {{ $subject->grade_level }})
+                                    @endif
+                                    @if($subject->getIsMAPEHAttribute())
+                                        [MAPEH]
+                                    @endif
+                                </option>
                             @endforeach
                         </select>
                     </td>
@@ -358,49 +379,49 @@
             `;
             $('#subjectsTable tbody').append(newRow);
             rowCount++;
-            
+
             // Enable the first row's remove button if we have more than one row
             if ($('.subject-row').length > 1) {
                 $('.remove-subject').prop('disabled', false);
             }
-            
+
             // Update subject selections to prevent duplicates
             preventDuplicateSubjects();
         });
-        
+
         // Remove subject row
         $(document).on('click', '.remove-subject', function() {
             $(this).closest('tr').remove();
-            
+
             // If only one row left, disable its remove button
             if ($('.subject-row').length == 1) {
                 $('.remove-subject').prop('disabled', true);
             }
-            
+
             // Update subject selections after removal
             preventDuplicateSubjects();
         });
-        
+
         // Prevent selecting the same subject twice
         function preventDuplicateSubjects() {
             $('.subject-select').on('change', function() {
                 let selectedValues = [];
-                
+
                 // Get all currently selected values
                 $('.subject-select').each(function() {
                     if ($(this).val()) {
                         selectedValues.push($(this).val());
                     }
                 });
-                
+
                 // Disable selected options in all other dropdowns
                 $('.subject-select').each(function() {
                     let currentSelect = $(this);
                     let currentVal = currentSelect.val();
-                    
+
                     // Reset options
                     currentSelect.find('option').not(':first').prop('disabled', false);
-                    
+
                     // Disable options selected in other dropdowns
                     $.each(selectedValues, function(index, value) {
                         if (value !== currentVal) {
@@ -410,13 +431,13 @@
                 });
             });
         }
-        
+
         // Initialize duplicate prevention
         preventDuplicateSubjects();
-        
+
         // Trigger change on page load to set initial state
         $('.subject-select').first().trigger('change');
     });
 </script>
 @endpush
-@endsection 
+@endsection
