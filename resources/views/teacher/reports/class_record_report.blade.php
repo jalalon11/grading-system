@@ -1873,7 +1873,8 @@
                                 $qaScore = $studentQuarterly->score;
                                 $qaMaxScore = $studentQuarterly->max_score;
                                 // Calculate PS as a percentage
-                                $qaPS = ($qaScore / $qaMaxScore) * 100;
+                                // Ensure we don't divide by zero
+                                $qaPS = ($qaMaxScore > 0) ? ($qaScore / $qaMaxScore) * 100 : 0;
                                 // Calculate WS as actual contribution to final grade
                                 $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
                             } elseif ($hasQuarterlyAssessment) {
@@ -1896,8 +1897,8 @@
                                 <small class="text-danger" style="font-size: 8px;">No assessment</small>
                             @endif
                         </td>
-                        <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
-                        <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
+                        <td>{{ $qaPS !== '' ? number_format(floatval($qaPS), 2) : '' }}</td>
+                        <td>{{ $qaWS !== '' ? number_format(floatval($qaWS), 1) : '' }}%</td>
 
                         <!-- Initial and Quarterly Grades for male students -->
                         @php
@@ -2086,7 +2087,8 @@
                                 $qaScore = $studentQuarterly->score;
                                 $qaMaxScore = $studentQuarterly->max_score;
                                 // Calculate PS as a percentage
-                                $qaPS = ($qaScore / $qaMaxScore) * 100;
+                                // Ensure we don't divide by zero
+                                $qaPS = ($qaMaxScore > 0) ? ($qaScore / $qaMaxScore) * 100 : 0;
                                 // Calculate WS as actual contribution to final grade
                                 $qaWS = ($qaPS / 100) * $gradeConfig->quarterly_assessment_percentage;
                             } elseif ($hasQuarterlyAssessment) {
@@ -2109,8 +2111,8 @@
                                 <small class="text-danger" style="font-size: 8px;">No assessment</small>
                             @endif
                         </td>
-                        <td>{{ $qaPS !== '' ? number_format($qaPS, 2) : '' }}</td>
-                        <td>{{ $qaWS !== '' ? number_format($qaWS, 1) : '' }}%</td>
+                        <td>{{ $qaPS !== '' ? number_format(floatval($qaPS), 2) : '' }}</td>
+                        <td>{{ $qaWS !== '' ? number_format(floatval($qaWS), 1) : '' }}%</td>
 
                         <!-- Initial and Quarterly Grades for female students -->
                         @php
