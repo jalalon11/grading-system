@@ -50,6 +50,127 @@
             transition: none !important;
         }
 
+        /* Page Loading Overlay */
+        .page-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s cubic-bezier(0.19, 1, 0.22, 1), visibility 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .page-loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-content {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.05);
+            max-width: 320px;
+            width: 100%;
+            border: 1px solid rgba(230, 230, 230, 0.7);
+        }
+
+        .loading-spinner {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .spinner-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #3498db;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .spinner-ring:nth-child(2) {
+            width: 70%;
+            height: 70%;
+            top: 15%;
+            left: 15%;
+            border-top-color: #2980b9;
+            animation: spin 2s linear infinite reverse;
+        }
+
+        .spinner-ring:nth-child(3) {
+            width: 40%;
+            height: 40%;
+            top: 30%;
+            left: 30%;
+            border-top-color: #1c4966;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-progress {
+            width: 100%;
+            height: 4px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 2px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        /* Use ID selector for the navigation progress bar to avoid conflicts */
+        #navigation-progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        .loading-text {
+            font-weight: 500;
+            color: #333;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes progress {
+            0% {
+                width: 0;
+                opacity: 1;
+            }
+            50% {
+                width: 100%;
+                opacity: 0.5;
+            }
+            100% {
+                width: 100%;
+                opacity: 0;
+            }
+        }
+
         body {
             font-family: 'Nunito', sans-serif;
             background-color: #f8f9fa;
@@ -831,6 +952,21 @@
     </style>
 </head>
 <body class="{{ !Request::is('login') && !Request::is('register') && Auth::check() ? 'sidebar-open' : 'sidebar-collapsed' }} {{ Request::is('login') ? 'login-page' : '' }} {{ Request::is('register') ? 'register-page' : '' }} no-transition">
+    <!-- Page Loading Overlay - Only shown when navigating from sidebar -->
+    <div id="page-loading-overlay" class="page-loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar" id="navigation-progress-bar"></div>
+            </div>
+            <p class="loading-text">Please wait...</p>
+        </div>
+    </div>
+
     <div class="wrapper">
         <!-- Sidebar  -->
         @auth
@@ -1075,16 +1211,26 @@
 
             // Apply saved state if it exists before DOM is fully loaded
             if (sidebarState === 'collapsed') {
-                document.getElementById('sidebar').classList.add('active');
-                document.body.classList.remove('sidebar-open');
-                document.body.classList.add('sidebar-collapsed');
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.add('active');
+                    document.body.classList.remove('sidebar-open');
+                    document.body.classList.add('sidebar-collapsed');
+                }
             } else if (sidebarState === 'open') {
-                document.getElementById('sidebar').classList.remove('active');
-                document.body.classList.add('sidebar-open');
-                document.body.classList.remove('sidebar-collapsed');
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.remove('active');
+                    document.body.classList.add('sidebar-open');
+                    document.body.classList.remove('sidebar-collapsed');
+                }
             }
 
-
+            // Hide loading overlay on initial page load
+            const pageLoadingOverlay = document.getElementById('page-loading-overlay');
+            if (pageLoadingOverlay) {
+                pageLoadingOverlay.classList.remove('active');
+            }
         })();
 
         $(document).ready(function () {
@@ -1092,6 +1238,55 @@
             setTimeout(function() {
                 $('body').removeClass('no-transition');
             }, 200);
+
+            // Page Navigation Loading Effect
+            const pageLoadingOverlay = $('#page-loading-overlay');
+
+            // Ensure the loading overlay is hidden on page load
+            pageLoadingOverlay.removeClass('active');
+
+            // Function to show loading overlay with enhanced experience
+            function showLoadingOverlay() {
+                // Reset progress bar animation ONLY for the navigation progress bar
+                // Use the specific ID to avoid affecting other progress bars on the page
+                $('#navigation-progress-bar').css('animation', 'none');
+                setTimeout(function() {
+                    $('#navigation-progress-bar').css('animation', 'progress 2s ease-in-out infinite');
+                }, 10);
+
+                // Show the overlay with a slight delay for better visual effect
+                setTimeout(function() {
+                    pageLoadingOverlay.addClass('active');
+                }, 50);
+
+                // Set a timeout to hide the overlay if page doesn't load within 5 seconds
+                // This prevents the overlay from getting stuck if there's an issue with navigation
+                setTimeout(function() {
+                    pageLoadingOverlay.removeClass('active');
+                }, 5000);
+            }
+
+            // Hide loading overlay when page is fully loaded
+            $(window).on('load', function() {
+                pageLoadingOverlay.removeClass('active');
+            });
+
+            // Only show loading effect when navigating from sidebar links
+            $('#sidebar a:not([href^="#"]):not([href^="javascript"]):not([href^="mailto"]):not([href^="tel"]):not([target="_blank"]):not(.no-loading)').on('click', function(e) {
+                // Skip if it's an external link
+                if (this.hostname !== window.location.hostname) return;
+
+                // Show loading overlay only for sidebar navigation
+                showLoadingOverlay();
+            });
+
+            // Only handle form submissions from the sidebar context
+            $('#sidebar form:not(.no-loading)').on('submit', function() {
+                showLoadingOverlay();
+            });
+
+            // We're not showing loading for browser back/forward navigation
+            // to keep the experience smooth and consistent
 
             // Fixed sidebar button icon should match state
             if ($('body').hasClass('sidebar-collapsed')) {

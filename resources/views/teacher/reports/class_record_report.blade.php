@@ -1710,14 +1710,15 @@
                 </tr>
                 @php
                     $maleStudents = $students->where('gender', 'Male')->sortBy('last_name');
+                    $maleCounter = 1; // Initialize counter for male students
                     error_log('Male students found: ' . $maleStudents->count());
                     foreach ($maleStudents as $m) {
                         error_log('Male student: ' . $m->first_name . ' ' . $m->last_name . ' (ID: ' . $m->id . ')');
                     }
                 @endphp
-                @forelse($maleStudents as $maleIndex => $student)
+                @forelse($maleStudents as $student)
                     <tr>
-                        <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $maleIndex + 1 }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
+                        <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $maleCounter++ }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
 
                         <!-- Written Works -->
                         @php
@@ -1913,10 +1914,13 @@
                 <tr>
                     <td class="gender-label" colspan="27" style="text-align: left; background-color: #d9d9d9; color: #000; font-size: 11pt; padding: 5px 8px; font-weight: normal; border: 1px solid #000;">FEMALE</td>
                 </tr>
-                @php $femaleStudents = $students->where('gender', 'Female')->sortBy('last_name'); @endphp
-                @forelse($femaleStudents as $femaleIndex => $student)
+                @php
+                    $femaleStudents = $students->where('gender', 'Female')->sortBy('last_name');
+                    $femaleCounter = 1; // Initialize counter for female students
+                @endphp
+                @forelse($femaleStudents as $student)
                     <tr>
-                        <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $femaleIndex + 1 }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
+                        <td class="text-left" style="text-align: left; padding-left: 10px;">{{ $femaleCounter++ }}. {{ $student->last_name }}, {{ $student->first_name }}</td>
 
                         <!-- Written Works -->
                         @php
