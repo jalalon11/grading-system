@@ -1231,6 +1231,17 @@ $age = $birthDate->diff($today)->y;
     </div>
     @endif
 
+    <!-- Alert for Disabled Student -->
+    @if(isset($isFromAssignedSection) && $isFromAssignedSection && !$student->is_active)
+    <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div><strong>Note:</strong> You are viewing a disabled student. This student will not appear in your grade entries & reports.</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Student Profile Header -->
     <div class="profile-container">
         <div class="profile-header {{ isset($isFromAssignedSection) && $isFromAssignedSection ? 'assigned-subject-header' : '' }}">

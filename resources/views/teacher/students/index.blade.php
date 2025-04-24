@@ -1426,6 +1426,12 @@
 
         <!-- Improved Search and Filter Section -->
         <div class="search-filter-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0"><i class="fas fa-filter text-primary me-2"></i> Search & Filter Students</h6>
+                <button id="resetFiltersBtn" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-redo-alt me-1"></i> Reset Filters
+                </button>
+            </div>
             <div class="row g-3">
                 <!-- Search Input -->
                 <div class="col-md-6">
@@ -1447,13 +1453,22 @@
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="sectionFilter" class="form-label fw-medium mb-2">Section</label>
                     <select id="sectionFilter" class="form-select filter-dropdown">
                         <option value="">All Sections</option>
                         @foreach($students->pluck('section.name', 'section.id')->unique() as $id => $name)
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <label for="statusFilter" class="form-label fw-medium mb-2">Status</label>
+                    <select id="statusFilter" class="form-select filter-dropdown">
+                        <option value="active" {{ $statusFilter === 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="disabled" {{ $statusFilter === 'disabled' ? 'selected' : '' }}>Disabled</option>
+                        <option value="all" {{ $statusFilter === 'all' ? 'selected' : '' }}>All</option>
                     </select>
                 </div>
             </div>
@@ -1679,7 +1694,7 @@
                                     </thead>
                                     <tbody>
                                         @foreach($assignedStudentsBySection[$section->id] as $student)
-                                            <tr>
+                                            <tr class="{{ !$student->is_active ? 'table-secondary' : '' }}" {{ !$student->is_active ? 'data-bs-toggle="tooltip" data-bs-placement="left" title="This student is disabled"' : '' }}>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         @php
@@ -1695,11 +1710,16 @@
                                                             $colorKey = array_keys($avatarColors)[$colorIndex];
                                                             $bgColor = $avatarColors[$colorKey];
                                                         @endphp
-                                                        <div class="student-avatar" style="background-color: <?php echo $bgColor; ?>">
+                                                        <div class="student-avatar" style="background-color: <?php echo $bgColor; ?>; {{ !$student->is_active ? 'opacity: 0.6;' : '' }}">
                                                             {{ substr($student->first_name, 0, 1) }}{{ substr($student->last_name, 0, 1) }}
                                                         </div>
                                                         <div>
-                                                            <h6 class="mb-0 fw-bold">{{ $student->last_name }}, {{ $student->first_name }}</h6>
+                                                            <h6 class="mb-0 fw-bold">
+                                                                {{ $student->last_name }}, {{ $student->first_name }}
+                                                                @if(!$student->is_active)
+                                                                    <span class="badge bg-secondary ms-1">Disabled</span>
+                                                                @endif
+                                                            </h6>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -1708,18 +1728,24 @@
                                                 <td class="text-end">
                                                     @if(count($assignedSubjectsBySection[$section->id] ?? []) > 1)
                                                     <div class="dropdown">
-                                                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="dropdownMenu-{{ $student->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <button class="btn btn-sm {{ !$student->is_active ? 'btn-secondary' : 'btn-primary' }} dropdown-toggle"
+                                                               type="button" id="dropdownMenu-{{ $student->id }}"
+                                                               data-bs-toggle="dropdown" aria-expanded="false"
+                                                               {{ !$student->is_active ? 'data-bs-toggle="tooltip" data-bs-placement="top" title="This student is disabled"' : '' }}>
                                                             View Subject Grades
                                                         </button>
                                                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownMenu-{{ $student->id }}">
                                                             @foreach($assignedSubjectsBySection[$section->id] ?? [] as $subject)
                                                                 <li>
-                                                                    <a class="dropdown-item" href="{{ route('teacher.students.show', [
+                                                                    <a class="dropdown-item {{ !$student->is_active ? 'text-muted' : '' }}" href="{{ route('teacher.students.show', [
                                                                         'student' => $student->id,
                                                                         'from_assigned' => 1,
                                                                         'subject_id' => $subject->id
                                                                     ]) }}">
                                                                         {{ $subject->name }} ({{ $subject->code }})
+                                                                        @if(!$student->is_active)
+                                                                            <i class="fas fa-user-slash ms-1 small"></i>
+                                                                        @endif
                                                                     </a>
                                                                 </li>
                                                             @endforeach
@@ -1732,8 +1758,12 @@
                                                         'student' => $student->id,
                                                         'from_assigned' => 1,
                                                         'subject_id' => $subject->id
-                                                    ]) }}" class="btn btn-sm btn-primary">
+                                                    ]) }}" class="btn btn-sm {{ !$student->is_active ? 'btn-secondary' : 'btn-primary' }}"
+                                                       {{ !$student->is_active ? 'data-bs-toggle="tooltip" data-bs-placement="top" title="This student is disabled"' : '' }}>
                                                         View {{ $subject->name }} Grades
+                                                        @if(!$student->is_active)
+                                                            <i class="fas fa-user-slash ms-1 small"></i>
+                                                        @endif
                                                     </a>
                                                     @endif
                                                 </td>
@@ -1784,6 +1814,12 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
         // Apply CSS fixes for any visual glitches
         document.querySelectorAll('.counter-card').forEach(card => {
             card.style.height = '100%';
@@ -2056,6 +2092,14 @@
             sectionFilter.addEventListener('change', filterStudents);
         }
 
+        // Status filter
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', function() {
+                window.location.href = '{{ route('teacher.students.index') }}?status=' + this.value;
+            });
+        }
+
         // Reset filters
         if (resetFiltersBtn) {
             resetFiltersBtn.addEventListener('click', function() {
@@ -2063,6 +2107,13 @@
                 if (gradeFilter) gradeFilter.value = '';
                 if (sectionFilter) sectionFilter.value = '';
                 if (genderSectionFilter) genderSectionFilter.value = 'all';
+
+                // Reset status filter to active and redirect
+                if (statusFilter && statusFilter.value !== 'active') {
+                    window.location.href = '{{ route('teacher.students.index') }}?status=active';
+                    return;
+                }
+
                 filterStudents();
                 if (genderSectionFilter) updateGenderDistribution();
             });

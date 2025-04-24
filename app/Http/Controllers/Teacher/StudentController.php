@@ -16,16 +16,29 @@ class StudentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             // Get sections associated with the current teacher
             $sections = Section::where('adviser_id', Auth::id())->pluck('id');
 
-            // Get all students in these sections, including inactive ones
-            $students = Student::whereIn('section_id', $sections)
-                ->with('section')
-                ->orderBy('is_active', 'desc') // Active students first
+            // Get the status filter (active, disabled, all)
+            $statusFilter = $request->query('status', 'active');
+
+            // Build the query for students
+            $query = Student::whereIn('section_id', $sections)
+                ->with('section');
+
+            // Apply status filter
+            if ($statusFilter === 'active') {
+                $query->where('is_active', true);
+            } elseif ($statusFilter === 'disabled') {
+                $query->where('is_active', false);
+            }
+            // If 'all', don't apply any filter
+
+            // Get students with ordering
+            $students = $query->orderBy('is_active', 'desc') // Active students first
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();
@@ -77,7 +90,8 @@ class StudentController extends Controller
                 'students',
                 'assignedStudents',
                 'assignedSections',
-                'assignedSubjectsBySection'
+                'assignedSubjectsBySection',
+                'statusFilter'
             ));
         } catch (\Exception $e) {
             Log::error('Error in student index: ' . $e->getMessage(), [
@@ -90,7 +104,8 @@ class StudentController extends Controller
                 'students' => collect(),
                 'assignedStudents' => collect(),
                 'assignedSections' => collect(),
-                'assignedSubjectsBySection' => []
+                'assignedSubjectsBySection' => [],
+                'statusFilter' => $request->query('status', 'active')
             ])->with('error', 'Error loading students. Please contact administrator.');
         }
     }
