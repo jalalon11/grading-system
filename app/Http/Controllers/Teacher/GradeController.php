@@ -2314,8 +2314,27 @@ class GradeController extends Controller
 
                 // If this is a quarterly assessment update, use the current data directly
                 if ($request->assessment_type === 'quarterly') {
-                    $maxScore = $request->max_score ?? 100;
-                    $qaPercentage = ($request->score / $maxScore) * 100;
+                    // Make sure we're using the correct max_score value
+                    $maxScore = floatval($request->max_score ?? 100);
+                    $score = floatval($request->score);
+
+                    // Ensure we don't divide by zero
+                    if ($maxScore > 0) {
+                        $qaPercentage = ($score / $maxScore) * 100;
+
+                        // Log the calculation for debugging
+                        \Illuminate\Support\Facades\Log::info('Quarterly Assessment calculation', [
+                            'score' => $score,
+                            'max_score' => $maxScore,
+                            'percentage' => $qaPercentage
+                        ]);
+                    } else {
+                        $qaPercentage = 0;
+                        \Illuminate\Support\Facades\Log::warning('Invalid max_score for quarterly assessment', [
+                            'max_score' => $maxScore,
+                            'score' => $score
+                        ]);
+                    }
                 } else {
                     // Otherwise, fetch from database
                     $quarterlyAssessment = Grade::where([
@@ -2329,7 +2348,16 @@ class GradeController extends Controller
                     })->first();
 
                     if ($quarterlyAssessment) {
-                        $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
+                        // Ensure we don't divide by zero
+                        if ($quarterlyAssessment->max_score > 0) {
+                            $qaPercentage = ($quarterlyAssessment->score / $quarterlyAssessment->max_score) * 100;
+                        } else {
+                            $qaPercentage = 0;
+                            \Illuminate\Support\Facades\Log::warning('Invalid max_score for quarterly assessment from database', [
+                                'max_score' => $quarterlyAssessment->max_score,
+                                'score' => $quarterlyAssessment->score
+                            ]);
+                        }
                     }
                 }
 
@@ -2391,9 +2419,9 @@ class GradeController extends Controller
         $isAjax = $request->ajax();
 
         try {
-            // Force numeric conversion for max_score 
-            $maxScore = is_numeric($request->max_score) ? 
-                (float)$request->max_score : 
+            // Force numeric conversion for max_score
+            $maxScore = is_numeric($request->max_score) ?
+                (float)$request->max_score :
                 (is_string($request->max_score) ? (float)$request->max_score : 100);
 
             // Override request with parsed max_score
@@ -2440,7 +2468,7 @@ class GradeController extends Controller
                         'message' => 'You are not authorized to update assessments for this subject.'
                     ], 403);
                 }
-                
+
                 return redirect()->back()->with('error', 'You are not authorized to update assessments for this subject.');
             }
 
@@ -2451,7 +2479,7 @@ class GradeController extends Controller
             if ($request->is_mapeh && !empty($request->component_id)) {
                 $componentId = $request->component_id;
                 $componentExists = \App\Models\Subject::where('id', $componentId)->exists();
-                
+
                 if ($componentExists) {
                     $subjectId = $componentId;
                 }
@@ -2473,25 +2501,25 @@ class GradeController extends Controller
                     ->join('section_subject', 'student_section.section_id', '=', 'section_subject.section_id')
                     ->where('section_subject.subject_id', $subjectId)
                     ->pluck('student_section.student_id');
-                
+
                 if ($studentIds->isEmpty()) {
                     Log::warning('No students found for this subject', [
                         'subject_id' => $subjectId
                     ]);
-                    
+
                     if ($isAjax) {
                         return response()->json([
                             'success' => false,
                             'message' => 'No students found for this subject. Please add students before creating assessments.'
                         ], 404);
                     }
-                    
+
                     return redirect()->back()->with('error', 'No students found for this subject. Please add students before creating assessments.');
                 }
-                
+
                 // Create a template grade for the first student
                 $firstStudentId = $studentIds->first();
-                
+
                 $grade = new Grade();
                 $grade->student_id = $firstStudentId;
                 $grade->subject_id = $subjectId;
@@ -2501,9 +2529,9 @@ class GradeController extends Controller
                 $grade->score = 0; // Default score
                 $grade->max_score = $request->max_score;
                 $grade->save();
-                
+
                 DB::commit();
-                
+
                 if ($isAjax) {
                     return response()->json([
                         'success' => true,
@@ -2511,14 +2539,14 @@ class GradeController extends Controller
                         'is_new' => true
                     ]);
                 }
-                
+
                 return redirect()->back()->with('success', 'Assessment created successfully.');
             }
 
             // Update all grades using direct SQL for better performance
             $updatedCount = 0;
             $batchUpdates = [];
-            
+
             foreach ($grades as $grade) {
                 // Use direct database update for better performance
                 $updated = DB::table('grades')
@@ -2527,7 +2555,7 @@ class GradeController extends Controller
                         'assessment_name' => $request->assessment_name,
                         'max_score' => $request->max_score
                     ]);
-                
+
                 if ($updated) {
                     $updatedCount++;
                 }
@@ -2553,7 +2581,7 @@ class GradeController extends Controller
                         'term' => $request->term,
                         'error' => $e->getMessage()
                     ]);
-                    
+
                     $summaryErrors[] = "Error updating summary for student ID {$studentId}: " . $e->getMessage();
                 }
             }
@@ -2569,7 +2597,7 @@ class GradeController extends Controller
             if (empty($summaryErrors)) {
                 DB::commit();
                 $successMessage = 'Assessment updated successfully. Updated ' . $updatedCount . ' grade entries for ' . count($studentIds) . ' students.';
-                
+
                 if ($isAjax) {
                     return response()->json([
                         'success' => true,
@@ -2578,15 +2606,15 @@ class GradeController extends Controller
                         'affected_students' => count($studentIds)
                     ]);
                 }
-                
+
                 return redirect()->back()->with('success', $successMessage);
             } else {
                 // If there were errors updating summaries, we still commit the grade changes
                 // but let the user know about the summary update issues
                 DB::commit();
-                
+
                 $warningMessage = 'Assessment information was updated, but there were issues updating some grade summaries. Please contact the system administrator.';
-                
+
                 if ($isAjax) {
                     return response()->json([
                         'success' => true,
@@ -2597,7 +2625,7 @@ class GradeController extends Controller
                         'affected_students' => count($studentIds)
                     ]);
                 }
-                
+
                 return redirect()->back()
                     ->with('success', 'Assessment updated successfully.')
                     ->with('warning', $warningMessage);
@@ -2608,7 +2636,7 @@ class GradeController extends Controller
                 'errors' => $e->errors(),
                 'request_data' => $request->all()
             ]);
-            
+
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
@@ -2616,11 +2644,11 @@ class GradeController extends Controller
                     'errors' => $e->errors()
                 ], 422);
             }
-            
+
             return redirect()->back()
                 ->withErrors($e->errors())
                 ->withInput();
-                
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating assessment', [
@@ -2636,7 +2664,7 @@ class GradeController extends Controller
                     'message' => 'Error updating assessment: ' . $e->getMessage()
                 ], 500);
             }
-            
+
             return redirect()->back()
                 ->with('error', 'Error updating assessment: ' . $e->getMessage())
                 ->withInput();
@@ -2650,12 +2678,12 @@ class GradeController extends Controller
     {
         // Get the subject's grading configurations
         $gradeConfig = GradeConfiguration::where('subject_id', $subjectId)->firstOrFail();
-        
+
         // Get the student's section ID
         $sectionId = DB::table('student_section')
             ->where('student_id', $studentId)
             ->value('section_id');
-            
+
         if (!$sectionId) {
             Log::error('Unable to recalculate grade summary: Student section not found', [
                 'student_id' => $studentId,
@@ -2671,7 +2699,7 @@ class GradeController extends Controller
             'subject_id' => $subjectId,
             'quarter' => $term,
         ]);
-        
+
         // Set the section_id
         $gradeSummary->section_id = $sectionId;
 
@@ -2754,7 +2782,7 @@ class GradeController extends Controller
             $result = $gradeSummary->save();
             Log::info('Grade summary saved', [
                 'student_id' => $studentId,
-                'subject_id' => $subjectId, 
+                'subject_id' => $subjectId,
                 'term' => $term,
                 'section_id' => $sectionId,
                 'result' => $result
