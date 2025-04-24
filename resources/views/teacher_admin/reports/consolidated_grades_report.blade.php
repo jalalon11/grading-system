@@ -163,9 +163,10 @@ if (!function_exists('getTransmutedGrade')) {
                 </tr>
             </thead>
             <tbody>
-                @forelse($maleStudents as $index => $student)
+                @php $maleCounter = 1; @endphp
+                @forelse($maleStudents as $student)
                     <tr>
-                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $maleCounter++ }}</td>
                         <td>{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</td>
 
                                 @foreach($subjects->where('is_component', false) as $subject)
@@ -327,9 +328,10 @@ if (!function_exists('getTransmutedGrade')) {
                 </tr>
             </thead>
             <tbody>
-                @forelse($femaleStudents as $index => $student)
+                @php $femaleCounter = 1; @endphp
+                @forelse($femaleStudents as $student)
                     <tr>
-                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $femaleCounter++ }}</td>
                         <td>{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</td>
 
                                 @foreach($subjects->where('is_component', false) as $subject)

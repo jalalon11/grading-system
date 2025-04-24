@@ -206,16 +206,23 @@
             if (performancePercentDisplay) performancePercentDisplay.textContent = performance + '%';
             if (quarterlyPercentDisplay) quarterlyPercentDisplay.textContent = quarterly + '%';
 
-            // Update progress bars
+            // Update progress bars - ensure correct order (Written Works, Performance Tasks, Quarterly Assessment)
             const progressBars = document.querySelectorAll('.progress-bar');
-            progressBars[0].style.width = written + '%';
-            progressBars[0].setAttribute('aria-valuenow', written);
 
-            progressBars[1].style.width = performance + '%';
-            progressBars[1].setAttribute('aria-valuenow', performance);
+            // Written Works - blue/primary
+            const writtenBar = document.querySelector('.progress-bar.bg-primary');
+            writtenBar.style.width = written + '%';
+            writtenBar.setAttribute('aria-valuenow', written);
 
-            progressBars[2].style.width = quarterly + '%';
-            progressBars[2].setAttribute('aria-valuenow', quarterly);
+            // Performance Tasks - green/success
+            const performanceBar = document.querySelector('.progress-bar.bg-success');
+            performanceBar.style.width = performance + '%';
+            performanceBar.setAttribute('aria-valuenow', performance);
+
+            // Quarterly Assessment - yellow/warning
+            const quarterlyBar = document.querySelector('.progress-bar.bg-warning');
+            quarterlyBar.style.width = quarterly + '%';
+            quarterlyBar.setAttribute('aria-valuenow', quarterly);
 
             // Change color if not equal to 100%
             if (Math.round(total * 100) / 100 !== 100) {
