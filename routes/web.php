@@ -145,6 +145,9 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         // Gender distribution endpoint for AJAX
         Route::get('/students/gender-distribution', [StudentController::class, 'genderDistribution'])->name('students.gender-distribution');
 
+        // Student reactivation route
+        Route::post('/students/{student}/reactivate', [StudentController::class, 'reactivate'])->name('students.reactivate');
+
         // Regular teacher functionality - all teachers including teacher admins
         Route::resource('students', StudentController::class);
         Route::get('grades/assessment-setup', [GradeController::class, 'assessmentSetup'])->name('grades.assessment-setup');
@@ -210,6 +213,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
                 ->firstOrFail();
 
             $students = Student::where('section_id', $section->id)
+                ->where('is_active', true) // Only include active students
                 ->orderBy('last_name')
                 ->orderBy('first_name')
                 ->get();

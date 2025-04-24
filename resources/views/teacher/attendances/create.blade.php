@@ -436,7 +436,9 @@
                                             </span>
                                         </div>
                                         <div>
-                                            <div class="fw-medium">${student.last_name}, ${student.first_name}${student.middle_name ? ' ' + student.middle_name.charAt(0) + '.' : ''}</div>
+                                            <div class="fw-medium">
+                                                ${student.last_name}, ${student.first_name}${student.middle_name ? ' ' + student.middle_name.charAt(0) + '.' : ''}
+                                            </div>
                                             <div class="small text-muted d-md-none">${student.student_id}</div>
                                         </div>
                                     </div>

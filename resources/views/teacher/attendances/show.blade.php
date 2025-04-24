@@ -218,7 +218,12 @@
                                                                 <i class="fas fa-user text-primary"></i>
                                                             </div>
                                                             <div>
-                                                                <div class="fw-medium">{{ $student->first_name }} {{ $student->last_name }}</div>
+                                                                <div class="fw-medium">
+                                                                    {{ $student->first_name }} {{ $student->last_name }}
+                                                                    @if(!$student->is_active)
+                                                                        <span class="badge bg-secondary ms-1">Disabled</span>
+                                                                    @endif
+                                                                </div>
                                                                 <div class="text-muted small d-md-none">{{ $student->student_id }}</div>
                                                             </div>
                                                         </div>

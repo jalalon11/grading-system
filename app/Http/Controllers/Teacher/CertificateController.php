@@ -447,8 +447,9 @@ class CertificateController extends Controller
             'honors' => []
         ];
 
-        // Get all students in the section
+        // Get only active students in the section
         $students = Student::where('section_id', $section->id)
+            ->where('is_active', true)
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();

@@ -93,8 +93,9 @@ class ReportController extends Controller
                            ->orderBy('subjects.name')
                            ->get();
 
-        // Get all students in this section
+        // Get only active students in this section
         $students = Student::where('section_id', $section->id)
+                          ->where('is_active', true)
                           ->orderBy('gender')
                           ->orderBy('last_name')
                           ->orderBy('first_name')

@@ -66,8 +66,9 @@ class AttendanceSummaryService
             'students' => [],
         ];
 
-        // Get all students in these sections
+        // Get all active students in these sections
         $students = Student::whereIn('section_id', $sectionIds)
+            ->where('is_active', true) // Only include active students
             ->select('id', 'first_name', 'middle_name', 'last_name', 'section_id')
             ->with('section:id,name')
             ->orderBy('last_name')
@@ -272,8 +273,9 @@ class AttendanceSummaryService
             'students' => [],
         ];
 
-        // Get all students in these sections
+        // Get all active students in these sections
         $students = Student::whereIn('section_id', $sectionIds)
+            ->where('is_active', true) // Only include active students
             ->select('id', 'first_name', 'middle_name', 'last_name', 'section_id')
             ->with('section:id,name')
             ->orderBy('last_name')

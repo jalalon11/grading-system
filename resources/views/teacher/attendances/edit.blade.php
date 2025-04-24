@@ -166,7 +166,9 @@
                                                                     </span>
                                                                 </div>
                                                                 <div>
-                                                                    <div class="fw-medium">{{ $student->surname_first }}</div>
+                                                                    <div class="fw-medium">
+                                                                        {{ $student->surname_first }}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </td>

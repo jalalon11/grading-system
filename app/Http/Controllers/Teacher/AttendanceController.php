@@ -294,9 +294,10 @@ class AttendanceController extends Controller
         try {
             // Create individual attendance records for each student
             foreach ($validated['attendance'] as $studentId => $status) {
-                // Verify student belongs to the section
+                // Verify student belongs to the section and is active
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
+                                  ->where('is_active', true)
                                   ->firstOrFail();
 
                 // Get the student's subject ID (assuming they only have one subject in this section)
@@ -351,7 +352,10 @@ class AttendanceController extends Controller
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
 
+        // Get all students in this section, including inactive ones
+        // We need to include inactive students to show their past attendance records
         $students = Student::where('section_id', $id)
+                          ->orderBy('is_active', 'desc') // Active students first
                           ->orderBy('last_name')
                           ->orderBy('first_name')
                           ->get();
@@ -420,7 +424,9 @@ class AttendanceController extends Controller
                           ->where('adviser_id', Auth::id())
                           ->firstOrFail();
 
+        // Get only active students in this section for editing
         $students = Student::where('section_id', $id)
+                          ->where('is_active', true) // Only include active students
                           ->orderBy('last_name')
                           ->orderBy('first_name')
                           ->get();
@@ -463,6 +469,7 @@ class AttendanceController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // $id is used in the route but not in the method
         $validated = $request->validate([
             'section_id' => 'required|exists:sections,id',
             'date' => 'required|date',
@@ -497,9 +504,10 @@ class AttendanceController extends Controller
 
             // Create new attendance records for each student
             foreach ($validated['attendance'] as $studentId => $status) {
-                // Verify student belongs to the section
+                // Verify student belongs to the section and is active
                 $student = Student::where('id', $studentId)
                                   ->where('section_id', $validated['section_id'])
+                                  ->where('is_active', true)
                                   ->firstOrFail();
 
                 // Get remarks if status is excused
@@ -535,6 +543,7 @@ class AttendanceController extends Controller
      */
     public function destroy(string $id)
     {
+        // $id is used in the route but not in the method
         // Not implemented for attendance
         return redirect()->route('teacher.attendances.index')
                          ->with('error', 'Attendance deletion is not supported.');
