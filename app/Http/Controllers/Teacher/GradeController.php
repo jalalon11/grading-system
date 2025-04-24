@@ -274,6 +274,7 @@ class GradeController extends Controller
                 } else {
                     // Original code for viewing a single subject
                     $sectionStudents = Student::where('section_id', $selectedSectionId)
+                        ->where('is_active', true) // Only include active students
                         ->with(['grades' => function ($query) use ($selectedSubject, $selectedTerm) {
                             $query->where('subject_id', $selectedSubject->id)
                                   ->where('term', $selectedTerm);
@@ -1823,7 +1824,7 @@ class GradeController extends Controller
             $students = [];
             if ($selectedSubject && $selectedSectionId) {
                 $sectionStudents = Student::where('section_id', $selectedSectionId)
-                    ->where('is_active', true)
+                    ->where('is_active', true) // Only include active students
                     ->with(['grades' => function($query) use ($selectedSubject, $selectedTerm) {
                         $query->where('subject_id', $selectedSubject->id)
                               ->where('term', $selectedTerm);
