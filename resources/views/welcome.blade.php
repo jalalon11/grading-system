@@ -658,7 +658,7 @@
                                 <i class="fas fa-gift text-[#F4F6F6] text-2xl"></i>
                             </div>
                             <div>
-                                <h3 class="text-2xl font-bold text-[#F4F6F6] mb-2">3-Month Free Trial</h3>
+                                <h3 class="text-2xl font-bold text-[#F4F6F6] mb-2">3-Months Free Trial</h3>
                                 <p class="text-[#AAB7B8]">Experience all premium features with no commitment</p>
                             </div>
                         </div>
