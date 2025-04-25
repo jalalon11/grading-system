@@ -10,6 +10,31 @@
         justify-content: center;
     }
 
+    /* Registration key styling */
+    .key-text {
+        font-family: monospace;
+        font-size: 1rem;
+        background-color: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+        color: #2E4053;
+        letter-spacing: 0.5px;
+    }
+
+    .user-select-all {
+        user-select: all;
+    }
+
+    /* Sticky header for scrollable tables */
+    .scrollable-table .sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: #f8f9fa;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
     /* Custom scrollbar styling */
     .scrollable-payment-list {
         scrollbar-width: thin;
@@ -452,6 +477,112 @@
         </div>
 
 
+    </div>
+
+    <!-- Registration Keys -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-key text-primary me-2"></i> Teacher Registration Keys
+            </h5>
+            <div class="d-flex">
+                <span class="badge bg-primary">{{ $registrationKeys->count() }} Available</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-3">
+                <i class="fas fa-info-circle me-1"></i> These registration keys can be provided to teachers to create accounts for your school. Each key can only be used once.
+            </p>
+
+            @if($registrationKeys->count() > 0)
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="badge bg-primary">{{ $registrationKeys->count() }} Keys Available</span>
+                    </div>
+                    <button class="btn btn-primary copy-all-keys-btn"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="Copy all keys to clipboard">
+                        <i class="fas fa-copy me-2"></i> Copy All Keys
+                    </button>
+                </div>
+
+                <div class="scrollable-table position-relative" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-hover align-middle mb-0" id="keysTable">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Registration Key</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($registrationKeys as $key)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="key-text me-2 user-select-all">{{ $key->temporaryKey->plain_key }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ $key->created_at->setTimezone('Asia/Manila')->format('M d, Y') }}</td>
+                                    <td>
+                                        @if($key->expires_at)
+                                            {{ $key->expires_at->setTimezone('Asia/Manila')->format('M d, Y') }}
+                                        @else
+                                            <span class="badge bg-success">Never Expires</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary copy-key-btn"
+                                                data-key="{{ $key->temporaryKey->plain_key }}"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                title="Copy to clipboard">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($registrationKeys->count() > 5)
+                    <div class="text-center py-2 border-top">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i> Scroll to see all {{ $registrationKeys->count() }} keys
+                        </small>
+                    </div>
+                @endif
+
+                <!-- Hidden textarea for copying all keys -->
+                <textarea id="allKeysText" class="d-none">@foreach($registrationKeys as $key){{ $key->temporaryKey->plain_key }}
+@endforeach</textarea>
+
+                <div class="alert alert-warning mt-3 mb-0">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="alert-heading">Important Note</h6>
+                            <p class="mb-0">These keys are only visible to Teacher Administrators. For security reasons, keys will disappear from this list once they are used for registration.</p>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="text-center py-4">
+                    <div class="mb-3">
+                        <div class="bg-light p-3 rounded-circle d-inline-block">
+                            <i class="fas fa-key text-secondary fa-2x"></i>
+                        </div>
+                    </div>
+                    <h5>No Registration Keys Available</h5>
+                    <p class="text-muted">There are no active registration keys for teachers at this time. Please contact the system administrator to generate new keys.</p>
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Teachers List -->
@@ -901,6 +1032,19 @@
         </div>
     </div>
 </div>
+
+<!-- Toast notification for copy success -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="copySuccessToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i> Registration key copied to clipboard!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <!-- Inline script to ensure grade level content is displayed -->
 <script>
     // Execute immediately
@@ -940,6 +1084,31 @@
             selectedContent.style.display = 'block';
         }
     }
+
+    // Function to copy registration key to clipboard
+    function copyKeyToClipboard(key) {
+        navigator.clipboard.writeText(key).then(function() {
+            // Show success message
+            const toast = new bootstrap.Toast(document.getElementById('copySuccessToast'));
+            toast.show();
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+
+    // Function to copy all registration keys to clipboard
+    function copyAllKeysToClipboard() {
+        const allKeysText = document.getElementById('allKeysText').value;
+        navigator.clipboard.writeText(allKeysText).then(function() {
+            // Show success message
+            const toast = new bootstrap.Toast(document.getElementById('copySuccessToast'));
+            document.querySelector('#copySuccessToast .toast-body').innerHTML =
+                '<i class="fas fa-check-circle me-2"></i> All registration keys copied to clipboard!';
+            toast.show();
+        }).catch(function(err) {
+            console.error('Could not copy all keys: ', err);
+        });
+    }
     // Initialize when the DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize the grade level content
@@ -955,6 +1124,59 @@
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
         });
+
+        // Initialize toast and add event listener to reset content
+        const copySuccessToast = document.getElementById('copySuccessToast');
+        if (copySuccessToast) {
+            const toast = new bootstrap.Toast(copySuccessToast);
+            copySuccessToast.addEventListener('hidden.bs.toast', function () {
+                // Reset toast content to default after it's hidden
+                document.querySelector('#copySuccessToast .toast-body').innerHTML =
+                    '<i class="fas fa-check-circle me-2"></i> Registration key copied to clipboard!';
+            });
+        }
+
+        // Add event listeners for copy buttons
+        document.querySelectorAll('.copy-key-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const key = this.getAttribute('data-key');
+                copyKeyToClipboard(key);
+
+                // Change button text temporarily
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-success');
+
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-primary');
+                }, 2000);
+            });
+        });
+
+        // Add event listener for copy all keys button
+        const copyAllButton = document.querySelector('.copy-all-keys-btn');
+        if (copyAllButton) {
+            copyAllButton.addEventListener('click', function() {
+                copyAllKeysToClipboard();
+
+                // Change button text temporarily
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> All Keys Copied!';
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-success');
+
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-primary');
+                }, 2000);
+            });
+        }
 
         // Initialize the first grade level content to be visible
         if ($(".grade-level-content").length > 0) {

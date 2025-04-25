@@ -33,6 +33,24 @@ class SchoolController extends Controller
                 }]);
             }
 
+            // Get active registration keys for teachers in this school
+            $registrationKeys = \App\Models\RegistrationKey::where('school_id', $user->school_id)
+                ->where('is_master', false)
+                ->where('is_used', false)
+                ->where('key_type', 'teacher')
+                ->where(function($query) {
+                    $query->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', \Carbon\Carbon::now());
+                })
+                ->with('temporaryKey')
+                ->get()
+                ->filter(function($key) {
+                    // Only include keys that have a non-expired temporary key
+                    return $key->temporaryKey &&
+                           ($key->temporaryKey->expires_at === null ||
+                            $key->temporaryKey->expires_at->isAfter(\Carbon\Carbon::now()));
+                });
+
             // Get teaching assignments for each teacher
             $teachingAssignments = [];
             foreach ($teachers as $teacher) {
@@ -130,7 +148,8 @@ class SchoolController extends Controller
                 'sections',
                 'studentsBySection',
                 'sectionStats',
-                'gradeLevelStats'
+                'gradeLevelStats',
+                'registrationKeys'
             ));
         } catch (\Exception $e) {
             Log::error('Error loading school overview: ' . $e->getMessage(), [

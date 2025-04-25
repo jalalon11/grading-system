@@ -242,11 +242,63 @@
 
     .input-group .form-control {
         border-left: 0;
-        border-radius: 0 0.75rem 0.75rem 0;
+        border-radius: 0;
     }
 
     .input-group .input-group-text {
         border-right: 0;
+    }
+
+    /* Fix for registration key input group */
+    #registrationKeyForm .input-group {
+        flex-wrap: nowrap;
+        align-items: stretch;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    #registrationKeyForm .input-group:focus-within {
+        box-shadow: 0 4px 12px rgba(28, 40, 51, 0.15);
+    }
+
+    #registrationKeyForm .form-control {
+        border-right: 0;
+        height: 100%;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        padding-left: 1rem;
+    }
+
+    #registrationKeyForm .form-control:focus {
+        border-color: #2E4053;
+    }
+
+    #registrationKeyForm .input-group-text {
+        background-color: #f8f9fc;
+        border-color: #e2e8f0;
+        color: #2E4053;
+        transition: all 0.3s ease;
+    }
+
+    #registrationKeyForm .input-group:focus-within .input-group-text {
+        border-color: #2E4053;
+        background-color: #f1f5f9;
+    }
+
+    /* Fix for input group on all browsers */
+    #registrationKeyForm .input-group > * {
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Text styling */
+    #registrationKeyForm .text-muted.small {
+        color: #718096 !important;
+        line-height: 1.5;
     }
 
     .btn-auth {
@@ -327,6 +379,62 @@
         padding: 0;
     }
 
+    /* Verify button styling */
+    .verify-btn {
+        min-width: 90px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-top-right-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+        margin-left: -1px;
+        border: 2px solid #e2e8f0;
+        border-left: 0;
+    }
+
+    /* Override Bootstrap's outline button styles to match our design */
+    .btn-outline-primary.verify-btn {
+        color: #2E4053;
+        border-color: #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .btn-outline-primary.verify-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(46, 64, 83, 0.1), transparent);
+        transition: 0.5s;
+        z-index: -1;
+    }
+
+    .btn-outline-primary.verify-btn:hover::before {
+        left: 100%;
+    }
+
+    .btn-outline-primary.verify-btn:hover {
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+        border-color: #2E4053;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(28, 40, 51, 0.2);
+    }
+
+    .btn-outline-primary.verify-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(28, 40, 51, 0.2);
+    }
+
     /* Mobile responsiveness */
     @media (max-width: 768px) {
         .auth-card {
@@ -349,16 +457,69 @@
             margin-bottom: 1.5rem;
         }
 
+        /* Improved tab navigation for mobile */
+        .nav-tabs {
+            display: flex;
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-tabs .nav-item {
+            flex: 1;
+            display: flex;
+            margin: 0 0.25rem;
+        }
+
         .nav-tabs .nav-link {
-            padding: 0.5rem 1rem;
+            flex: 1;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .form-control, .input-group-text {
             padding: 0.75rem;
         }
 
+        /* Improved auth buttons for mobile */
         .btn-auth {
-            padding: 0.75rem 1.25rem;
+            padding: 0.875rem 1rem;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 3.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* Mobile styles for key form */
+        .key-form-container {
+            padding: 1.25rem;
+        }
+
+        .key-icon {
+            width: 56px;
+            height: 56px;
+        }
+
+        .key-icon i {
+            font-size: 1.5rem;
+        }
+
+        .key-title {
+            font-size: 1.2rem;
+        }
+
+        .key-description {
+            font-size: 0.85rem;
+            padding: 0;
+        }
+
+        .btn-verify {
+            height: 3rem;
+            font-size: 0.95rem;
         }
     }
 
@@ -376,13 +537,157 @@
             font-size: 1.5rem;
         }
 
+        /* Further improved tab navigation for very small screens */
         .nav-tabs .nav-item {
-            margin: 0 0.25rem;
+            margin: 0 0.125rem;
         }
 
         .nav-tabs .nav-link {
-            padding: 0.5rem 0.75rem;
+            padding: 0.625rem 0.25rem;
             font-size: 0.9rem;
+        }
+
+        /* Ensure icons are properly sized and aligned */
+        .nav-tabs .nav-link i {
+            margin-right: 0.25rem !important;
+        }
+
+        /* Optimize tab navigation for small screens */
+        .nav-tabs .nav-link span.d-flex {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-tabs .nav-link i {
+            margin-right: 0 !important;
+        }
+
+        /* Improved auth buttons for very small screens */
+        .btn-auth {
+            height: 3.25rem;
+            font-size: 1rem;
+        }
+    }
+
+    /* Extra small devices */
+    @media (max-width: 360px) {
+        .nav-tabs .nav-link {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.25rem;
+        }
+
+        /* Stack icon and text vertically on very small screens */
+        .nav-tabs .nav-link span.d-flex {
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .nav-tabs .nav-link i {
+            font-size: 1.1rem;
+            margin: 0 auto 0.125rem !important;
+        }
+
+        .btn-auth {
+            font-size: 0.95rem;
+        }
+
+        /* Extra small screen styles for key form */
+        .key-form-container {
+            padding: 1rem;
+        }
+
+        .key-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 0.75rem;
+        }
+
+        .key-icon i {
+            font-size: 1.25rem;
+        }
+
+        .key-title {
+            font-size: 1.1rem;
+        }
+
+        .key-description {
+            font-size: 0.8rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .key-input-container .form-label {
+            font-size: 0.85rem;
+        }
+
+        .key-input-container .form-control {
+            font-size: 0.95rem;
+            padding: 0.75rem 1rem 0.75rem 2.25rem;
+        }
+
+        .input-icon {
+            font-size: 0.9rem;
+            left: 0.85rem;
+        }
+
+        .btn-verify {
+            height: 2.75rem;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .key-info {
+            font-size: 0.75rem;
+            padding: 0.5rem;
+        }
+
+        /* Success and warning styles for small screens */
+        .key-success {
+            padding: 1.25rem;
+        }
+
+        .key-success-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+
+        .key-success-icon i {
+            font-size: 1.5rem;
+        }
+
+        .key-success-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .key-success-message {
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .key-warning {
+            padding: 1rem;
+            gap: 0.75rem;
+        }
+
+        .key-warning-icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        .key-warning-title {
+            font-size: 0.95rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .key-warning-message {
+            font-size: 0.8rem;
+        }
+
+        /* Ensure the registration key input is usable on very small screens */
+        #registration-key {
+            min-width: 0;
+            font-size: 16px; /* Prevent iOS zoom */
         }
     }
 
@@ -434,10 +739,174 @@
     /* Registration key form */
     .key-form-container {
         margin-bottom: 1.5rem;
-        padding: 1rem;
-        background-color: rgba(255, 255, 255, 0.5);
+        padding: 1.5rem;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(244, 246, 246, 0.9));
         border-radius: 0.75rem;
-        border: 1px dashed rgba(28, 40, 51, 0.2);
+        box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(28, 40, 51, 0.1);
+        animation: formAppear 0.5s ease-out forwards;
+    }
+
+    @keyframes formAppear {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Key form header */
+    .key-form-header {
+        text-align: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .key-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        box-shadow: 0 4px 10px rgba(28, 40, 51, 0.2);
+    }
+
+    .key-icon i {
+        color: white;
+        font-size: 1.75rem;
+    }
+
+    .key-title {
+        color: #1C2833;
+        font-weight: 700;
+        font-size: 1.25rem;
+        margin-bottom: 0;
+    }
+
+    /* Key description */
+    .key-description {
+        color: #718096;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        text-align: center;
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem;
+    }
+
+    /* Input styling */
+    .key-input-container {
+        margin-bottom: 1.5rem;
+    }
+
+    .key-input-container .form-label {
+        color: #2E4053;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #718096;
+        font-size: 1rem;
+        z-index: 2;
+    }
+
+    .key-input-container .form-control {
+        border: 2px solid #e2e8f0;
+        padding: 0.875rem 1rem 0.875rem 2.5rem;
+        font-size: 1rem;
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.9);
+        height: auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .key-input-container .form-control:focus {
+        border-color: #2E4053;
+        box-shadow: 0 0 0 4px rgba(46, 64, 83, 0.1);
+        background: #ffffff;
+    }
+
+    /* Verify button */
+    .key-action {
+        margin-bottom: 1.25rem;
+    }
+
+    .btn-verify {
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+        border: none;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+        color: white;
+        height: 3.25rem;
+    }
+
+    .btn-verify::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: 0.5s;
+    }
+
+    .btn-verify:hover::before {
+        left: 100%;
+    }
+
+    .btn-verify:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(28, 40, 51, 0.3);
+    }
+
+    .btn-verify.verifying {
+        background: linear-gradient(135deg, #2E4053 0%, #1C2833 100%);
+        cursor: wait;
+        opacity: 0.9;
+    }
+
+    /* Key info text */
+    .key-info {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        color: #718096;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        padding: 0.75rem;
+        background-color: rgba(46, 64, 83, 0.05);
+        border-radius: 0.5rem;
+    }
+
+    .key-info i {
+        color: #2E4053;
+        font-size: 0.9rem;
+        margin-top: 0.125rem;
     }
 
     .tab-content > .tab-pane {
@@ -481,6 +950,198 @@
         color: #e67700;
     }
 
+    /* Key verified styling */
+    .key-verified {
+        padding: 1rem 0;
+        animation: fadeIn 0.5s ease-out forwards;
+        border-bottom: 1px solid rgba(28, 40, 51, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    .key-verified-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #1C2833 0%, #2E4053 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(28, 40, 51, 0.2);
+        position: relative;
+        animation: iconPulse 2s infinite;
+    }
+
+    @keyframes iconPulse {
+        0% { box-shadow: 0 0 0 0 rgba(28, 40, 51, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(28, 40, 51, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(28, 40, 51, 0); }
+    }
+
+    .key-verified-icon i {
+        color: white;
+        font-size: 1.25rem;
+    }
+
+    .key-verified-title {
+        color: #1C2833;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .key-verified-subtitle {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* Form floating styles */
+    .form-floating {
+        position: relative;
+    }
+
+    .form-floating > .form-control {
+        padding: 1.25rem 1rem 0.5rem;
+        height: 3.5rem;
+    }
+
+    .form-floating > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 1rem;
+        pointer-events: none;
+        border: 1px solid transparent;
+        transform-origin: 0 0;
+        transition: opacity .1s ease-in-out, transform .1s ease-in-out;
+        color: #718096;
+        font-size: 0.95rem;
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        opacity: .85;
+        transform: scale(.85) translateY(-0.5rem);
+    }
+
+    .form-floating > .form-control:focus {
+        border-color: #2E4053;
+        box-shadow: 0 0 0 0.25rem rgba(46, 64, 83, 0.1);
+    }
+
+    /* Password container styles */
+    .password-container {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: #718096;
+        z-index: 5;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .password-toggle:hover {
+        color: #2E4053;
+    }
+
+    .password-container .form-control {
+        padding-right: 2.5rem;
+    }
+
+    /* Key warning styling */
+    .key-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        background-color: #fff9db;
+        border-left: 4px solid #f59f00;
+        padding: 1.25rem;
+        border-radius: 0.5rem;
+        text-align: left;
+        margin-top: 1.5rem;
+    }
+
+    .key-warning-icon {
+        width: 32px;
+        height: 32px;
+        background-color: #f59f00;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .key-warning-icon i {
+        color: white;
+        font-size: 0.9rem;
+    }
+
+    .key-warning-content {
+        flex: 1;
+    }
+
+    .key-warning-title {
+        color: #e67700;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .key-warning-message {
+        color: #6b5900;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        margin-bottom: 0;
+    }
+
+    /* Key error message styling */
+    .key-error-message {
+        background-color: rgba(229, 62, 62, 0.05);
+        border-left: 4px solid #e53e3e;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .key-error-icon {
+        width: 32px;
+        height: 32px;
+        background-color: #e53e3e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .key-error-icon i {
+        color: white;
+        font-size: 0.875rem;
+    }
+
+    .key-error-title {
+        color: #e53e3e;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .key-error-text {
+        color: #718096;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
 </style>
 @endpush
 
@@ -498,12 +1159,18 @@
                         <ul class="nav nav-tabs" id="authTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-tab-pane" type="button" role="tab" aria-controls="login-tab-pane" aria-selected="true">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                                    <span class="d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        <span>Sign In</span>
+                                    </span>
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-tab-pane" type="button" role="tab" aria-controls="register-tab-pane" aria-selected="false">
-                                    <i class="fas fa-user-plus me-2"></i>Register
+                                    <span class="d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-user-plus me-2"></i>
+                                        <span>Register</span>
+                                    </span>
                                 </button>
                             </li>
                         </ul>
@@ -592,7 +1259,10 @@
 
                                     <div class="d-grid">
                                         <button type="submit" class="btn btn-auth btn-lg">
-                                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                                            <span class="d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-sign-in-alt me-2"></i>
+                                                <span>Sign In</span>
+                                            </span>
                                         </button>
                                     </div>
                                 </form>
@@ -606,21 +1276,33 @@
                                 </div>
 
                                 <!-- Registration Key Form -->
-                                <div class="key-form-container" id="keyFormContainer">
+                                <div id="keyFormContainer">
                                     <form id="registrationKeyForm" class="mb-0">
-                                        <div class="mb-3">
-                                            <label for="registration-key" class="form-label fw-medium mb-2">Registration Key</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">
-                                                    <i class="fas fa-key"></i>
-                                                </span>
-                                                <input id="registration-key" type="text" class="form-control"
-                                                       placeholder="Enter registration key" required>
-                                                <button class="btn btn-outline-primary" type="submit" id="verifyKeyBtn">
-                                                    <i class="fas fa-check me-1"></i>Verify
-                                                </button>
+                                        <div class="text-center mb-3">
+                                            <div class="d-inline-flex align-items-center">
+                                                <h5 class="mb-0">Enter Registration Key</h5>
                                             </div>
-                                            <div class="form-text">A valid registration key is required to create an account</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <div class="form-floating">
+                                                <input id="registration-key" type="text" class="form-control"
+                                                       placeholder="Enter your registration key" required>
+                                                <label for="registration-key"><i class="fas fa-key me-2"></i>Registration Key</label>
+                                            </div>
+                                            <div class="form-text small text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                This key should have been provided by your school administrator
+                                            </div>
+                                        </div>
+
+                                        <div class="d-grid mb-3">
+                                            <button class="btn btn-verify" type="submit" id="verifyKeyBtn">
+                                                <span class="d-flex align-items-center justify-content-center">
+                                                    <i class="fas fa-check-circle me-2"></i>
+                                                    <span>Verify Key</span>
+                                                </span>
+                                            </button>
                                         </div>
                                     </form>
                                 </div>
@@ -630,91 +1312,76 @@
                                     @csrf
                                     <input type="hidden" name="registration_key" id="verified-key">
 
-                                    <!-- <div class="mb-4 p-3 border border-primary border-opacity-25 rounded bg-primary bg-opacity-10">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <i class="fas fa-info-circle text-primary me-2"></i>
-                                            <h6 class="mb-0 fw-bold">Complete Your Registration</h6>
-                                        </div>
-                                        <p class="small mb-0">Please fill out all fields below to complete your registration. Your registration key has been verified but will become invalid if you refresh or leave this page.</p>
-                                    </div> -->
-
-                                    <div class="mb-4">
-                                        <label for="register-name" class="form-label fw-medium mb-2">Full Name</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="fas fa-user"></i>
-                                            </span>
-                                            <input id="register-name" type="text"
-                                                class="form-control @error('name') is-invalid @enderror"
-                                                name="name" value="{{ old('name') }}"
-                                                required autocomplete="name"
-                                                placeholder="Enter your full name">
-                                        </div>
-                                        @error('name')
-                                            <div class="invalid-feedback">
-                                                <i class="fas fa-exclamation-circle"></i>
-                                                {{ $message }}
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div class="form-floating">
+                                                <input id="register-name" type="text"
+                                                    class="form-control @error('name') is-invalid @enderror"
+                                                    name="name" value="{{ old('name') }}"
+                                                    required autocomplete="name"
+                                                    placeholder="Enter your full name">
+                                                <label for="register-name"><i class="fas fa-user me-2"></i>Full Name</label>
+                                                @error('name')
+                                                    <div class="invalid-feedback">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        {{ $message }}
+                                                    </div>
+                                                @enderror
                                             </div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label for="register-email" class="form-label fw-medium mb-2">Email Address</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="fas fa-envelope"></i>
-                                            </span>
-                                            <input id="register-email" type="email"
-                                                class="form-control @error('email') is-invalid @enderror"
-                                                name="email" value="{{ old('email') }}"
-                                                required autocomplete="email"
-                                                placeholder="Enter your email address">
                                         </div>
-                                        @error('email')
-                                            <div class="invalid-feedback">
-                                                <i class="fas fa-exclamation-circle"></i>
-                                                {{ $message }}
+
+                                        <div class="col-12 mb-3">
+                                            <div class="form-floating">
+                                                <input id="register-email" type="email"
+                                                    class="form-control @error('email') is-invalid @enderror"
+                                                    name="email" value="{{ old('email') }}"
+                                                    required autocomplete="email"
+                                                    placeholder="Enter your email address">
+                                                <label for="register-email"><i class="fas fa-envelope me-2"></i>Email Address</label>
+                                                @error('email')
+                                                    <div class="invalid-feedback">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        {{ $message }}
+                                                    </div>
+                                                @enderror
                                             </div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label for="register-password" class="form-label fw-medium mb-2">Password</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="fas fa-lock"></i>
-                                            </span>
-                                            <input id="register-password" type="password"
-                                                class="form-control @error('password') is-invalid @enderror"
-                                                name="password" required autocomplete="new-password"
-                                                placeholder="Create a strong password">
-                                            <button class="btn btn-outline-secondary" type="button" id="toggleRegisterPassword">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
                                         </div>
-                                        @error('password')
-                                            <div class="invalid-feedback">
-                                                <i class="fas fa-exclamation-circle"></i>
-                                                {{ $message }}
+
+                                        <div class="col-12 mb-3">
+                                            <div class="form-floating password-container">
+                                                <input id="register-password" type="password"
+                                                    class="form-control @error('password') is-invalid @enderror"
+                                                    name="password" required autocomplete="new-password"
+                                                    placeholder="Create a strong password">
+                                                <label for="register-password"><i class="fas fa-lock me-2"></i>Password</label>
+                                                <button class="btn btn-sm password-toggle" type="button" id="toggleRegisterPassword">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                @error('password')
+                                                    <div class="invalid-feedback">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        {{ $message }}
+                                                    </div>
+                                                @enderror
                                             </div>
-                                        @enderror
-                                    </div>
+                                        </div>
 
-                                    <div class="mb-4">
-                                        <label for="password-confirm" class="form-label fw-medium mb-2">Confirm Password</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">
-                                                <i class="fas fa-lock"></i>
-                                            </span>
-                                            <input id="password-confirm" type="password" class="form-control"
-                                                name="password_confirmation" required autocomplete="new-password"
-                                                placeholder="Confirm your password">
+                                        <div class="col-12 mb-3">
+                                            <div class="form-floating password-container">
+                                                <input id="password-confirm" type="password" class="form-control"
+                                                    name="password_confirmation" required autocomplete="new-password"
+                                                    placeholder="Confirm your password">
+                                                <label for="password-confirm"><i class="fas fa-lock me-2"></i>Confirm Password</label>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="d-grid mt-4">
+                                    <div class="d-grid mt-3">
                                         <button type="submit" class="btn btn-auth btn-lg">
-                                            <i class="fas fa-user-plus me-2"></i>Register
+                                            <span class="d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-user-plus me-2"></i>
+                                                <span>Register</span>
+                                            </span>
                                         </button>
                                     </div>
                                 </form>
@@ -769,6 +1436,15 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleRegisterPassword.addEventListener('click', function() {
             const type = registerPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             registerPasswordInput.setAttribute('type', type);
+
+            // Also toggle the confirm password field if it exists
+            const confirmPasswordInput = document.getElementById('password-confirm');
+            if (confirmPasswordInput && type === 'text') {
+                confirmPasswordInput.setAttribute('type', 'text');
+            } else if (confirmPasswordInput) {
+                confirmPasswordInput.setAttribute('type', 'password');
+            }
+
             this.querySelector('i').classList.toggle('fa-eye');
             this.querySelector('i').classList.toggle('fa-eye-slash');
         });
@@ -811,7 +1487,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function verifyKey(key) {
         verifyKeyBtn.disabled = true;
-        verifyKeyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        // Show loading state
+        verifyKeyBtn.innerHTML = `
+            <span class="d-flex align-items-center justify-content-center">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                <span>Verifying Key...</span>
+            </span>`;
+        verifyKeyBtn.classList.add('verifying');
 
         // Verify key using AJAX
         fetch('/register/verify-key-ajax', {
@@ -827,18 +1510,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.valid) {
                 // Key is valid, show registration form
                 keyFormContainer.innerHTML = `
-                    <div class="alert alert-success mb-3">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <span>Registration key verified successfully!</span>
-                        </div>
-                    </div>
-                    <div class="alert alert-warning mb-0">
-                        <div class="d-flex">
-                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                    <div class="key-verified">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="key-verified-icon me-3">
+                                <i class="fas fa-check"></i>
+                            </div>
                             <div>
-                                <strong>IMPORTANT:</strong> Do not refresh this page or navigate away! Your registration key will become invalid if you do.
-                                <br>Complete your registration now to avoid losing your key.
+                                <h4 class="key-verified-title mb-0">Registration Key Verified!</h4>
+                                <p class="key-verified-subtitle mb-0 text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Do not refresh this page</p>
                             </div>
                         </div>
                     </div>`;
@@ -874,19 +1553,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!errorMessage) {
                     errorMessage = document.createElement('div');
                     errorMessage.id = 'key-error-message';
-                    errorMessage.className = 'invalid-feedback d-block mt-2';
-                    errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Invalid registration key. Please try again.';
+                    errorMessage.className = 'key-error-message d-block mt-3';
+                    errorMessage.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="key-error-icon">
+                                <i class="fas fa-exclamation"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h6 class="key-error-title mb-1">Invalid Registration Key</h6>
+                                <p class="key-error-text mb-0">The key you entered is not valid. Please check and try again, or contact your administrator for assistance.</p>
+                            </div>
+                        </div>
+                    `;
                     keyInput.parentNode.after(errorMessage);
                 }
 
                 verifyKeyBtn.disabled = false;
-                verifyKeyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
+                verifyKeyBtn.classList.remove('verifying');
+                verifyKeyBtn.innerHTML = `
+                    <span class="d-flex align-items-center justify-content-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Verify Registration Key</span>
+                    </span>`;
             }
         })
         .catch(error => {
             console.error('Error:', error);
+
+            // Create network error message
+            let errorMessage = document.getElementById('key-error-message');
+            if (!errorMessage) {
+                errorMessage = document.createElement('div');
+                errorMessage.id = 'key-error-message';
+                errorMessage.className = 'key-error-message d-block mt-3';
+                errorMessage.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="key-error-icon">
+                            <i class="fas fa-wifi"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="key-error-title mb-1">Connection Error</h6>
+                            <p class="key-error-text mb-0">Unable to verify your registration key. Please check your internet connection and try again.</p>
+                        </div>
+                    </div>
+                `;
+                keyInput.parentNode.after(errorMessage);
+            }
+
             verifyKeyBtn.disabled = false;
-            verifyKeyBtn.innerHTML = '<i class="fas fa-check me-1"></i>Verify';
+            verifyKeyBtn.classList.remove('verifying');
+            verifyKeyBtn.innerHTML = `
+                <span class="d-flex align-items-center justify-content-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span>Verify Registration Key</span>
+                </span>`;
         });
     }
 
@@ -903,7 +1623,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+
     // Fetch and display announcements
     fetchAnnouncements();
 
@@ -1039,6 +1759,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return formatted;
     }
+});
 </script>
 @endpush
 
