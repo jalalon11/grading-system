@@ -1573,7 +1573,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 verifyKeyBtn.innerHTML = `
                     <span class="d-flex align-items-center justify-content-center">
                         <i class="fas fa-check-circle me-2"></i>
-                        <span>Verify Registration Key</span>
+                        <span>Verify Key</span>
                     </span>`;
             }
         })
@@ -1605,7 +1605,7 @@ document.addEventListener('DOMContentLoaded', function() {
             verifyKeyBtn.innerHTML = `
                 <span class="d-flex align-items-center justify-content-center">
                     <i class="fas fa-check-circle me-2"></i>
-                    <span>Verify Registration Key</span>
+                    <span>Verify Key</span>
                 </span>`;
         });
     }
