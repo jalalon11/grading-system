@@ -184,6 +184,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::post('reports/generate-grade-slips', [ReportController::class, 'generateGradeSlips'])->name('reports.generate-grade-slips');
         Route::get('reports/generate-grade-slips', [ReportController::class, 'generateGradeSlips'])->name('reports.generate-grade-slips-get');
         Route::get('reports/grade-slip-preview', [ReportController::class, 'previewGradeSlip'])->name('reports.grade-slip-preview');
+        Route::get('reports/preview-grade-slip', [ReportController::class, 'previewGradeSlip'])->name('reports.preview-grade-slip');
 
         // Certificates Routes (now under reports)
         Route::get('reports/certificates', [CertificateController::class, 'index'])->name('reports.certificates.index');

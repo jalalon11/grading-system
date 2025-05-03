@@ -805,11 +805,13 @@ class ReportController extends Controller
             'debug' => 'nullable|boolean',
             'transmutation_table' => 'nullable|in:1,2,3,4',
             'all_quarters' => 'nullable|boolean',
+            'print' => 'nullable|boolean',
         ]);
 
         $debug = $request->has('debug') ? (bool)$request->debug : false;
         $transmutationTable = $request->input('transmutation_table', 1); // Default to table 1 if not specified
         $allQuarters = $request->has('all_quarters') ? (bool)$request->all_quarters : ($validated['quarter'] === 'all');
+        $printMode = $request->has('print') ? (bool)$request->print : false;
 
         $teacher = Auth::user();
         $student = Student::findOrFail($validated['student_id']);
@@ -879,7 +881,7 @@ class ReportController extends Controller
 
         // If showing all quarters, we'll process each quarter separately
         if ($allQuarters) {
-            return $this->previewAllQuartersGradeSlip($student, $section, $subjects, $mapehSubjects, $mapehComponents, $mapehParentMap, $transmutationTable, $debug);
+            return $this->previewAllQuartersGradeSlip($student, $section, $subjects, $mapehSubjects, $mapehComponents, $mapehParentMap, $transmutationTable, $debug, $printMode);
         }
 
         // Get all grade approvals for this section, quarter, and subjects
@@ -1060,10 +1062,12 @@ class ReportController extends Controller
         foreach ($studentGrades as $subjectId => $grade) {
             // Only include approved grades in the average
             if (isset($extendedApprovals[$subjectId]) && $extendedApprovals[$subjectId]->is_approved) {
-                $totalGrade += $grade->quarterly_grade;
+                // Use transmuted_grade if available, otherwise use quarterly_grade
+                $gradeToUse = isset($grade->transmuted_grade) ? $grade->transmuted_grade : $grade->quarterly_grade;
+                $totalGrade += $gradeToUse;
                 $subjectCount++;
 
-                if ($grade->quarterly_grade < 75) {
+                if ($gradeToUse < 75) {
                     $allPassed = false;
                 }
             }
@@ -1127,7 +1131,8 @@ class ReportController extends Controller
         // Log debug data
         Log::info('Grade Slip Preview - Complete data', $debugData);
 
-        return view('teacher.reports.grade_slip_preview', [
+        // Prepare data for both views
+        $viewData = [
             'student' => $student,
             'section' => $section,
             'quarter' => $validated['quarter'],
@@ -1143,7 +1148,9 @@ class ReportController extends Controller
             'mapehParentMap' => $mapehParentMap,
             'schoolYear' => $schoolYear,
             'overallAverage' => $overallAverage,
+            'generalAverage' => $subjectCount > 0 ? round(($totalGrade / $subjectCount) + 0.00001) : 0, // Add small value to ensure proper rounding
             'allPassed' => $allPassed,
+            'allApproved' => $subjectCount > 0,
             'currentTime' => $currentTime,
             'debug' => $debug,
             'debugData' => $debugData,
@@ -1154,7 +1161,30 @@ class ReportController extends Controller
                 3 => 'SHS Core & Work Immersion',
                 4 => 'SHS Academic Track'
             ],
-        ]);
+            // Additional data for MAPEH components
+            'standardComponents' => [
+                'Music' => 'Music',
+                'Arts' => 'Arts',
+                'PE' => 'P.E.',
+                'Health' => 'Health'
+            ],
+            'componentGrades' => [],
+            'componentRemarks' => [],
+            // Add region, division, district, address
+            'region' => isset($section) && $section->school && $section->school->schoolDivision ? $section->school->schoolDivision->region : 'Region XI',
+            'division' => isset($section) && $section->school && $section->school->schoolDivision ? $section->school->schoolDivision->name : 'Division of Davao del Sur',
+            'district' => isset($section) && $section->school ? $section->school->district : '',
+            'address' => isset($section) && $section->school ? $section->school->address : '',
+            'schoolName' => isset($section) && $section->school ? $section->school->name : 'St. Anthony Parish School',
+        ];
+
+        // If print mode is enabled, use the dedicated print template
+        if ($printMode) {
+            return view('teacher.reports.grade_slip_print', $viewData);
+        }
+
+        // Otherwise, use the regular preview template
+        return view('teacher.reports.grade_slip_preview', $viewData);
     }
 
     /**
@@ -1167,9 +1197,11 @@ class ReportController extends Controller
      * @param object $mapehComponents Collection of MAPEH components
      * @param array $mapehParentMap Map of MAPEH components to their parent subjects
      * @param int $transmutationTable The transmutation table to use (1-4)
+     * @param bool $debug Whether to include debug information
+     * @param bool $printMode Whether to use the print layout
      * @return \Illuminate\View\View
      */
-    private function previewAllQuartersGradeSlip($student, $section, $subjects, $mapehSubjects, $mapehComponents, $mapehParentMap, $transmutationTable, $debug = false)
+    private function previewAllQuartersGradeSlip($student, $section, $subjects, $mapehSubjects, $mapehComponents, $mapehParentMap, $transmutationTable, $debug = false, $printMode = false)
     {
         // Get current school year
         $schoolYear = $section->school_year ?? date('Y') . '-' . (date('Y') + 1);
@@ -1333,8 +1365,8 @@ class ReportController extends Controller
             }
 
             $quarterlyAverages[$quarter] = $subjectCount > 0 ?
-                GradeHelper::getTransmutedGrade(round($totalGrade / $subjectCount, 1), $transmutationTable) :
-                null;
+                GradeHelper::getTransmutedGrade(round(($totalGrade / $subjectCount) + 0.00001, 1), $transmutationTable) :
+                null; // Add small value to ensure proper rounding
         }
 
         // Calculate final grades for each subject
@@ -1394,7 +1426,7 @@ class ReportController extends Controller
             $finalSubjectCount++;
         }
 
-        $overallFinalAverage = $finalSubjectCount > 0 ? round($totalFinalGrade / $finalSubjectCount) : null;
+        $overallFinalAverage = $finalSubjectCount > 0 ? round(($totalFinalGrade / $finalSubjectCount) + 0.00001) : null; // Add small value to ensure proper rounding
 
         // Create debug data
         $debugData = [];
@@ -1428,7 +1460,8 @@ class ReportController extends Controller
             'overall_final_average' => $overallFinalAverage
         ]);
 
-        return view('teacher.reports.grade_slip_all_quarters', [
+        // Prepare data for both views
+        $viewData = [
             'student' => $student,
             'section' => $section,
             'quarter' => 'all',
@@ -1455,7 +1488,21 @@ class ReportController extends Controller
                 3 => 'SHS Core & Work Immersion',
                 4 => 'SHS Academic Track'
             ],
-        ]);
+            // Add region, division, district, address
+            'region' => isset($section) && $section->school && $section->school->schoolDivision ? $section->school->schoolDivision->region : 'Region XI',
+            'division' => isset($section) && $section->school && $section->school->schoolDivision ? $section->school->schoolDivision->name : 'Division of Davao del Sur',
+            'district' => isset($section) && $section->school ? $section->school->district : '',
+            'address' => isset($section) && $section->school ? $section->school->address : '',
+            'schoolName' => isset($section) && $section->school ? $section->school->name : 'St. Anthony Parish School',
+        ];
+
+        // If print mode is enabled, use the dedicated print template
+        if ($printMode) {
+            return view('teacher.reports.grade_slip_all_quarters_print', $viewData);
+        }
+
+        // Otherwise, use the regular preview template
+        return view('teacher.reports.grade_slip_all_quarters', $viewData);
     }
 
     /**

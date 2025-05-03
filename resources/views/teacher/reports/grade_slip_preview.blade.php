@@ -6,9 +6,15 @@
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="mb-0">Grade Slip Preview</h2>
             <div>
-                <button class="btn btn-primary me-2" onclick="window.print()">
+                <a href="{{ route('teacher.reports.preview-grade-slip', [
+                    'student_id' => $student->id,
+                    'section_id' => $section->id,
+                    'quarter' => $quarter,
+                    'transmutation_table' => $transmutationTable ?? 1,
+                    'print' => true
+                ]) }}" class="btn btn-primary me-2" target="_blank">
                     <i class="fas fa-print me-2"></i> Print Grade Slip
-                </button>
+                </a>
                 <a href="{{ route('teacher.reports.generate-grade-slips', ['section_id' => $section->id, 'quarter' => $quarter, 'transmutation_table' => $transmutationTable ?? 1]) }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i> Back to Grade Slips
                 </a>
@@ -752,67 +758,151 @@
     }
 
     @media print {
+        /* Reset all print styles to ensure we start fresh */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Hide everything except the grade slip */
         body * {
             visibility: hidden;
         }
 
-        .grade-slip, .grade-slip * {
+        /* Make the grade slip container and its contents visible */
+        .grade-slip-container, .grade-slip, .grade-slip * {
             visibility: visible;
         }
 
-        .grade-slip {
+        /* Position the grade slip properly */
+        .grade-slip-container {
             position: absolute;
             left: 0;
             top: 0;
             width: 100%;
-            border: none;
-            box-shadow: none;
-            padding: 0.5cm;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            background-color: white;
         }
 
-        .container, .row, .col-md-12, .card {
+        /* Ensure the grade slip itself maintains its styling */
+        .grade-slip {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            border: none;
+            box-shadow: none;
+            padding: 1.5rem;
+            margin: 0 auto;
+            background-color: white;
+            page-break-inside: avoid;
+        }
+
+        /* Hide non-printable elements */
+        .d-print-none, .no-print {
+            display: none !important;
+        }
+
+        /* Ensure all tables maintain their structure */
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        /* Maintain exact styling for all elements */
+        .school-logo {
+            max-height: 70px;
+        }
+
+        .school-name {
+            font-size: 1.3rem;
+            letter-spacing: 0.5px;
+        }
+
+        .grade-slip-title {
+            letter-spacing: 2px;
+            font-size: 1.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .student-info {
+            background-color: #f8f9fa !important;
+            border-radius: 5px;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .grades-table .table {
+            border: 2px solid #dee2e6 !important;
+        }
+
+        .grades-table .thead-light th {
+            background-color: #e9ecef !important;
+            color: #495057;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6 !important;
+        }
+
+        .grades-table tbody tr:nth-of-type(even) {
+            background-color: rgba(0,0,0,0.02) !important;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000;
+            width: 60%;
+            margin: 0.5rem auto;
+        }
+
+        .mapeh-component-row {
+            background-color: #f8f9fa !important;
+        }
+
+        /* Ensure table borders are visible */
+        .table-bordered th, .table-bordered td {
+            border: 1px solid #dee2e6 !important;
+        }
+
+        /* Ensure text colors are preserved */
+        .text-success {
+            color: #28a745 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        /* Set page margins and size */
+        @page {
+            size: portrait;
+            margin: 0.5cm;
+        }
+
+        /* Override any Bootstrap print classes that might interfere */
+        .container, .container-fluid, .row, .col, .col-md-6, .col-md-12 {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
             padding: 0 !important;
             margin: 0 !important;
         }
 
-        .card {
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        .no-print {
-            display: none !important;
-        }
-
-        .school-logo {
-            max-height: 1.5cm;
-        }
-
-        .school-name {
-            font-size: 14pt;
-        }
-
-        .grade-slip-title {
-            font-size: 16pt;
-            margin-top: 0.2cm;
-        }
-
-        .student-info {
-            margin-bottom: 0.3cm;
-            padding: 0.2cm;
-        }
-
-        .grades-table {
-            margin-bottom: 0.3cm;
-        }
-
-        .table {
-            font-size: 9pt;
-            margin-bottom: 0.2cm;
-        }
-
-        .signature-line {
-            margin: 0.3cm auto;
+        /* Fix for Firefox which sometimes has issues with visibility */
+        @-moz-document url-prefix() {
+            body {
+                height: auto !important;
+            }
         }
     }
 </style>
