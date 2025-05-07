@@ -191,6 +191,34 @@
             </div>
         </div>
         <div class="col-lg-4">
+            <!-- Maintenance Mode Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tools text-warning me-2"></i> Maintenance Mode</h5>
+                    @php
+                        $maintenanceMode = \App\Models\SystemSetting::isMaintenanceMode();
+                    @endphp
+                    <span class="badge {{ $maintenanceMode ? 'bg-danger' : 'bg-success' }}">
+                        {{ $maintenanceMode ? 'Enabled' : 'Disabled' }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        {{ $maintenanceMode
+                            ? 'The system is currently in maintenance mode. Only administrators can access the system.'
+                            : 'The system is currently active and accessible to all users.'
+                        }}
+                    </p>
+
+                    <button type="button" class="btn btn-{{ $maintenanceMode ? 'success' : 'warning' }} w-100"
+                            data-bs-toggle="modal" data-bs-target="#maintenanceModal">
+                        <i class="fas fa-{{ $maintenanceMode ? 'power-off' : 'tools' }} me-2"></i>
+                        {{ $maintenanceMode ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Information Card -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0"><i class="fas fa-info-circle text-info me-2"></i> System Information</h5>
@@ -224,4 +252,53 @@
         </div>
     </div>
 </div>
-@endsection 
+<!-- Maintenance Mode Modal -->
+<div class="modal fade" id="maintenanceModal" tabindex="-1" aria-labelledby="maintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="maintenanceModalLabel">
+                    <i class="fas fa-tools me-2 text-warning"></i>
+                    {{ $maintenanceMode ? 'Disable' : 'Enable' }} Maintenance Mode
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('maintenance.toggle') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    @if($maintenanceMode)
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Disabling maintenance mode will make the system accessible to all users again.
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Enabling maintenance mode will prevent all non-admin users from accessing the system.
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="maintenance_message" class="form-label">Maintenance Message</label>
+                            <textarea class="form-control" id="maintenance_message" name="maintenance_message" rows="3" placeholder="Enter a message to display to users during maintenance...">{{ \App\Models\SystemSetting::getMaintenanceMessage() }}</textarea>
+                            <div class="form-text">This message will be displayed to users on the maintenance page.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="maintenance_duration" class="form-label">Maintenance Duration (minutes)</label>
+                            <input type="number" class="form-control" id="maintenance_duration" name="maintenance_duration" min="1" value="30" placeholder="Enter duration in minutes">
+                            <div class="form-text">Estimated time for maintenance to complete. This will be displayed to users.</div>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-{{ $maintenanceMode ? 'success' : 'warning' }}">
+                        <i class="fas fa-{{ $maintenanceMode ? 'power-off' : 'tools' }} me-2"></i>
+                        {{ $maintenanceMode ? 'Disable' : 'Enable' }} Maintenance Mode
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endsection

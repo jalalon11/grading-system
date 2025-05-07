@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
 use App\Http\Controllers\TeacherAdmin\PaymentController as TeacherAdminPaymentController;
 use App\Http\Controllers\TeacherAdmin\SupportController as TeacherAdminSupportController;
+use App\Http\Controllers\MaintenanceController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Section;
@@ -40,6 +41,29 @@ Route::get('/', function () {
 
 // Announcement routes for public access
 Route::get('/api/announcements', [\App\Http\Controllers\AnnouncementViewController::class, 'getActiveAnnouncements'])->name('api.announcements');
+
+// Maintenance mode routes - these must be accessible during maintenance
+Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance');
+Route::get('/maintenance/auth', [MaintenanceController::class, 'authenticatedIndex'])->name('maintenance.auth');
+
+// Debug route to check maintenance mode status (admin only)
+Route::get('/maintenance/status', [MaintenanceController::class, 'checkStatus'])
+    ->middleware(['auth', 'check.role:admin'])
+    ->name('maintenance.status');
+
+// AJAX route to check maintenance status for authenticated users
+Route::get('/maintenance/check-status-ajax', [MaintenanceController::class, 'checkStatusAjax'])
+    ->middleware(['auth'])
+    ->name('maintenance.check-status-ajax');
+
+// AJAX route to get maintenance progress information
+Route::get('/maintenance/progress', [MaintenanceController::class, 'getMaintenanceProgress'])
+    ->name('maintenance.progress');
+
+// Test route to check if maintenance middleware is working
+Route::get('/test-maintenance', function() {
+    return 'If you see this, maintenance mode is NOT working correctly!';
+})->middleware([\App\Http\Middleware\MaintenanceModeMiddleware::class])->name('test.maintenance');
 
 // Image proxy route
 Route::get('/image-proxy/{path}', [\App\Http\Controllers\ImageProxyController::class, 'proxyImage'])
@@ -81,7 +105,12 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         }
     })->name('home');
 
-    // Admin Routes
+    // Maintenance mode toggle route (admin only)
+    Route::post('/maintenance/toggle', [MaintenanceController::class, 'toggleMaintenanceMode'])
+        ->middleware(['auth', 'check.role:admin'])
+        ->name('maintenance.toggle');
+
+    // Admin Routes - explicitly excluded from maintenance mode
     Route::prefix('admin')->middleware(['auth', 'check.role:admin'])->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile', function() {
@@ -148,7 +177,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
     });
 
     // Teacher Routes
-    Route::prefix('teacher')->middleware(['auth', 'check.role:teacher'])->name('teacher.')->group(function () {
+    Route::prefix('teacher')->middleware(['auth', 'check.role:teacher', \App\Http\Middleware\MaintenanceModeMiddleware::class])->name('teacher.')->group(function () {
         Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/attendance-data', [TeacherDashboardController::class, 'getAttendanceData'])->name('dashboard.attendance-data');
         Route::get('/dashboard/performance-data', [TeacherDashboardController::class, 'getPerformanceData'])->name('dashboard.performance-data');
@@ -295,7 +324,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
     });
 
     // Teacher Admin Routes
-    Route::middleware(['auth', 'teacher.admin'])
+    Route::middleware(['auth', 'teacher.admin', \App\Http\Middleware\MaintenanceModeMiddleware::class])
         ->name('teacher-admin.')
         ->prefix('teacher-admin')
         ->group(function () {
