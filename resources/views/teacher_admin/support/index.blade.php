@@ -32,7 +32,7 @@
                     <!-- Mobile Card View (visible on small screens) -->
                     <div class="d-md-none">
                         @forelse($tickets as $ticket)
-                            <div class="card mb-3 {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'border-primary' : 'border-light' }} shadow-sm">
+                            <div class="card mb-3 {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'border-primary' : 'border-light' }} shadow-sm">
                                 <div class="card-body p-3">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="d-flex align-items-center">
@@ -42,8 +42,8 @@
                                             <div>
                                                 <div class="fw-medium">#{{ $ticket->id }}</div>
                                             </div>
-                                            @if($ticket->unreadMessagesCount(Auth::id()) > 0)
-                                                <span class="badge bg-danger rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $ticket->unreadMessagesCount(Auth::id()) }}</span>
+                                            @if($ticket->unreadMessagesCountForSchool() > 0)
+                                                <span class="badge bg-danger rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $ticket->unreadMessagesCountForSchool() }}</span>
                                             @endif
                                         </div>
                                         <div>
@@ -59,7 +59,7 @@
                                     <div class="mb-2">
                                         <div class="fw-medium text-truncate">{{ $ticket->subject }}</div>
                                         <div class="small text-muted">
-                                            Created {{ $ticket->created_at->format('M d, Y') }}
+                                            Created by {{ $ticket->user->name }} on {{ $ticket->created_at->format('M d, Y') }}
                                         </div>
                                     </div>
 
@@ -68,9 +68,9 @@
                                             <i class="fas fa-clock me-1"></i>
                                             {{ $ticket->last_reply_at ? $ticket->last_reply_at->diffForHumans() : 'N/A' }}
                                         </div>
-                                        <a href="{{ route('teacher-admin.support.show', $ticket->id) }}" class="btn btn-sm {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'btn-primary' : 'btn-outline-primary' }}">
-                                            <i class="fas {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'fa-envelope' : 'fa-eye' }} me-1"></i>
-                                            {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'View New' : 'View' }}
+                                        <a href="{{ route('teacher-admin.support.show', $ticket->id) }}" class="btn btn-sm {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'btn-primary' : 'btn-outline-primary' }}">
+                                            <i class="fas {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'fa-envelope' : 'fa-eye' }} me-1"></i>
+                                            {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'View New' : 'View' }}
                                         </a>
                                     </div>
                                 </div>
@@ -99,6 +99,7 @@
                                 <tr>
                                     <th class="ps-3">Ticket</th>
                                     <th>Subject</th>
+                                    <th>Created By</th>
                                     <th>Status</th>
                                     <th>Priority</th>
                                     <th>Last Activity</th>
@@ -107,7 +108,7 @@
                             </thead>
                             <tbody>
                                 @forelse($tickets as $ticket)
-                                    <tr class="{{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'table-active' : '' }}">
+                                    <tr class="{{ $ticket->unreadMessagesCountForSchool() > 0 ? 'table-active' : '' }}">
                                         <td class="ps-3">
                                             <div class="d-flex align-items-center">
                                                 <div class="ticket-icon me-3 d-flex align-items-center justify-content-center rounded-circle {{ $ticket->status == 'closed' ? 'bg-secondary' : ($ticket->priority == 'high' ? 'bg-danger' : ($ticket->priority == 'medium' ? 'bg-warning' : 'bg-info')) }}" style="width: 40px; height: 40px; color: white;">
@@ -117,14 +118,22 @@
                                                     <div class="fw-medium">#{{ $ticket->id }}</div>
                                                     <div class="small text-muted">Created {{ $ticket->created_at->format('M d, Y') }}</div>
                                                 </div>
-                                                @if($ticket->unreadMessagesCount(Auth::id()) > 0)
-                                                    <span class="badge bg-danger rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $ticket->unreadMessagesCount(Auth::id()) }}</span>
+                                                @if($ticket->unreadMessagesCountForSchool() > 0)
+                                                    <span class="badge bg-danger rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $ticket->unreadMessagesCountForSchool() }}</span>
                                                 @endif
                                             </div>
                                         </td>
                                         <td>
                                             <div class="text-truncate" style="max-width: 250px;" title="{{ $ticket->subject }}">
                                                 {{ $ticket->subject }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-2" style="width: 28px; height: 28px; background-color: #3498db;">
+                                                    <span class="initials">{{ substr($ticket->user->name, 0, 1) }}</span>
+                                                </div>
+                                                <span>{{ $ticket->user->name }}</span>
                                             </div>
                                         </td>
                                         <td>
@@ -144,9 +153,9 @@
                                             </div>
                                         </td>
                                         <td class="text-end pe-3">
-                                            <a href="{{ route('teacher-admin.support.show', $ticket->id) }}" class="btn btn-sm {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'btn-primary' : 'btn-outline-primary' }}">
-                                                <i class="fas {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'fa-envelope' : 'fa-eye' }} me-1"></i>
-                                                {{ $ticket->unreadMessagesCount(Auth::id()) > 0 ? 'View New Messages' : 'View Ticket' }}
+                                            <a href="{{ route('teacher-admin.support.show', $ticket->id) }}" class="btn btn-sm {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'btn-primary' : 'btn-outline-primary' }}">
+                                                <i class="fas {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'fa-envelope' : 'fa-eye' }} me-1"></i>
+                                                {{ $ticket->unreadMessagesCountForSchool() > 0 ? 'View New Messages' : 'View Ticket' }}
                                             </a>
                                         </td>
                                     </tr>

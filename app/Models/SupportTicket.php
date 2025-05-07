@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\User;
 
 class SupportTicket extends Model
 {
@@ -75,6 +76,43 @@ class SupportTicket extends Model
     {
         return $this->messages()
             ->where('user_id', '!=', $userId)
+            ->where('is_read', false)
+            ->count();
+    }
+
+    /**
+     * Get all teacher admins for this ticket's school
+     */
+    public function getSchoolTeacherAdmins()
+    {
+        return User::where('school_id', $this->school_id)
+            ->where('role', 'teacher')
+            ->where('is_teacher_admin', true)
+            ->get();
+    }
+
+    /**
+     * Mark messages as read for all teacher admins of this school
+     */
+    public function markMessagesAsReadForSchool()
+    {
+        $teacherAdminIds = $this->getSchoolTeacherAdmins()->pluck('id')->toArray();
+
+        return $this->messages()
+            ->whereNotIn('user_id', $teacherAdminIds)
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+    }
+
+    /**
+     * Get the unread messages count for all teacher admins of this school
+     */
+    public function unreadMessagesCountForSchool()
+    {
+        $teacherAdminIds = $this->getSchoolTeacherAdmins()->pluck('id')->toArray();
+
+        return $this->messages()
+            ->whereNotIn('user_id', $teacherAdminIds)
             ->where('is_read', false)
             ->count();
     }
