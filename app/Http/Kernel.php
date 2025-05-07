@@ -14,7 +14,7 @@ class Kernel extends HttpKernel
      * @var array<int, class-string|string>
      */
     protected $middleware = [
-        //
+        \App\Http\Middleware\MaintenanceModeMiddleware::class,
     ];
 
     /**
@@ -57,5 +57,6 @@ class Kernel extends HttpKernel
         'registration.key' => \App\Http\Middleware\RegistrationKeyMiddleware::class,
         'throttle.payments' => \App\Http\Middleware\ThrottlePaymentSubmissions::class,
         'payment.throttle' => \App\Http\Middleware\ThrottlePaymentSubmissions::class,
+        'maintenance.mode' => \App\Http\Middleware\MaintenanceModeMiddleware::class,
     ];
 }
