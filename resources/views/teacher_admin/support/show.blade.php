@@ -42,6 +42,22 @@
                                 </div>
                             </div>
 
+                            <!-- Shared Support Ticket Notice -->
+                            <div class="alert alert-info m-3 mb-0 d-flex align-items-center" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div>
+                                    <strong>Shared Support:</strong> This ticket is visible to all teacher admins from your school.
+                                    <!-- @if(count($schoolTeacherAdmins) > 1)
+                                        <span class="d-block mt-1 small">
+                                            Teacher Admins:
+                                            @foreach($schoolTeacherAdmins as $admin)
+                                                <span class="badge bg-secondary me-1">{{ $admin->name }}</span>
+                                            @endforeach
+                                        </span>
+                                    @endif -->
+                                </div>
+                            </div>
+
                             <div id="messages-container" class="messages-container p-3 position-relative" style="height: 550px; overflow-y: auto; background-color: #f8f9fa;">
                                 <!-- Scroll to bottom button -->
                                 <button id="scroll-to-bottom" class="btn btn-sm btn-primary rounded-circle position-absolute d-none" style="bottom: 20px; right: 20px; width: 40px; height: 40px; z-index: 1000;">
@@ -50,39 +66,64 @@
 
 
                                 @foreach($messages as $message)
-                                    <div class="message-wrapper mb-3 {{ $message->user->id === Auth::id() ? 'teacher-admin-message' : 'admin-message' }}" data-message-id="{{ $message->id }}" data-is-read="{{ $message->is_read ? 'true' : 'false' }}">
+                                    @php
+                                        $isCurrentUser = $message->user->id === Auth::id();
+                                        $isTeacherAdmin = $message->user->role === 'teacher' && $message->user->is_teacher_admin;
+                                        $isAdmin = $message->user->role === 'admin';
+                                        $avatarColor = $isAdmin ? '#3498db' : ($isTeacherAdmin ? '#6c757d' : '#28a745');
+                                    @endphp
+                                    <div class="message-wrapper mb-3 {{ $isCurrentUser ? 'teacher-admin-message' : ($isAdmin ? 'admin-message' : 'other-teacher-admin-message') }}" data-message-id="{{ $message->id }}" data-is-read="{{ $message->is_read ? 'true' : 'false' }}">
                                         <!-- Mobile-optimized message layout -->
-                                        <div class="d-flex {{ $message->user->id === Auth::id() ? 'justify-content-end' : 'justify-content-start' }}">
+                                        <div class="d-flex {{ $isCurrentUser ? 'justify-content-end' : 'justify-content-start' }}">
                                             <!-- Avatar for non-current user (hidden on mobile) -->
-                                            @if($message->user->id !== Auth::id())
+                                            @if(!$isCurrentUser)
                                                 <div class="avatar me-2 d-flex align-items-start d-none d-sm-flex">
-                                                    <div class="avatar-circle" style="width: 36px; height: 36px; background-color: #3498db;">
+                                                    <div class="avatar-circle" style="width: 36px; height: 36px; background-color: {{ $avatarColor }};">
                                                         <span class="initials">{{ substr($message->user->name, 0, 1) }}</span>
                                                     </div>
                                                 </div>
                                                 <!-- Mobile avatar (small version) -->
                                                 <div class="avatar-mobile me-1 d-flex d-sm-none align-items-start">
-                                                    <div class="avatar-circle" style="width: 24px; height: 24px; background-color: #3498db;">
+                                                    <div class="avatar-circle" style="width: 24px; height: 24px; background-color: {{ $avatarColor }};">
                                                         <span class="initials" style="font-size: 10px;">{{ substr($message->user->name, 0, 1) }}</span>
                                                     </div>
                                                 </div>
                                             @endif
 
-                                            <div class="message-content-wrapper {{ $message->user->id === Auth::id() ? 'text-end admin-message-wrapper' : 'user-message-wrapper' }}" style="max-width: 85%;">
-                                                <div class="message-bubble d-inline-block p-3 rounded-3 shadow-sm {{ $message->user->id === Auth::id() ? 'bg-primary text-white' : 'bg-white' }}">
+                                            <div class="message-content-wrapper {{ $isCurrentUser ? 'text-end admin-message-wrapper' : 'user-message-wrapper' }}" style="max-width: 85%;">
+                                                @php
+                                                    $bubbleClass = $isCurrentUser ? 'bg-primary text-white' :
+                                                                  ($isAdmin ? 'bg-white' :
+                                                                  'bg-light border border-secondary');
+                                                @endphp
+                                                <div class="message-bubble d-inline-block p-3 rounded-3 shadow-sm {{ $bubbleClass }}">
                                                     <div class="message-content">
                                                         {{ $message->message }}
                                                     </div>
                                                 </div>
-                                                <div class="message-meta mt-1 {{ $message->user->id === Auth::id() ? 'text-end' : '' }} text-muted small">
-                                                    <!-- Username - different display for mobile -->
-                                                    <span class="d-none d-sm-inline">{{ $message->user->name }}</span>
-                                                    <span class="d-sm-none">{{ Str::limit($message->user->name, 10) }}</span> •
+                                                <div class="message-meta mt-1 {{ $isCurrentUser ? 'text-end' : '' }} text-muted small">
+                                                    <!-- Username with role indicator -->
+                                                    <span class="d-none d-sm-inline">
+                                                        {{ $message->user->name }}
+                                                        @if($isAdmin)
+                                                            <span class="badge bg-primary ms-1">Admin</span>
+                                                        @elseif($isTeacherAdmin)
+                                                            <span class="badge bg-secondary ms-1">Teacher Admin</span>
+                                                        @endif
+                                                    </span>
+                                                    <span class="d-sm-none">
+                                                        {{ Str::limit($message->user->name, 10) }}
+                                                        @if($isAdmin)
+                                                            <span class="badge bg-primary ms-1" style="font-size: 0.6rem;">Admin</span>
+                                                        @elseif($isTeacherAdmin)
+                                                            <span class="badge bg-secondary ms-1" style="font-size: 0.6rem;">TA</span>
+                                                        @endif
+                                                    </span> •
                                                     <!-- Timestamp - different format for mobile -->
                                                     <span class="d-none d-sm-inline">{{ $message->created_at->format('M d, Y h:i A') }}</span>
                                                     <span class="d-sm-none">{{ $message->created_at->format('h:i A') }}</span>
 
-                                                    @if($message->user->id === Auth::id())
+                                                    @if($isCurrentUser)
                                                     <span class="message-status-indicators ms-2">
                                                         <!-- Only one status will be visible at a time -->
                                                         <span class="message-status sent {{ $message->is_read ? 'd-none' : '' }}" title="Sent" data-status="sent">
@@ -99,16 +140,16 @@
                                                 </div>
                                             </div>
 
-                                            @if($message->user->id === Auth::id())
+                                            @if($isCurrentUser)
                                                 <!-- Desktop avatar -->
                                                 <div class="avatar ms-2 d-flex align-items-start d-none d-sm-flex">
-                                                    <div class="avatar-circle" style="width: 36px; height: 36px; background-color: #6c757d;">
+                                                    <div class="avatar-circle" style="width: 36px; height: 36px; background-color: {{ $avatarColor }};">
                                                         <span class="initials">{{ substr($message->user->name, 0, 1) }}</span>
                                                     </div>
                                                 </div>
                                                 <!-- Mobile avatar (small version) -->
                                                 <div class="avatar-mobile ms-1 d-flex d-sm-none align-items-start">
-                                                    <div class="avatar-circle" style="width: 24px; height: 24px; background-color: #6c757d;">
+                                                    <div class="avatar-circle" style="width: 24px; height: 24px; background-color: {{ $avatarColor }};">
                                                         <span class="initials" style="font-size: 10px;">{{ substr($message->user->name, 0, 1) }}</span>
                                                     </div>
                                                 </div>
@@ -231,6 +272,11 @@
 
     .admin-message-wrapper {
         margin-right: 8px;
+    }
+
+    /* Styling for different user types */
+    .other-teacher-admin-message .message-bubble {
+        border-color: #6c757d !important;
     }
 
     /* Avatar styling */
@@ -429,3 +475,5 @@
 <!-- Hidden inputs for JavaScript -->
 <input type="hidden" id="ticket-id" value="{{ $ticket->id }}">
 <input type="hidden" id="current-user-id" value="{{ Auth::id() }}">
+<input type="hidden" id="school-id" value="{{ Auth::user()->school_id }}">
+<input type="hidden" id="is-shared-support" value="true">

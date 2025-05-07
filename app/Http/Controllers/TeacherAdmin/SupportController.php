@@ -5,6 +5,7 @@ namespace App\Http\Controllers\TeacherAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\SupportMessage;
+use App\Models\User;
 use App\Events\NewSupportMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,13 @@ class SupportController extends Controller
             ->orderBy('last_reply_at', 'desc')
             ->paginate(10);
 
-        return view('teacher_admin.support.index', compact('tickets'));
+        // Get all teacher admins for this school
+        $schoolTeacherAdmins = User::where('school_id', $user->school_id)
+            ->where('role', 'teacher')
+            ->where('is_teacher_admin', true)
+            ->get();
+
+        return view('teacher_admin.support.index', compact('tickets', 'schoolTeacherAdmins'));
     }
 
     /**
@@ -94,13 +101,13 @@ class SupportController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Mark all messages as read for the teacher admin
-        SupportMessage::where('support_ticket_id', $ticket->id)
-            ->where('user_id', '!=', $user->id)
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+        // Mark all messages as read for all teacher admins of this school
+        $ticket->markMessagesAsReadForSchool();
 
-        return view('teacher_admin.support.show', compact('ticket', 'messages'));
+        // Get all teacher admins for this school to display in the view
+        $schoolTeacherAdmins = $ticket->getSchoolTeacherAdmins();
+
+        return view('teacher_admin.support.show', compact('ticket', 'messages', 'schoolTeacherAdmins'));
     }
 
     /**
@@ -147,7 +154,7 @@ class SupportController extends Controller
     }
 
     /**
-     * Mark a message as read.
+     * Mark a message as read for all teacher admins of the school.
      */
     public function markAsRead(string $id)
     {
@@ -156,8 +163,20 @@ class SupportController extends Controller
             $query->where('school_id', $user->school_id);
         })->findOrFail($id);
 
+        // Get the ticket
+        $ticket = $message->ticket;
+
+        // Mark this message as read for all teacher admins
         $message->is_read = true;
         $message->save();
+
+        // Log the action
+        Log::info('Teacher Admin marked message as read', [
+            'message_id' => $id,
+            'user_id' => $user->id,
+            'school_id' => $user->school_id,
+            'ticket_id' => $ticket->id
+        ]);
 
         return response()->json(['success' => true]);
     }
@@ -178,16 +197,21 @@ class SupportController extends Controller
 
         $latestMessageId = $latestMessage ? $latestMessage->id : 0;
 
-        // Count new messages from other users
+        // Get all teacher admin IDs for this school
+        $teacherAdminIds = $ticket->getSchoolTeacherAdmins()->pluck('id')->toArray();
+
+        // Count new messages from non-teacher-admin users
         $newMessages = SupportMessage::where('support_ticket_id', $ticket->id)
             ->where('id', '>', $lastMessageId)
-            ->where('user_id', '!=', $user->id)
+            ->whereNotIn('user_id', $teacherAdminIds)
             ->count();
 
         // Log for debugging
         Log::info('Teacher Admin checking for new messages', [
             'ticket_id' => $id,
             'user_id' => $user->id,
+            'school_id' => $user->school_id,
+            'teacher_admin_ids' => $teacherAdminIds,
             'last_message_id' => $lastMessageId,
             'latest_message_id' => $latestMessageId,
             'new_messages_count' => $newMessages,
@@ -202,14 +226,21 @@ class SupportController extends Controller
     }
 
     /**
-     * Check read status for messages sent by the current user.
+     * Check read status for messages sent by any teacher admin from the school.
      */
     public function checkReadStatus()
     {
         $user = Auth::user();
 
-        // Get all messages sent by the current user
-        $messages = SupportMessage::where('user_id', $user->id)
+        // Get all teacher admin IDs for this school
+        $teacherAdminIds = User::where('school_id', $user->school_id)
+            ->where('role', 'teacher')
+            ->where('is_teacher_admin', true)
+            ->pluck('id')
+            ->toArray();
+
+        // Get all messages sent by any teacher admin from this school
+        $messages = SupportMessage::whereIn('user_id', $teacherAdminIds)
             ->with('ticket')
             ->whereHas('ticket', function($query) use ($user) {
                 $query->where('school_id', $user->school_id);
@@ -222,7 +253,9 @@ class SupportController extends Controller
             $messageStatuses[$message->id] = [
                 'id' => $message->id,
                 'is_read' => (bool) $message->is_read,
-                'ticket_id' => $message->support_ticket_id
+                'ticket_id' => $message->support_ticket_id,
+                'sender_id' => $message->user_id,
+                'sender_name' => $message->user->name
             ];
         }
 
