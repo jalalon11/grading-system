@@ -1026,6 +1026,14 @@
                         @endif
                     </a>
                 </li>
+                <li class="{{ Request::is('admin/support*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.support.index') }}" class="position-relative">
+                        <i class="fas fa-headset"></i> <span>Support</span>
+                        @if(isset($pendingSupportCount) && $pendingSupportCount > 0)
+                            <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $pendingSupportCount }}</span>
+                        @endif
+                    </a>
+                </li>
                 <!-- Database Backups option removed -->
                 @elseif(Auth::user()->role === 'teacher')
                 <li class="{{ Request::is('teacher/dashboard') ? 'active' : '' }}">
@@ -1088,6 +1096,14 @@
                         <li class="{{ Request::is('teacher-admin/reports*') ? 'active' : '' }}">
                             <a href="{{ route('teacher-admin.reports.index') }}">
                                 <i class="fas fa-chart-bar"></i> <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('teacher-admin/support*') ? 'active' : '' }}">
+                            <a href="{{ route('teacher-admin.support.index') }}" class="position-relative">
+                                <i class="fas fa-headset"></i> <span>Support</span>
+                                @if(isset($teacherAdminSupportCount) && $teacherAdminSupportCount > 0)
+                                    <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $teacherAdminSupportCount }}</span>
+                                @endif
                             </a>
                         </li>
                     </ul>

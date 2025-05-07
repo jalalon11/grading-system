@@ -23,7 +23,10 @@ class DashboardController extends Controller
             'studentsCount' => Student::count()
         ];
 
-        return view('admin.dashboard', compact('stats'));
+        // Get pending support tickets count
+        $pendingSupportCount = \App\Models\SupportTicket::where('status', 'open')->count();
+
+        return view('admin.dashboard', compact('stats', 'pendingSupportCount'));
     }
 
     /**
@@ -59,7 +62,7 @@ class DashboardController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Check if current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'The current password is incorrect.']);
