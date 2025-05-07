@@ -108,6 +108,14 @@ class School extends Model
     }
 
     /**
+     * Get the support tickets for this school
+     */
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
+    /**
      * Check if the school is on trial
      */
     public function onTrial(): bool

@@ -148,4 +148,20 @@ class User extends Authenticatable
             ->where('is_teacher_admin', true)
             ->count() < 2;
     }
+
+    /**
+     * Get support tickets created by this user
+     */
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
+    /**
+     * Get support messages sent by this user
+     */
+    public function supportMessages(): HasMany
+    {
+        return $this->hasMany(SupportMessage::class);
+    }
 }

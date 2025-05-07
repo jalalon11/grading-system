@@ -21,7 +21,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $school = $user->school;
-        
+
         // Get counts for the dashboard
         $sectionsCount = Section::where('school_id', $user->school_id)->count();
         $subjectsCount = Subject::where('school_id', $user->school_id)->count();
@@ -31,31 +31,31 @@ class DashboardController extends Controller
         $studentsCount = Student::whereHas('section', function($query) use ($user) {
             $query->where('school_id', $user->school_id);
         })->count();
-        
+
         // Get the most recent sections and subjects
         $recentSections = Section::where('school_id', $user->school_id)
             ->with(['adviser', 'subjects'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
-        
+
         $recentSubjects = Subject::where('school_id', $user->school_id)
             ->withCount('sections')
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
-        
+
         // Get teachers to assign
         $availableTeachers = User::where('school_id', $user->school_id)
             ->where('role', 'teacher')
             ->orderBy('name')
             ->get();
-            
+
         // Calculate attendance statistics
         $today = Carbon::today();
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
-        
+
         $attendanceStats = [
             'todayCount' => Attendance::whereDate('date', $today)
                 ->whereHas('student.section', function($query) use ($user) {
@@ -64,16 +64,16 @@ class DashboardController extends Controller
             'weeklyAttendance' => $this->getWeeklyAttendanceData($user->school_id),
             'attendanceRate' => $this->getAttendanceRate($user->school_id)
         ];
-        
+
         // Calculate grade distribution
         $gradeDistribution = $this->getGradeDistribution($user->school_id);
-        
+
         // Get recent activity
         $recentActivity = $this->getRecentActivity($user->school_id);
-        
+
         // Get teacher performance metrics
         $teacherPerformance = $this->getTeacherPerformanceMetrics($user->school_id);
-        
+
         // Combine stats for the dashboard
         $stats = [
             'sectionsCount' => $sectionsCount,
@@ -82,7 +82,15 @@ class DashboardController extends Controller
             'studentsCount' => $studentsCount,
             'todayAttendance' => $attendanceStats['todayCount'],
         ];
-        
+
+        // Get unread support messages count for teacher admin
+        $teacherAdminSupportCount = \App\Models\SupportMessage::whereHas('ticket', function($query) use ($user) {
+            $query->where('school_id', $user->school_id);
+        })
+        ->where('user_id', '!=', $user->id)
+        ->where('is_read', false)
+        ->count();
+
         return view('teacher_admin.dashboard', compact(
             'user',
             'school',
@@ -97,7 +105,8 @@ class DashboardController extends Controller
             'gradeDistribution',
             'recentActivity',
             'teacherPerformance',
-            'stats'
+            'stats',
+            'teacherAdminSupportCount'
         ));
     }
 
@@ -108,7 +117,7 @@ class DashboardController extends Controller
     {
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
-        
+
         $attendanceData = Attendance::whereBetween('date', [$startOfWeek, $endOfWeek])
             ->whereHas('student.section', function($query) use ($schoolId) {
                 $query->where('school_id', $schoolId);
@@ -116,14 +125,14 @@ class DashboardController extends Controller
             ->select(DB::raw('DATE(date) as attendance_date'), DB::raw('count(*) as count'), 'status')
             ->groupBy('attendance_date', 'status')
             ->get();
-            
+
         $formattedData = [];
         for ($day = 0; $day < 7; $day++) {
             $date = $startOfWeek->copy()->addDays($day)->format('Y-m-d');
             $present = $attendanceData->where('attendance_date', $date)->where('status', 'present')->first();
             $absent = $attendanceData->where('attendance_date', $date)->where('status', 'absent')->first();
             $late = $attendanceData->where('attendance_date', $date)->where('status', 'late')->first();
-            
+
             $formattedData[] = [
                 'date' => $startOfWeek->copy()->addDays($day)->format('D'),
                 'present' => $present ? $present->count : 0,
@@ -131,32 +140,32 @@ class DashboardController extends Controller
                 'late' => $late ? $late->count : 0
             ];
         }
-        
+
         return $formattedData;
     }
-    
+
     /**
      * Get overall attendance rate
      */
     private function getAttendanceRate($schoolId)
     {
         $startOfMonth = Carbon::now()->startOfMonth();
-        
+
         $totalAttendances = Attendance::whereDate('date', '>=', $startOfMonth)
             ->whereHas('student.section', function($query) use ($schoolId) {
                 $query->where('school_id', $schoolId);
             })->count();
-            
+
         $presentAttendances = Attendance::whereDate('date', '>=', $startOfMonth)
             ->whereHas('student.section', function($query) use ($schoolId) {
                 $query->where('school_id', $schoolId);
             })
             ->where('status', 'present')
             ->count();
-            
+
         return $totalAttendances > 0 ? round(($presentAttendances / $totalAttendances) * 100) : 0;
     }
-    
+
     /**
      * Get grade distribution for the school
      */
@@ -165,7 +174,7 @@ class DashboardController extends Controller
         $grades = Grade::whereHas('student.section', function($query) use ($schoolId) {
             $query->where('school_id', $schoolId);
         })->get();
-        
+
         $distribution = [
             'excellent' => 0, // 90-100
             'veryGood' => 0,  // 85-89
@@ -173,10 +182,10 @@ class DashboardController extends Controller
             'satisfactory' => 0, // 75-79
             'needsImprovement' => 0, // Below 75
         ];
-        
+
         foreach ($grades as $grade) {
             $score = $grade->score;
-            
+
             if ($score >= 90) {
                 $distribution['excellent']++;
             } elseif ($score >= 85) {
@@ -189,10 +198,10 @@ class DashboardController extends Controller
                 $distribution['needsImprovement']++;
             }
         }
-        
+
         return $distribution;
     }
-    
+
     /**
      * Get recent activity for the school
      */
@@ -210,12 +219,12 @@ class DashboardController extends Controller
         ->map(function($grade) {
             // Try to find the correct teacher from the section_subject pivot
             $teacherName = Auth::user()->name; // Default fallback
-            
+
             // Get the section_subject relationship that contains the correct teacher
             $sectionSubject = $grade->student->section->subjects
                 ->where('id', $grade->subject_id)
                 ->first();
-                
+
             // If we found it, get the teacher name from the pivot
             if ($sectionSubject && isset($sectionSubject->pivot->teacher_id)) {
                 $teacher = User::find($sectionSubject->pivot->teacher_id);
@@ -223,7 +232,7 @@ class DashboardController extends Controller
                     $teacherName = $teacher->name;
                 }
             }
-            
+
             return [
                 'type' => 'grade',
                 'description' => "Grade added for {$grade->student->name} in {$grade->subject->name}",
@@ -231,7 +240,7 @@ class DashboardController extends Controller
                 'date' => $grade->created_at
             ];
         });
-        
+
         $recentAttendance = Attendance::whereHas('student.section', function($query) use ($schoolId) {
             $query->where('school_id', $schoolId);
         })
@@ -247,10 +256,10 @@ class DashboardController extends Controller
                 'date' => $attendance->created_at
             ];
         });
-        
+
         return $recentGrades->concat($recentAttendance)->sortByDesc('date')->take(10)->values()->all();
     }
-    
+
     /**
      * Get teacher performance metrics
      */
@@ -262,17 +271,17 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->take(10)
             ->get();
-            
+
         return $teachers->map(function($teacher) {
             // Since we don't have teacher_id in grades table, we'll use a placeholder value
             $averageGrade = 0;
-            
+
             // Count attendance records by this teacher
             $attendanceCount = Attendance::where('teacher_id', $teacher->id)->count();
-            
+
             // Count sections where teacher is adviser
             $sectionsCount = Section::where('adviser_id', $teacher->id)->count();
-            
+
             return [
                 'id' => $teacher->id,
                 'name' => $teacher->name,
@@ -320,7 +329,7 @@ class DashboardController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         // Check if current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'The current password is incorrect.']);

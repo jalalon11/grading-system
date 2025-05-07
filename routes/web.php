@@ -25,7 +25,9 @@ use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\ResourceCategoryController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\SupportController as AdminSupportController;
 use App\Http\Controllers\TeacherAdmin\PaymentController as TeacherAdminPaymentController;
+use App\Http\Controllers\TeacherAdmin\SupportController as TeacherAdminSupportController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Section;
@@ -103,8 +105,23 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::post('teachers/{teacher}/reset-password', [TeacherController::class, 'resetPassword'])->name('teachers.reset-password');
         Route::resource('teacher-admins', TeacherAdminController::class);
 
+        // Support Routes
+        Route::get('support', [AdminSupportController::class, 'index'])->name('support.index');
+        Route::get('support/{id}', [AdminSupportController::class, 'show'])->name('support.show');
+        Route::post('support/{id}/reply', [AdminSupportController::class, 'reply'])->name('support.reply');
+        Route::post('support/{id}/close', [AdminSupportController::class, 'close'])->name('support.close');
+        Route::post('support/{id}/reopen', [AdminSupportController::class, 'reopen'])->name('support.reopen');
+
         // API Routes
         Route::get('/api/schools/{school}/teachers', [TeacherAdminController::class, 'getTeachers']);
+
+        // Support API Routes
+        Route::post('/api/support/messages/{message}/read', [AdminSupportController::class, 'markAsRead']);
+        Route::get('/api/support/tickets/{id}/messages', [AdminSupportController::class, 'getMessages']);
+
+        // Support API Routes with admin prefix for JavaScript
+        Route::post('/admin/api/support/messages/{message}/read', [AdminSupportController::class, 'markAsRead']);
+        Route::get('/admin/api/support/tickets/{id}/messages', [AdminSupportController::class, 'getMessages']);
 
         // Admin routes for registration key management
         Route::post('/reset-master-key', [\App\Http\Controllers\RegistrationKeyController::class, 'resetMasterKey'])->name('reset-master-key');
@@ -122,8 +139,6 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::put('/resources/{resource}', [ResourceController::class, 'update'])->name('resources.update');
         Route::delete('/resources/{resource}', [ResourceController::class, 'destroy'])->name('resources.destroy');
         Route::post('/resources/{resource}/toggle-status', [ResourceController::class, 'toggleStatus'])->name('resources.toggle-status');
-
-        // Database Backup Management routes have been removed
 
         // Resource Categories Management
         Route::post('/resource-categories', [ResourceCategoryController::class, 'store'])->name('resource-categories.store');
@@ -324,6 +339,23 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             Route::get('/payments/{payment}', [TeacherAdminPaymentController::class, 'show'])->name('payments.show');
             Route::get('/payments/{payment}/receipt', [TeacherAdminPaymentController::class, 'receipt'])->name('payments.receipt');
             Route::get('/subscription/remaining-time', [TeacherAdminPaymentController::class, 'getRemainingTime'])->name('subscription.remaining-time');
+
+            // Support Routes
+            Route::get('/support', [TeacherAdminSupportController::class, 'index'])->name('support.index');
+            Route::get('/support/create', [TeacherAdminSupportController::class, 'create'])->name('support.create');
+            Route::post('/support', [TeacherAdminSupportController::class, 'store'])->name('support.store');
+            Route::get('/support/{id}', [TeacherAdminSupportController::class, 'show'])->name('support.show');
+            Route::post('/support/{id}/reply', [TeacherAdminSupportController::class, 'reply'])->name('support.reply');
+
+            // Support API Routes
+            Route::post('/api/support/messages/{message}/read', [TeacherAdminSupportController::class, 'markAsRead']);
+            Route::get('/api/support/tickets/{id}/messages', [TeacherAdminSupportController::class, 'getMessages']);
+            Route::get('/api/support/messages/read-status', [TeacherAdminSupportController::class, 'checkReadStatus']);
+
+            // Support API Routes with teacher-admin prefix for JavaScript
+            Route::post('/teacher-admin/api/support/messages/{message}/read', [TeacherAdminSupportController::class, 'markAsRead']);
+            Route::get('/teacher-admin/api/support/tickets/{id}/messages', [TeacherAdminSupportController::class, 'getMessages']);
+            Route::get('/teacher-admin/api/support/messages/read-status', [TeacherAdminSupportController::class, 'checkReadStatus']);
         });
 
 
