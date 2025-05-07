@@ -3,15 +3,11 @@
 namespace App\Events;
 
 use App\Models\SupportMessage;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class NewSupportMessage implements ShouldBroadcast
+class NewSupportMessage
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -26,33 +22,11 @@ class NewSupportMessage implements ShouldBroadcast
     }
 
     /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): array
-    {
-        return [
-            new PrivateChannel('support.ticket.' . $this->message->support_ticket_id),
-        ];
-    }
-
-    /**
-     * The event's broadcast name.
-     *
-     * @return string
-     */
-    public function broadcastAs()
-    {
-        return 'new.message';
-    }
-
-    /**
-     * Get the data to broadcast.
+     * Get the message data.
      *
      * @return array
      */
-    public function broadcastWith()
+    public function getMessageData()
     {
         return [
             'id' => $this->message->id,
