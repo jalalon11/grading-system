@@ -1,5 +1,121 @@
 @extends('layouts.app')
 
+@section('styles')
+<style>
+    /* Disabled payment method styles */
+    .payment-method-option.disabled {
+        cursor: not-allowed;
+        position: relative;
+    }
+
+    .payment-method-option.disabled::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 0.5rem;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .payment-method-option.disabled .payment-method-label {
+        cursor: not-allowed;
+        border-color: #e9ecef;
+    }
+
+    /* Position the disabled badge at the bottom right of the payment method card */
+    .payment-method-label {
+        position: relative;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .status-badge {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .disabled-badge {
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(1px);
+    }
+
+    .available-badge {
+        opacity: 0;
+        background-color: rgba(255, 255, 255, 0);
+    }
+
+    .payment-method-option:hover .available-badge {
+        opacity: 1;
+        background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .payment-method-option.disabled:hover .disabled-badge {
+        background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .status-badge .badge {
+        font-size: 0.8rem;
+        padding: 0.35rem 0.65rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        transform: scale(1);
+        transition: transform 0.3s ease;
+    }
+
+    .payment-method-option:hover .status-badge .badge {
+        transform: scale(1.05);
+    }
+
+    /* Style for the disabled message below the payment method */
+    .disabled-message {
+        font-size: 0.8rem;
+        margin-top: 5px;
+        color: #dc3545;
+    }
+
+    /* Ensure payment method icons maintain their appearance */
+    .payment-method-icon {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Subtle visual indication for disabled payment methods */
+    .payment-method-option.disabled .payment-method-title {
+        color: #6c757d;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Preserve hover effects for enabled payment methods only */
+    .payment-method-option:not(.disabled) .payment-method-label:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-3px);
+    }
+
+    /* Prevent transform on disabled payment methods */
+    .payment-method-option.disabled .payment-method-label:hover {
+        transform: none;
+        background-color: transparent;
+    }
+</style>
+@endsection
+
 @section('content')
 <div class="container-fluid px-4">
     <div class="row mb-4">
@@ -215,53 +331,131 @@
                             <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-credit-card me-2"></i>Select Payment Method</h5>
                             <div class="row g-3">
                                 <div class="col-6 col-md-3">
-                                    <div class="payment-method-option">
-                                        <input class="payment-method-input" type="radio" name="payment_method" id="bank_transfer" value="bank_transfer">
+                                    <div class="payment-method-option {{ !$paymentMethodSettings['bank_transfer']['enabled'] ? 'disabled' : '' }}">
+                                        <input class="payment-method-input" type="radio" name="payment_method" id="bank_transfer" value="bank_transfer" {{ !$paymentMethodSettings['bank_transfer']['enabled'] ? 'disabled' : '' }}>
                                         <label class="payment-method-label" for="bank_transfer">
                                             <div class="payment-method-icon payment-icon-custom">
                                                 <img src="{{ asset('images/bdo_icon.png') }}" alt="BDO" class="img-fluid payment-logo">
                                             </div>
                                             <div class="payment-method-title">Bank Transfer</div>
+                                            @if(!$paymentMethodSettings['bank_transfer']['enabled'])
+                                                <div class="status-badge disabled-badge">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Unavailable
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="status-badge available-badge">
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Available
+                                                    </span>
+                                                </div>
+                                            @endif
                                         </label>
                                     </div>
+                                    @if(!$paymentMethodSettings['bank_transfer']['enabled'] && $paymentMethodSettings['bank_transfer']['message'])
+                                        <div class="disabled-message small">
+                                            <i class="fas fa-info-circle me-1"></i> {{ $paymentMethodSettings['bank_transfer']['message'] }}
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-6 col-md-3">
-                                    <div class="payment-method-option">
-                                        <input class="payment-method-input" type="radio" name="payment_method" id="gcash" value="gcash">
+                                    <div class="payment-method-option {{ !$paymentMethodSettings['gcash']['enabled'] ? 'disabled' : '' }}">
+                                        <input class="payment-method-input" type="radio" name="payment_method" id="gcash" value="gcash" {{ !$paymentMethodSettings['gcash']['enabled'] ? 'disabled' : '' }}>
                                         <label class="payment-method-label" for="gcash">
                                             <div class="payment-method-icon payment-icon-custom">
                                                 <img src="{{ asset('images/gcash_icon.png') }}" alt="GCash" class="img-fluid payment-logo">
                                             </div>
                                             <div class="payment-method-title">GCash</div>
+                                            @if(!$paymentMethodSettings['gcash']['enabled'])
+                                                <div class="status-badge disabled-badge">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Unavailable
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="status-badge available-badge">
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Available
+                                                    </span>
+                                                </div>
+                                            @endif
                                         </label>
                                     </div>
+                                    @if(!$paymentMethodSettings['gcash']['enabled'] && $paymentMethodSettings['gcash']['message'])
+                                        <div class="disabled-message small">
+                                            <i class="fas fa-info-circle me-1"></i> {{ $paymentMethodSettings['gcash']['message'] }}
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-6 col-md-3">
-                                    <div class="payment-method-option">
-                                        <input class="payment-method-input" type="radio" name="payment_method" id="paymaya" value="paymaya">
+                                    <div class="payment-method-option {{ !$paymentMethodSettings['paymaya']['enabled'] ? 'disabled' : '' }}">
+                                        <input class="payment-method-input" type="radio" name="payment_method" id="paymaya" value="paymaya" {{ !$paymentMethodSettings['paymaya']['enabled'] ? 'disabled' : '' }}>
                                         <label class="payment-method-label" for="paymaya">
                                             <div class="payment-method-icon payment-icon-custom">
                                                 <img src="{{ asset('images/maya_icon.png') }}" alt="PayMaya" class="img-fluid payment-logo">
                                             </div>
                                             <div class="payment-method-title">PayMaya</div>
+                                            @if(!$paymentMethodSettings['paymaya']['enabled'])
+                                                <div class="status-badge disabled-badge">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Unavailable
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="status-badge available-badge">
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Available
+                                                    </span>
+                                                </div>
+                                            @endif
                                         </label>
                                     </div>
+                                    @if(!$paymentMethodSettings['paymaya']['enabled'] && $paymentMethodSettings['paymaya']['message'])
+                                        <div class="disabled-message small">
+                                            <i class="fas fa-info-circle me-1"></i> {{ $paymentMethodSettings['paymaya']['message'] }}
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="col-6 col-md-3">
-                                    <div class="payment-method-option">
-                                        <input class="payment-method-input" type="radio" name="payment_method" id="other" value="other">
+                                    <div class="payment-method-option {{ !$paymentMethodSettings['other']['enabled'] ? 'disabled' : '' }}">
+                                        <input class="payment-method-input" type="radio" name="payment_method" id="other" value="other" {{ !$paymentMethodSettings['other']['enabled'] ? 'disabled' : '' }}>
                                         <label class="payment-method-label" for="other">
                                             <div class="payment-method-icon bg-secondary">
                                                 <i class="fas fa-ellipsis-h"></i>
                                             </div>
                                             <div class="payment-method-title">Other</div>
+                                            @if(!$paymentMethodSettings['other']['enabled'])
+                                                <div class="status-badge disabled-badge">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-ban me-1"></i>Unavailable
+                                                    </span>
+                                                </div>
+                                            @else
+                                                <div class="status-badge available-badge">
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Available
+                                                    </span>
+                                                </div>
+                                            @endif
                                         </label>
                                     </div>
+                                    @if(!$paymentMethodSettings['other']['enabled'] && $paymentMethodSettings['other']['message'])
+                                        <div class="disabled-message small">
+                                            <i class="fas fa-info-circle me-1"></i> {{ $paymentMethodSettings['other']['message'] }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             @error('payment_method')
                                 <div class="text-danger mt-2 small">{{ $message }}</div>
                             @enderror
+
+                            @if(!$paymentMethodSettings['bank_transfer']['enabled'] && !$paymentMethodSettings['gcash']['enabled'] && !$paymentMethodSettings['paymaya']['enabled'] && !$paymentMethodSettings['other']['enabled'])
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> All payment methods are currently unavailable. Please contact the administrator for assistance.
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Payment Method Instructions -->
@@ -1175,6 +1369,11 @@
 
         // Add event listeners to payment method inputs
         paymentMethodInputs.forEach(input => {
+            // Skip disabled payment methods
+            if (input.disabled) {
+                return;
+            }
+
             input.addEventListener('change', function() {
                 if (this.checked) {
                     showInstructions(this.value);

@@ -1026,6 +1026,16 @@
                         @endif
                     </a>
                 </li>
+                <li class="{{ Request::is('admin/payment-methods*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.payment-methods.index') }}">
+                        <i class="fas fa-money-check-alt"></i> <span>Payment Methods</span>
+                    </a>
+                </li>
+                <li class="{{ Request::is('admin/reports/sales*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.reports.sales') }}">
+                        <i class="fas fa-chart-line"></i> <span>Sales Reports</span>
+                    </a>
+                </li>
                 <li class="{{ Request::is('admin/support*') ? 'active' : '' }}">
                     <a href="{{ route('admin.support.index') }}" class="position-relative">
                         <i class="fas fa-headset"></i> <span>Support</span>

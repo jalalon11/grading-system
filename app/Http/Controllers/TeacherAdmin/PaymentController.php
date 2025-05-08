@@ -4,6 +4,7 @@ namespace App\Http\Controllers\TeacherAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\PaymentMethodSetting;
 use App\Models\School;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -73,7 +74,27 @@ class PaymentController extends Controller
                 ->with('info', 'You already have an active subscription. No need to make another payment at this time.');
         }
 
-        return view('teacher_admin.payments.create', compact('school'));
+        // Get payment method settings
+        $paymentMethodSettings = [
+            'bank_transfer' => [
+                'enabled' => PaymentMethodSetting::isEnabled('bank_transfer'),
+                'message' => PaymentMethodSetting::getDisabledMessage('bank_transfer'),
+            ],
+            'gcash' => [
+                'enabled' => PaymentMethodSetting::isEnabled('gcash'),
+                'message' => PaymentMethodSetting::getDisabledMessage('gcash'),
+            ],
+            'paymaya' => [
+                'enabled' => PaymentMethodSetting::isEnabled('paymaya'),
+                'message' => PaymentMethodSetting::getDisabledMessage('paymaya'),
+            ],
+            'other' => [
+                'enabled' => PaymentMethodSetting::isEnabled('other'),
+                'message' => PaymentMethodSetting::getDisabledMessage('other'),
+            ],
+        ];
+
+        return view('teacher_admin.payments.create', compact('school', 'paymentMethodSettings'));
     }
 
     /**
@@ -95,6 +116,13 @@ class PaymentController extends Controller
             'reference_number' => 'required|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        // Check if the selected payment method is enabled
+        $paymentMethod = $request->payment_method;
+        if (!PaymentMethodSetting::isEnabled($paymentMethod)) {
+            $message = PaymentMethodSetting::getDisabledMessage($paymentMethod) ?: 'This payment method is currently unavailable.';
+            return redirect()->back()->withInput()->with('error', $message);
+        }
 
         // Calculate amount based on billing cycle
         $amount = $request->billing_cycle === 'yearly' ? $school->yearly_price : $school->monthly_price;

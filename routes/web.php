@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\Admin\TeacherAdminController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\RegistrationKeyController;
+use App\Http\Controllers\Admin\SalesReportController;
 use App\Http\Controllers\Teacher\AttendanceController;
 use App\Http\Controllers\Teacher\CertificateController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Teacher\ResourceController as TeacherResourceController
 use App\Http\Controllers\Admin\ResourceController;
 use App\Http\Controllers\Admin\ResourceCategoryController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Admin\PaymentMethodsController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\SupportController as AdminSupportController;
 use App\Http\Controllers\TeacherAdmin\PaymentController as TeacherAdminPaymentController;
@@ -130,6 +132,16 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::get('payments/{payment}', [AdminPaymentController::class, 'show'])->name('payments.show');
         Route::post('payments/{payment}/approve', [AdminPaymentController::class, 'approve'])->name('payments.approve');
         Route::post('payments/{payment}/reject', [AdminPaymentController::class, 'reject'])->name('payments.reject');
+
+        // Payment Methods Management
+        Route::get('payment-methods', [PaymentMethodsController::class, 'index'])->name('payment-methods.index');
+        Route::put('payment-methods', [PaymentMethodsController::class, 'update'])->name('payment-methods.update');
+
+        // Sales Reports
+        Route::get('reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
+        Route::get('reports/sales/print/monthly', [SalesReportController::class, 'printMonthly'])->name('reports.sales.print.monthly');
+        Route::get('reports/sales/print/yearly', [SalesReportController::class, 'printYearly'])->name('reports.sales.print.yearly');
+
         Route::resource('teachers', TeacherController::class);
         Route::post('teachers/{teacher}/reset-password', [TeacherController::class, 'resetPassword'])->name('teachers.reset-password');
         Route::resource('teacher-admins', TeacherAdminController::class);

@@ -76,6 +76,14 @@ class School extends Model
     }
 
     /**
+     * Alias for schoolDivision to support snake_case access
+     */
+    public function school_division(): BelongsTo
+    {
+        return $this->schoolDivision();
+    }
+
+    /**
      * Get the sections in this school
      */
     public function sections(): HasMany
