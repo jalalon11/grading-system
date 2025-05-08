@@ -605,7 +605,7 @@
                 <table class="table table-hover align-middle mb-0" id="teachersTable">
                     <thead class="table-light sticky-top">
                         <tr>
-                            <th class="ps-3 bg-light">Teacher</th>
+                            <th class="ps-3 bg-light">Name</th>
                             <th class="bg-light">Email</th>
                             <th class="bg-light">Adviser For</th>
                             <th class="bg-light">Teaching Assignments</th>
@@ -734,15 +734,15 @@
                 <div class="container-fluid">
                     <div class="row align-items-center">
                         <div class="col-md-4">
-                            <h5 class="mb-0 text-primary">
-                                <i class="fas fa-layer-group me-2"></i> Sections by Grade Level
-                            </h5>
+                            <!-- <h5 class="mb-0 text-primary">
+                                <i class="fas fa-door-open me-2"></i> Sections by Grade Level
+                            </h5> -->
                         </div>
                         <div class="col-md-8">
                             <div class="d-flex flex-wrap justify-content-md-end" style="gap: 8px;">
                                 <div class="input-group" style="max-width: 250px;">
                                     <span class="input-group-text bg-primary text-white">
-                                        <i class="fas fa-graduation-cap"></i>
+                                        <i class="fas fa-door-open"></i>
                                     </span>
                                     <select class="form-select" id="gradeLevelSelect" onchange="switchGradeLevel(this.value)" onclick="switchGradeLevel(this.value)">
                                         @foreach($sectionsByGradeLevel as $gradeLevel => $gradeSections)
@@ -765,7 +765,7 @@
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h4 class="mb-0 text-primary">
-                                    <i class="fas fa-graduation-cap me-2"></i> Grade {{ $gradeLevel }} Sections
+                                    <i class="fas fa-door-open text-primary me-2"></i> {{ $gradeLevel }} Sections
                                 </h4>
                                 <div class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 fs-6">
                                     {{ count($gradeSections) }} {{ Str::plural('Section', count($gradeSections)) }}
