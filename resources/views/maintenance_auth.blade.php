@@ -455,11 +455,22 @@
         }
 
         .illustration-section {
-            min-height: 400px;
+            display: none; /* Hide the illustration section on mobile */
         }
 
         .system-title {
             font-size: 2rem;
+        }
+
+        /* Adjust the content section to take full width when illustration is hidden */
+        .system-update-card .row .col-md-5 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        /* Hide window content on mobile */
+        .update-window {
+            display: none;
         }
     }
 </style>

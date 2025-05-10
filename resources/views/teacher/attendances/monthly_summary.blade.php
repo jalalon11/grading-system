@@ -12,7 +12,7 @@
                                 <i class="fas fa-calendar-alt text-primary me-2"></i> Monthly Attendance
                             </h5>
                             <div class="d-flex flex-wrap gap-2">
-                                <a href="{{ route('teacher.attendances.weekly-summary') }}" class="btn btn-outline-info">
+                                <a href="{{ route('teacher.attendances.weekly-summary') }}" class="btn btn-outline-primary">
                                     <i class="fas fa-calendar-week me-1"></i> Weekly View
                                 </a>
                                 <a href="{{ route('teacher.attendances.index') }}" class="btn btn-outline-secondary">
