@@ -1,5 +1,14 @@
 @extends('layouts.app')
 
+@push('head-scripts')
+<script>
+    // Add a class to the html element to indicate JS is enabled
+    document.addEventListener('DOMContentLoaded', function() {
+        document.documentElement.classList.add('js');
+    }, { once: true });
+</script>
+@endpush
+
 @section('content')
 <div class="container-fluid py-4">
     <div class="row mb-4">
@@ -12,15 +21,15 @@
                             Support Ticket #{{ $ticket->id }}
                         </h5>
                         <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.support.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <!-- <a href="{{ route('admin.support.index') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-1"></i>
-                                <span>Back</span>
-                            </a>
+                                <span>Back to Tickets</span>
+                            </a> -->
 
                             @if($ticket->status != 'closed')
                                 <form action="{{ route('admin.support.close', $ticket->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm btn-danger">
+                                    <button type="submit" class="btn btn-danger">
                                         <i class="fas fa-times-circle me-1"></i>
                                         <span class="d-none d-sm-inline">Close Ticket</span>
                                         <span class="d-inline d-sm-none">Close</span>
@@ -29,7 +38,7 @@
                             @else
                                 <form action="{{ route('admin.support.reopen', $ticket->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-sm btn-success">
+                                    <button type="submit" class="btn btn-success">
                                         <i class="fas fa-redo me-1"></i>
                                         <span class="d-none d-sm-inline">Reopen Ticket</span>
                                         <span class="d-inline d-sm-none">Reopen</span>
@@ -51,24 +60,45 @@
                     <div class="conversation-container mb-4">
                         <div class="chat-container bg-light rounded-3 border shadow-sm mb-4">
 
-                            <div class="chat-header bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-comments text-primary me-2"></i>
-                                    <h6 class="mb-0 fw-bold">{{ $ticket->subject }}</h6>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <span class="me-2 d-none d-md-inline text-muted small">Ticket #{{ $ticket->id }}</span>
-                                    <span class="badge {{ $ticket->status === 'open' ? 'bg-success' : ($ticket->status === 'in_progress' ? 'bg-primary' : 'bg-secondary') }}">
-                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                    </span>
+                            <div class="chat-header bg-white p-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="chat-icon-container me-3 d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" style="width: 40px; height: 40px;">
+                                            <i class="fas fa-comments text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">{{ $ticket->subject }}</h6>
+                                            <div class="d-flex align-items-center mt-1">
+                                                <span class="badge {{ $ticket->status === 'open' ? 'bg-success' : ($ticket->status === 'in_progress' ? 'bg-primary' : 'bg-secondary') }} me-2">
+                                                    {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                                </span>
+                                                <span class="badge {{ $ticket->priority === 'high' ? 'bg-danger' : ($ticket->priority === 'medium' ? 'bg-warning text-dark' : 'bg-info') }}">
+                                                    {{ ucfirst($ticket->priority) }}
+                                                </span>
+                                                <span class="ms-2 text-muted small">Ticket #{{ $ticket->id }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-none d-md-block">
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="far fa-calendar-alt me-1"></i> Created {{ $ticket->created_at->format('M d, Y') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div id="messages-container" class="messages-container p-3 position-relative" style="height: 550px; overflow-y: auto; background-color: #f8f9fa;">
+                            <div id="messages-container" class="messages-container p-3 position-relative scroll-bottom" style="height: 550px; overflow-y: auto !important; background-color: #f8f9fa;" onload="this.scrollTop = this.scrollHeight;">
+
+
                                 <!-- Scroll to bottom button -->
-                                <button id="scroll-to-bottom" class="btn btn-sm btn-primary rounded-circle position-absolute d-none" style="bottom: 20px; right: 20px; width: 40px; height: 40px; z-index: 1000;">
+                                <button id="scroll-to-bottom" class="btn btn-sm btn-primary rounded-circle position-absolute shadow-sm" style="bottom: 20px; right: 20px; width: 44px; height: 44px; z-index: 1000;">
                                     <i class="fas fa-arrow-down"></i>
                                 </button>
+
+                                <!-- Date separator -->
+                                <div class="date-separator text-center my-4">
+                                    <span class="date-separator-text bg-light px-3 text-muted small rounded">{{ now()->format('F j, Y') }}</span>
+                                </div>
 
 
                                 @foreach($messages as $message)
@@ -91,9 +121,22 @@
                                             @endif
 
                                             <div class="message-content-wrapper {{ $message->user->role === 'admin' ? 'text-end admin-message-wrapper' : 'user-message-wrapper' }}" style="max-width: 85%;">
-                                                <div class="message-bubble d-inline-block p-3 rounded-3 shadow-sm {{ $message->user->role === 'admin' ? 'bg-primary text-white' : 'bg-white' }}">
+                                                @php
+                                                    $bubbleClass = $message->user->role === 'admin' ? 'bg-primary text-white' : 'bg-white border-0';
+                                                    $bubbleStyle = $message->user->role === 'admin' ? 'border-top-right-radius: 4px;' : 'border-top-left-radius: 4px;';
+                                                @endphp
+                                                <div class="message-bubble d-inline-block p-3 rounded-3 shadow-sm {{ $bubbleClass }}" style="{{ $bubbleStyle }}">
                                                     <div class="message-content">
                                                         {{ $message->message }}
+                                                    </div>
+
+                                                    <!-- Message reactions placeholder (hidden by default) -->
+                                                    <div class="message-reactions mt-2 d-none">
+                                                        <div class="d-flex gap-1">
+                                                            <span class="reaction-badge bg-light text-dark rounded-pill px-2 py-1 small">
+                                                                <i class="far fa-thumbs-up"></i> 1
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div class="message-meta mt-1 {{ $message->user->role === 'admin' ? 'text-end' : '' }} text-muted small">
@@ -144,9 +187,12 @@
                                 @if($ticket->status != 'closed')
                                     <form action="{{ route('admin.support.reply', $ticket->id) }}" method="POST" class="reply-form" id="reply-form">
                                         @csrf
-                                        <div class="input-group mobile-input-group">
-                                            <textarea name="message" id="message" rows="1" class="form-control @error('message') is-invalid @enderror" placeholder="Type your reply..." required></textarea>
-                                            <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center">
+                                        <div class="input-group mobile-input-group shadow-sm rounded-pill overflow-hidden">
+                                            <span class="input-group-text border-0 bg-white text-muted">
+                                                <i class="far fa-comment-dots"></i>
+                                            </span>
+                                            <textarea name="message" id="message" rows="1" class="form-control border-0 @error('message') is-invalid @enderror" placeholder="Type your reply..." required></textarea>
+                                            <button type="submit" class="btn btn-primary rounded-end-pill d-flex align-items-center justify-content-center px-3">
                                                 <i class="fas fa-paper-plane"></i>
                                                 <span class="d-none d-md-inline ms-2">Send</span>
                                             </button>
@@ -154,17 +200,37 @@
                                         @error('message')
                                             <div class="invalid-feedback d-block mt-1 small">{{ $message }}</div>
                                         @enderror
+
+                                        <!-- Message tools (hidden by default) -->
+                                        <div class="message-tools mt-2 d-none">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn btn-sm btn-light rounded-pill" title="Attach file">
+                                                        <i class="fas fa-paperclip"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-light rounded-pill" title="Add emoji">
+                                                        <i class="far fa-smile"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="text-muted small">Press Enter to send</div>
+                                            </div>
+                                        </div>
                                     </form>
                                 @else
-                                    <div class="alert alert-secondary mb-0 py-2">
+                                    <div class="alert alert-light border mb-0 py-2 rounded-3 shadow-sm">
                                         <div class="d-flex align-items-center justify-content-between flex-wrap">
                                             <div class="d-flex align-items-center">
-                                                <i class="fas fa-lock me-2"></i>
-                                                <span class="fw-medium">This ticket is closed</span>
+                                                <div class="bg-secondary rounded-circle p-2 text-white me-3">
+                                                    <i class="fas fa-lock"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="fw-medium">This ticket is closed</span>
+                                                    <p class="mb-0 small text-muted d-none d-md-block">Reopen this ticket to continue the conversation</p>
+                                                </div>
                                             </div>
-                                            <a href="#" class="btn btn-sm btn-outline-secondary mt-2 mt-sm-0" onclick="event.preventDefault(); document.getElementById('reopen-form').submit();">
-                                                <i class="fas fa-lock-open me-1 d-inline d-sm-none"></i>
-                                                <span>Reopen</span>
+                                            <a href="#" class="btn btn-outline-primary mt-2 mt-sm-0" onclick="event.preventDefault(); document.getElementById('reopen-form').submit();">
+                                                <i class="fas fa-lock-open me-1"></i>
+                                                <span>Reopen Ticket</span>
                                             </a>
                                             <form id="reopen-form" action="{{ route('admin.support.reply', $ticket->id) }}" method="POST" class="d-none">
                                                 @csrf
@@ -286,6 +352,55 @@
 
 @push('styles')
 <style>
+    /* Modern chat styling */
+    .chat-container {
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.3s ease;
+    }
+
+    .chat-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .chat-icon-container {
+        box-shadow: 0 0.25rem 0.5rem rgba(13, 110, 253, 0.15);
+    }
+
+    /* Date separator styling */
+    .date-separator {
+        position: relative;
+    }
+
+    .date-separator:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: rgba(0, 0, 0, 0.1);
+        z-index: 0;
+    }
+
+    .date-separator-text {
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    }
+
+
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
     /* Mobile-friendly message styling */
     .user-message-wrapper {
         margin-left: 8px;
@@ -303,6 +418,12 @@
         justify-content: center;
         color: white;
         font-weight: bold;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .avatar-circle:hover {
+        transform: scale(1.05);
     }
 
     .initials {
@@ -314,6 +435,27 @@
         border-radius: 18px;
         word-break: break-word;
         hyphens: auto;
+        transition: all 0.2s ease;
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .message-bubble:hover {
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* Message reactions styling */
+    .message-reactions {
+        transition: all 0.3s ease;
+    }
+
+    .reaction-badge {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    }
+
+    .reaction-badge:hover {
+        transform: scale(1.1);
     }
 
     /* Mobile-specific styles */
@@ -371,7 +513,19 @@
     /* Improved scrolling for mobile */
     .messages-container {
         -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
+        scroll-behavior: auto; /* Changed from smooth to auto to prevent visible scrolling */
+        overflow-y: auto !important; /* Ensure scrolling is enabled */
+    }
+
+    /* Class to ensure content is positioned at the bottom from the start */
+    .scroll-bottom {
+        overflow-anchor: auto;
+    }
+
+    /* Ensure the container is scrolled to the bottom on page load */
+    html.js .scroll-bottom {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
 
     /* Message status indicators */
@@ -420,20 +574,54 @@
 
     /* Scroll to bottom button styling */
     #scroll-to-bottom {
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.15);
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
+        opacity: 0.9;
     }
 
     #scroll-to-bottom:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+        opacity: 1;
     }
 
     #scroll-to-bottom i {
         font-size: 1.2rem;
+    }
+
+    /* Modern input styling */
+    .mobile-input-group {
+        transition: all 0.3s ease;
+    }
+
+    .mobile-input-group:focus-within {
+        box-shadow: 0 0.25rem 1rem rgba(13, 110, 253, 0.15) !important;
+    }
+
+    .mobile-input-group textarea {
+        transition: all 0.3s ease;
+        resize: none;
+    }
+
+    .mobile-input-group textarea:focus {
+        box-shadow: none !important;
+    }
+
+    /* Message tools styling */
+    .message-tools {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* Ticket details styling */
+    .card {
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1) !important;
     }
 </style>
 @endpush
@@ -445,11 +633,6 @@
         // Auto-resize textarea as user types (for mobile)
         const messageInput = document.getElementById('message');
         if (messageInput) {
-            // Focus the input when the page loads
-            setTimeout(() => {
-                messageInput.focus();
-            }, 500);
-
             // Auto-resize the textarea
             messageInput.addEventListener('input', function() {
                 // Reset height to auto to get the correct scrollHeight
@@ -460,29 +643,101 @@
                 this.style.height = newHeight + 'px';
             });
 
+            // Add a flag to track form submission status
+            let isSubmitting = false;
+
             // Handle form submission
             const replyForm = document.getElementById('reply-form');
             if (replyForm) {
-                replyForm.addEventListener('submit', function() {
+                replyForm.addEventListener('submit', function(e) {
+                    // Prevent multiple submissions
+                    if (isSubmitting) {
+                        e.preventDefault();
+                        return false;
+                    }
+
+                    // Set the submitting flag
+                    isSubmitting = true;
+
                     // Show loading state on button
                     const submitButton = this.querySelector('button[type="submit"]');
                     if (submitButton) {
                         submitButton.disabled = true;
                         submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
                     }
+
+                    // Save the current scroll position of the page
+                    localStorage.setItem('pageScrollPosition', window.scrollY);
+                });
+
+                // Handle Enter key to submit form
+                messageInput.addEventListener('keydown', function(e) {
+                    // Submit on Enter without Shift key
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+
+                        // Prevent multiple submissions
+                        if (isSubmitting) {
+                            return false;
+                        }
+
+                        // Set the submitting flag
+                        isSubmitting = true;
+
+                        // Save the current scroll position of the page
+                        localStorage.setItem('pageScrollPosition', window.scrollY);
+
+                        // Disable the submit button
+                        const submitButton = replyForm.querySelector('button[type="submit"]');
+                        if (submitButton) {
+                            submitButton.disabled = true;
+                            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                        }
+
+                        // Actually submit the form instead of just dispatching the event
+                        replyForm.submit();
+                    }
+
+                    // Allow new line with Shift+Enter
+                    if (e.key === 'Enter' && e.shiftKey) {
+                        // Do nothing, allow default behavior (new line)
+                    }
                 });
             }
         }
 
-        // Add tap-to-scroll functionality for mobile
-        const messagesContainer = document.getElementById('messages-container');
-        if (messagesContainer && window.innerWidth < 768) {
-            messagesContainer.addEventListener('click', function(e) {
-                // Only trigger if clicking directly on the container (not on messages)
-                if (e.target === this) {
-                    scrollToBottom(messagesContainer);
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Show message reactions on double click (for demo purposes)
+        document.querySelectorAll('.message-bubble').forEach(bubble => {
+            bubble.addEventListener('dblclick', function() {
+                const reactionsContainer = this.querySelector('.message-reactions');
+                if (reactionsContainer) {
+                    reactionsContainer.classList.toggle('d-none');
                 }
             });
+        });
+
+        // Add hover effects to ticket detail cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.classList.add('shadow-sm');
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.classList.remove('shadow-sm');
+            });
+        });
+
+        // Restore page scroll position if available
+        const savedPageScrollPosition = localStorage.getItem('pageScrollPosition');
+        if (savedPageScrollPosition) {
+            window.scrollTo(0, parseInt(savedPageScrollPosition));
+            localStorage.removeItem('pageScrollPosition');
         }
     });
 </script>

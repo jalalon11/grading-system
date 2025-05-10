@@ -335,8 +335,8 @@
         /* Collapsed sidebar badge positioning */
         #sidebar.active li a .badge {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 8px;
+            right: 8px;
             font-size: 0.65rem;
             padding: 0.25rem 0.5rem;
             min-width: 18px;
@@ -344,6 +344,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 2;
         }
 
         /* Mobile specific notification badge styling */
@@ -354,12 +355,24 @@
 
             #sidebar.active li a .badge {
                 position: absolute;
-                top: 8px;
-                right: 8px;
+                top: 14px;
+                right: 10px;
                 font-size: 0.7rem;
                 min-width: 20px;
                 height: 20px;
+                z-index: 2;
             }
+        }
+
+        /* Support badge specific styling */
+        .support-badge {
+            position: relative;
+            z-index: 5;
+        }
+
+        #sidebar.active .support-badge {
+            top: 10px !important;
+            right: 10px !important;
         }
 
         #sidebar.active ul li a {
@@ -1022,7 +1035,7 @@
                     <a href="{{ route('admin.payments.index') }}" class="position-relative">
                         <i class="fas fa-credit-card"></i> <span>Payments</span>
                         @if(isset($pendingPaymentsCount) && $pendingPaymentsCount > 0)
-                            <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $pendingPaymentsCount }}</span>
+                            <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite support-badge">{{ $pendingPaymentsCount }}</span>
                         @endif
                     </a>
                 </li>
@@ -1040,7 +1053,7 @@
                     <a href="{{ route('admin.support.index') }}" class="position-relative">
                         <i class="fas fa-headset"></i> <span>Support</span>
                         @if(isset($pendingSupportCount) && $pendingSupportCount > 0)
-                            <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $pendingSupportCount }}</span>
+                            <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite support-badge">{{ $pendingSupportCount }}</span>
                         @endif
                     </a>
                 </li>
@@ -1112,7 +1125,7 @@
                             <a href="{{ route('teacher-admin.support.index') }}" class="position-relative">
                                 <i class="fas fa-headset"></i> <span>Support</span>
                                 @if(isset($teacherAdminSupportCount) && $teacherAdminSupportCount > 0)
-                                    <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite">{{ $teacherAdminSupportCount }}</span>
+                                    <span class="badge bg-danger text-white rounded-pill ms-2 animate__animated animate__pulse animate__infinite support-badge">{{ $teacherAdminSupportCount }}</span>
                                 @endif
                             </a>
                         </li>

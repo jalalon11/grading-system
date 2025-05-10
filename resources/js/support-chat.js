@@ -25,9 +25,6 @@ function initializeSupportChat() {
     const ticketId = ticketIdElement.value;
     const currentUserId = currentUserIdElement.value;
 
-    // Handle hash in URL for direct scrolling to messages container
-    handleHashScroll();
-
     // Set up scroll-to-bottom button
     setupScrollToBottomButton(messagesContainer);
 
@@ -38,11 +35,17 @@ function initializeSupportChat() {
     // Check if we just sent a message (page reloaded after form submission)
     const messageSent = window.location.search.includes('success=true') || localStorage.getItem('messageSent') === 'true';
 
+    // Don't automatically scroll to bottom on page load
+    console.log('Not scrolling to bottom on page load');
+
+    // If a message was just sent, update the status indicators
     if (messageSent) {
         console.log('Message was just sent, updating status indicators');
 
-        // Clear the flag if it exists
+        // Clear the messageSent flag
         localStorage.removeItem('messageSent');
+        // Clear the device type flag
+        localStorage.removeItem('deviceType');
 
         // Remove the success parameter from URL if present
         if (window.location.search.includes('success=true')) {
@@ -85,22 +88,6 @@ function initializeSupportChat() {
             }, 100);
         } else {
             console.error('Could not find the last user message');
-        }
-
-        // Scroll to bottom
-        scrollToBottom(messagesContainer);
-    } else {
-        // Check if we have a saved scroll position
-        const savedScrollPosition = localStorage.getItem('chatScrollPosition');
-        if (savedScrollPosition) {
-            console.log('Restoring saved scroll position:', savedScrollPosition);
-            // Restore the scroll position
-            messagesContainer.scrollTop = parseInt(savedScrollPosition, 10);
-            // Clear the saved position
-            localStorage.removeItem('chatScrollPosition');
-        } else {
-            // Default: scroll to bottom
-            scrollToBottom(messagesContainer);
         }
     }
 
@@ -202,6 +189,10 @@ function listenForNewMessages(ticketId, currentUserId, messagesContainer) {
                 // Reload the page to show new messages
                 if (data.hasNewMessages) {
                     console.log('New messages detected, reloading page');
+
+                    // Save the current page scroll position before reloading
+                    localStorage.setItem('pageScrollPosition', window.scrollY);
+
                     window.location.reload();
                 }
             })
@@ -289,18 +280,12 @@ function setupFormSubmission() {
             return;
         }
 
-        // Save the scroll position and a flag indicating we just sent a message
-        localStorage.setItem('chatScrollPosition', messagesContainer.scrollHeight);
+        // Set flag indicating a message was just sent
         localStorage.setItem('messageSent', 'true');
 
-        // Force the URL to include success=true parameter and anchor when the form is submitted
-        // This will ensure the success message appears after reload and the page scrolls to the messages
+        // Force the URL to include success=true parameter
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('success', 'true');
-
-        // Add the anchor to the URL to scroll to the messages container
-        // We'll use the hash fragment to target the messages container
-        currentUrl.hash = 'messages-container';
 
         // Add a hidden input to the form to redirect back to the URL with success parameter and anchor
         const redirectInput = document.createElement('input');
@@ -310,7 +295,7 @@ function setupFormSubmission() {
         form.appendChild(redirectInput);
 
         // Let the form submit normally - the page will reload
-        console.log('Form submitting, saved scroll position:', messagesContainer.scrollHeight);
+        console.log('Form submitting, saved position:', isMobile ? messagesContainer.scrollTop : messagesContainer.scrollHeight);
     });
 }
 
@@ -460,8 +445,16 @@ function setupScrollToBottomButton(messagesContainer) {
     const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
     if (!scrollToBottomBtn || !messagesContainer) return;
 
+    // Initial check for scroll position
+    checkScrollPosition();
+
     // Show/hide the button based on scroll position
     messagesContainer.addEventListener('scroll', function() {
+        checkScrollPosition();
+    });
+
+    // Function to check scroll position and show/hide button
+    function checkScrollPosition() {
         // If we're not near the bottom, show the button
         const isNearBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < 100;
 
@@ -470,77 +463,28 @@ function setupScrollToBottomButton(messagesContainer) {
         } else {
             scrollToBottomBtn.classList.remove('d-none');
         }
-    });
+    }
 
     // Scroll to bottom when the button is clicked
     scrollToBottomBtn.addEventListener('click', function() {
-        scrollToBottom(messagesContainer);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 }
 
-/**
- * Handle hash in URL for direct scrolling to messages container
- */
-function handleHashScroll() {
-    // If we have a hash in the URL, scroll the element into view
-    if (window.location.hash === '#messages-container') {
-        const messagesContainer = document.getElementById('messages-container');
-        if (messagesContainer) {
-            // First scroll the element into view
-            messagesContainer.scrollIntoView({ behavior: 'smooth' });
-
-            // Then scroll to the bottom of the container
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-            console.log('Scrolled to messages container via hash');
-
-            // Focus the message input if it exists
-            const messageInput = document.getElementById('message');
-            if (messageInput) {
-                setTimeout(() => {
-                    messageInput.focus();
-                }, 600);
-            }
-        }
-    }
-}
+// We've removed the handleHashScroll function as we always scroll to bottom
 
 /**
  * Scroll to the bottom of the container
  */
 function scrollToBottom(container) {
     if (container) {
-        // First immediate scroll attempt
+        // Set scroll position to bottom immediately
         container.scrollTop = container.scrollHeight;
-        console.log('Initial scroll to bottom, height:', container.scrollHeight);
 
-        // Then use multiple timeouts to ensure scrolling happens after all DOM updates
-        // This helps with various browser rendering timings
-        setTimeout(() => {
-            container.scrollTop = container.scrollHeight;
-            console.log('Scroll attempt 1, height:', container.scrollHeight);
-
-            // Second attempt after a bit longer
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-                console.log('Scroll attempt 2, height:', container.scrollHeight);
-
-                // Final attempt after all rendering should be complete
-                setTimeout(() => {
-                    container.scrollTop = container.scrollHeight;
-                    console.log('Final scroll attempt, height:', container.scrollHeight);
-
-                    // If we have a hash in the URL, scroll the element into view
-                    if (window.location.hash === '#messages-container') {
-                        const messagesContainer = document.getElementById('messages-container');
-                        if (messagesContainer) {
-                            messagesContainer.scrollIntoView({ behavior: 'smooth' });
-                            // Also scroll to bottom of the container
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                        }
-                    }
-                }, 500);
-            }, 200);
-        }, 100);
+        // Focus the message input if it exists
+        const messageInput = document.getElementById('message');
+        if (messageInput) {
+            messageInput.focus();
+        }
     }
 }
