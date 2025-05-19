@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Section;
 use App\Models\Subject;
+use App\Models\School;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class SchoolController extends Controller
 {
@@ -160,4 +164,99 @@ class SchoolController extends Controller
             return back()->with('error', 'Error loading school overview. Please try again or contact support.');
         }
     }
+
+    /**
+     * Show the form for editing the school information.
+     */
+    public function edit()
+    {
+        try {
+            $user = Auth::user();
+            $school = $user->school;
+
+            // Check if school details can be updated (60-day restriction)
+            $canUpdate = $school->canUpdateDetails();
+
+            return view('teacher_admin.school.edit', compact('school', 'canUpdate'));
+        } catch (\Exception $e) {
+            Log::error('Error loading school edit form: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return back()->with('error', 'Error loading school edit form. Please try again or contact support.');
+        }
+    }
+
+    /**
+     * Update the school information.
+     */
+    public function update(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $school = $user->school;
+
+            // Check if school details can be updated (60-day restriction)
+            if (!$school->canUpdateDetails()) {
+                return back()->with('error', 'School information can only be updated once every 60 days. You can update again in ' . $school->days_until_next_update . ' days.')
+                    ->withInput();
+            }
+
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'principal' => 'nullable|string|max:255',
+                'address' => 'nullable|string',
+                'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            // Update school information
+            $school->name = $request->name;
+            $school->principal = $request->principal;
+            $school->address = $request->address;
+
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $logo = $request->file('logo');
+
+                try {
+                    // Delete old logo if exists
+                    if ($school->logo_path) {
+                        Storage::disk('r2')->delete($school->logo_path);
+                    }
+
+                    // Store the file in R2 storage
+                    $path = $logo->store('school_logos', 'r2');
+                    $school->logo_path = $path;
+
+                    Log::info('School logo uploaded successfully', [
+                        'path' => $path,
+                        'disk' => 'r2'
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to upload school logo', [
+                        'error' => $e->getMessage()
+                    ]);
+                    throw $e;
+                }
+            }
+
+            // Set the last update timestamp
+            $school->last_details_update_at = now();
+            $school->save();
+
+            return redirect()->route('teacher-admin.school.index')
+                ->with('success', 'School information updated successfully. You can update it again after 60 days.');
+        } catch (\Exception $e) {
+            Log::error('Error updating school information: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+
+            return back()->with('error', 'Error updating school information. Please try again or contact support.')
+                ->withInput();
+        }
+    }
+
+
 }

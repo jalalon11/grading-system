@@ -26,7 +26,50 @@ class DashboardController extends Controller
         // Get pending support tickets count
         $pendingSupportCount = \App\Models\SupportTicket::where('status', 'open')->count();
 
-        return view('admin.dashboard', compact('stats', 'pendingSupportCount'));
+        // Get sales data for the dashboard
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        // Get current month sales
+        $currentMonthSales = \App\Models\Payment::where('status', 'completed')
+            ->whereYear('payment_date', $currentYear)
+            ->whereMonth('payment_date', $currentMonth)
+            ->sum('amount');
+
+        // Get current year sales
+        $currentYearSales = \App\Models\Payment::where('status', 'completed')
+            ->whereYear('payment_date', $currentYear)
+            ->sum('amount');
+
+        // Get monthly sales data for the current year
+        $monthlySales = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlySales[$i] = \App\Models\Payment::where('status', 'completed')
+                ->whereYear('payment_date', $currentYear)
+                ->whereMonth('payment_date', $i)
+                ->sum('amount');
+        }
+
+        // Get yearly sales data for the last 5 years
+        $yearlySales = [];
+        for ($i = 0; $i < 5; $i++) {
+            $year = $currentYear - $i;
+            $yearlySales[$year] = \App\Models\Payment::where('status', 'completed')
+                ->whereYear('payment_date', $year)
+                ->sum('amount');
+        }
+
+        // Sort yearly sales by year (ascending)
+        ksort($yearlySales);
+
+        return view('admin.dashboard', compact(
+            'stats',
+            'pendingSupportCount',
+            'currentMonthSales',
+            'currentYearSales',
+            'monthlySales',
+            'yearlySales'
+        ));
     }
 
     /**

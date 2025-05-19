@@ -26,342 +26,168 @@
         </div>
     @endif
 
-    <!-- Stats Cards -->
-    <div class="row g-3 mb-4">
-        <!-- Total Subjects -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="rounded-circle p-3 bg-primary bg-opacity-10">
-                                <i class="fas fa-book fa-lg text-primary"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-muted mb-1 small">Total Subjects</p>
-                            <h4 class="mb-0 fw-bold">{{ $subjects->count() }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Active Subjects -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="rounded-circle p-3 bg-success bg-opacity-10">
-                                <i class="fas fa-check-circle fa-lg text-success"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-muted mb-1 small">Active Subjects</p>
-                            <h4 class="mb-0 fw-bold">{{ $subjects->where('is_active', true)->count() }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Assignments -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="rounded-circle p-3 bg-info bg-opacity-10">
-                                <i class="fas fa-chalkboard fa-lg text-info"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-muted mb-1 small">Total Assignments</p>
-                            <h4 class="mb-0 fw-bold">{{ $subjects->sum('sections_count') ?? 0 }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grade Levels -->
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0 me-3">
-                            <div class="rounded-circle p-3 bg-warning bg-opacity-10">
-                                <i class="fas fa-graduation-cap fa-lg text-warning"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-muted mb-1 small">Grade Levels</p>
-                            <h4 class="mb-0 fw-bold">{{ $subjects->pluck('grade_level')->filter()->unique()->count() }}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filters and Search -->
+    <!-- Stats Summary -->
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-0">
-            <div class="p-3 bg-primary text-white d-flex align-items-center">
-                <i class="fas fa-filter me-2"></i>
-                <span class="fw-medium">Filters and Search</span>
-            </div>
-
-            <div class="p-3">
-                <div class="row g-3">
-                    <div class="col-md-5">
-                        <div class="search-box">
-                            <div class="position-relative">
-                                <input type="text"
-                                    id="searchInput"
-                                    class="form-control form-control-lg ps-4 border"
-                                    placeholder="Search subjects..."
-                                    style="padding-left: 40px !important; background-color: #f8f9fa; border-color: #dee2e6;">
-                                <i class="fas fa-search position-absolute text-muted"
-                                   style="left: 14px; top: 50%; transform: translateY(-50%);"></i>
-                            </div>
-                        </div>
+        <div class="card-body py-3">
+            <div class="row g-0">
+                <div class="col-md-4 d-flex align-items-center border-end">
+                    <div class="px-3">
+                        <i class="fas fa-book text-primary me-2"></i>
+                        <span class="text-muted">Subjects:</span>
+                        <span class="fw-bold ms-1">{{ $subjects->count() }}</span>
+                        <span class="text-muted ms-2">({{ $subjects->where('is_active', true)->count() }} active)</span>
                     </div>
-
-                    <div class="col-md-3">
-                        <div class="filter-box">
-                            <select id="gradeLevelFilter"
-                                class="form-select form-select-lg border"
-                                style="background-color: #f8f9fa; border-color: #dee2e6;">
-                                <option value="">All Grade Levels</option>
-                                @php
-                                    $school = Auth::user()->school;
-                                    $gradeLevels = [];
-                                    if ($school) {
-                                        $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels :
-                                                    (is_string($school->grade_levels) ? json_decode($school->grade_levels, true) : []);
-                                        sort($gradeLevels, SORT_NUMERIC);
-                                    }
-                                @endphp
-                                @foreach($gradeLevels as $grade)
-                                    <option value="Grade {{ $grade }}">Grade {{ $grade }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-center border-end">
+                    <div class="px-3">
+                        <i class="fas fa-chalkboard text-info me-2"></i>
+                        <span class="text-muted">Assignments:</span>
+                        <span class="fw-bold ms-1">{{ $subjects->sum('sections_count') ?? 0 }}</span>
                     </div>
-
-                    <div class="col-md-3">
-                        <div class="filter-box">
-                            <select id="statusFilter"
-                                class="form-select form-select-lg border"
-                                style="background-color: #f8f9fa; border-color: #dee2e6;">
-                                <option value="">All Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="col-md-1">
-                        <button id="resetFilters"
-                            class="btn btn-outline-secondary btn-lg w-100 d-flex align-items-center justify-content-center"
-                            style="border-color: #dee2e6;">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
+                </div>
+                <div class="col-md-4 d-flex align-items-center">
+                    <div class="px-3">
+                        <i class="fas fa-graduation-cap text-warning me-2"></i>
+                        <span class="text-muted">Grade Levels:</span>
+                        <span class="fw-bold ms-1">{{ $subjects->pluck('grade_level')->filter()->unique()->count() }}</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Add this CSS to your stylesheet or in a style tag -->
+    <!-- Simplified Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Search subjects...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="gradeLevelFilter" class="form-select">
+                        <option value="">All Grade Levels</option>
+                        @php
+                            $school = Auth::user()->school;
+                            $gradeLevels = [];
+                            if ($school) {
+                                $gradeLevels = is_array($school->grade_levels) ? $school->grade_levels :
+                                            (is_string($school->grade_levels) ? json_decode($school->grade_levels, true) : []);
+                                sort($gradeLevels, SORT_NUMERIC);
+                            }
+                        @endphp
+                        @foreach($gradeLevels as $grade)
+                            <option value="Grade {{ $grade }}">Grade {{ $grade }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="statusFilter" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button id="resetFilters" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced CSS for better readability -->
     <style>
-        .search-box .form-control:focus,
-        .filter-box .form-select:focus {
-            border-color: #0d6efd;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
-
-        .search-box .form-control,
-        .filter-box .form-select,
-        #resetFilters {
-            height: 48px;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .search-box .form-control:hover,
-        .filter-box .form-select:hover,
-        #resetFilters:hover {
-            border-color: #0d6efd;
-        }
-
-        #resetFilters {
-            padding: 0;
-        }
-
-        #resetFilters:hover {
-            background-color: #f8f9fa;
-            color: #0d6efd;
-        }
-
-        .filter-box .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 16px 12px;
-        }
-
-        .card .rounded-circle {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card .fa-lg {
-            font-size: 1.2rem;
-        }
-
-        /* Enhanced table styles for better readability */
+        /* Table styling for better readability */
         .table {
             font-size: 1rem;
-        }
-
-        .table > :not(caption) > * > * {
-            padding: 1.25rem 0.75rem;
-            background-color: transparent;
+            color: #333;
         }
 
         .table thead th {
-            font-size: 1.05rem;
             font-weight: 600;
-            color: #2c3e50;
+            font-size: 1.05rem;
+            color: #495057;
         }
 
         .table tbody td {
-            color: #2c3e50;
-            font-weight: 500;
+            padding-top: 0.9rem;
+            padding-bottom: 0.9rem;
+            vertical-align: middle;
         }
 
         .table tbody tr:hover {
             background-color: #f8f9fa;
         }
 
-        .table .text-muted {
-            color: #495057 !important;
-        }
-
-        /* Additional styles for the table */
-        .table td {
-            vertical-align: middle;
-        }
-
-        .btn-group .btn {
-            padding: 0.5rem 0.75rem;
-            font-size: 1rem;
-        }
-
-        .btn-group .btn:hover {
-            background-color: #e9ecef;
-        }
-
-        .rounded-circle {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Enhanced icon styles */
-        .table .fas {
-            font-size: 1.1rem;
-        }
-
-        /* Status badge enhancements */
-        .badge.bg-success {
-            background-color: #198754 !important;
-            color: white !important;
-        }
-
-        .badge.bg-danger {
-            background-color: #dc3545 !important;
-            color: white !important;
-        }
-
-        .badge.bg-primary {
-            color: #0d6efd !important;
-        }
-
-        /* Badge styles */
-        .table > :not(caption) > * > * {
-            padding: 1rem 0.75rem;
-        }
-
-        .table th {
-            font-weight: 600;
-            color: #4a5568;
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        .rounded-circle.bg-primary.bg-opacity-10 {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Link styles */
-        .table a.text-dark {
+        /* Link styling */
+        .table a.text-decoration-none {
+            color: #0d6efd;
             font-weight: 500;
         }
 
-        .table a.text-dark:hover {
-            color: #0d6efd !important;
+        .table a.text-decoration-none:hover {
+            text-decoration: underline !important;
+        }
+
+        /* Badge styling */
+        .badge {
+            font-weight: 500;
+            font-size: 0.85rem;
+            padding: 0.35rem 0.65rem;
+        }
+
+        /* MAPEH badge specific styling */
+        .mapeh-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            padding: 0.4rem;
+            margin: 0 0.1rem;
+        }
+
+        /* Small text */
+        .small {
+            font-size: 0.85rem;
+            color: #6c757d;
         }
     </style>
 
     <!-- Subjects Table -->
     <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="d-flex justify-content-between align-items-center p-3 bg-primary text-white">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-list me-2"></i>
-                    <span class="fw-medium">Subject List</span>
-                </div>
-                {{-- <span class="badge bg-light text-primary" id="subjectCount">{{ $subjects->count() }} subjects</span> --}}
+        <div class="card-header bg-white py-3">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-list text-primary me-2"></i>
+                <span class="fw-medium">Subject List</span>
             </div>
-
+        </div>
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="subjectsTable">
+                <table class="table table-hover mb-0" id="subjectsTable">
                     <thead>
-                        <tr>
-                            <th class="fw-semibold border-0 py-3 ps-4">Subject Name</th>
-                            <th class="fw-semibold border-0 py-3">Code</th>
-                            <th class="fw-semibold border-0 py-3">Grade Level</th>
-                            <th class="fw-semibold border-0 py-3">Sections</th>
-                            <th class="fw-semibold border-0 py-3">Status</th>
-                            <th class="fw-semibold border-0 py-3 text-end pe-4" style="width: 10%">Actions</th>
+                        <tr class="bg-light">
+                            <th class="py-3">Subject</th>
+                            <th class="py-3">Grade</th>
+                            <th class="py-3 text-center">Sections</th>
+                            <th class="py-3 text-center">Status</th>
+                            <th class="py-3 text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($subjects as $subject)
                             @php
                                 $isComponent = $subject->is_component ?? false;
-                                $parentSubject = $isComponent ? $subject->parentSubject : null;
-
-                                // Don't display component subjects directly in the list
                                 if ($isComponent) continue;
 
-                                // Check if this is a MAPEH subject with components
+                                // Check if this is a MAPEH subject
                                 $hasComponents = isset($subject->components) && $subject->components->count() > 0;
                                 $isMAPEH = $hasComponents && $subject->components->pluck('name')->filter(function($name) {
                                     return in_array(strtolower($name), ['music', 'arts', 'physical education', 'health']) ||
@@ -370,106 +196,71 @@
                             @endphp
                             <tr>
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0 me-3">
-                                            <div class="rounded-circle p-2 bg-primary bg-opacity-10">
-                                                <i class="fas fa-book text-primary"></i>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <a href="{{ route('teacher-admin.subjects.show', $subject) }}" class="text-decoration-none text-dark">
-                                                {{ $subject->name }}
-                                            </a>
-                                            @if($isMAPEH)
-                                                <span class="badge bg-info text-white rounded-pill ms-2">MAPEH</span>
-                                            @endif
-                                        </div>
-                                    </div>
+                                    <a href="{{ route('teacher-admin.subjects.show', $subject) }}" class="text-decoration-none">
+                                        {{ $subject->name }}
+                                    </a>
+                                    @if($isMAPEH)
+                                        <span class="badge bg-info text-white mapeh-badge ms-1">MAPEH</span>
+                                    @endif
+                                    <div class="small text-muted">{{ $subject->code ?? 'No code' }}</div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ $subject->code ?? 'N/A' }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary" style="color: white !important;">
+                                    <span class="badge bg-light text-dark">
                                         Grade {{ $subject->grade_level }}
                                     </span>
                                 </td>
-                                <td>
-                                    <span class="badge bg-info">
-                                        {{ $subject->sections_count ?? 0 }} {{ Str::plural('section', $subject->sections_count ?? 0) }}
-                                    </span>
+                                <td class="text-center">
+                                    {{ $subject->sections_count ?? 0 }}
                                 </td>
-                                <td>
-                                    <span class="badge {{ $subject->is_active ? 'bg-success' : 'bg-danger' }}">
-                                        {{ $subject->is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                <td class="text-center">
+                                    @if($subject->is_active)
+                                        <span class="badge bg-success">Active</span>
+                                    @else
+                                        <span class="badge bg-danger">Inactive</span>
+                                    @endif
                                 </td>
-                                <td class="py-3 text-end pe-4">
-                                    <div class="btn-group">
-                                        <a href="{{ route('teacher-admin.subjects.show', $subject) }}"
-                                           class="btn btn-sm btn-light"
-                                           data-bs-toggle="tooltip"
-                                           title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('teacher-admin.subjects.edit', $subject) }}"
-                                           class="btn btn-sm btn-light"
-                                           data-bs-toggle="tooltip"
-                                           title="Edit Subject">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('teacher-admin.subjects.toggle-status', $subject) }}"
-                                              method="POST"
-                                              class="d-inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-light"
-                                                    data-bs-toggle="tooltip"
-                                                    title="{{ $subject->is_active ? 'Deactivate' : 'Activate' }}">
-                                                <i class="fas {{ $subject->is_active ? 'fa-toggle-on text-success' : 'fa-toggle-off text-muted' }}"></i>
-                                            </button>
-                                        </form>
-                                        <button type="button"
-                                                class="btn btn-sm btn-light"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal{{ $subject->id }}"
-                                                title="Delete Subject">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
+                                <td class="text-end">
+                                    <a href="{{ route('teacher-admin.subjects.show', $subject) }}"
+                                       class="btn btn-sm btn-outline-primary action-btn">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('teacher-admin.subjects.edit', $subject) }}"
+                                       class="btn btn-sm btn-outline-secondary action-btn">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger action-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal{{ $subject->id }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
 
                                     <!-- Delete Modal -->
                                     <div class="modal fade" id="deleteModal{{ $subject->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
+                                        <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content">
-                                                <div class="modal-header bg-danger text-white">
-                                                    <h5 class="modal-title">
-                                                        <i class="fas fa-exclamation-triangle me-1"></i> Delete Subject
-                                                    </h5>
-                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Delete Subject</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
                                                     <p>Are you sure you want to delete <strong>{{ $subject->name }}</strong>?</p>
 
                                                     @if($subject->sections_count > 0)
-                                                        <div class="alert alert-warning">
-                                                            <p class="mb-0">
-                                                                <i class="fas fa-exclamation-circle me-1"></i>
-                                                                Warning: This subject is assigned to {{ $subject->sections_count }} {{ Str::plural('section', $subject->sections_count) }}.
-                                                                Deleting it will remove it from all assigned sections.
-                                                            </p>
+                                                        <div class="alert alert-warning small">
+                                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                                            This subject is assigned to {{ $subject->sections_count }} {{ Str::plural('section', $subject->sections_count) }}.
                                                         </div>
                                                     @endif
 
-                                                    <p class="text-danger"><strong>This action cannot be undone!</strong></p>
+                                                    <p class="text-danger small">This action cannot be undone.</p>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                                                     <form action="{{ route('teacher-admin.subjects.destroy', $subject) }}" method="POST">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">Delete Subject</button>
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
                                                     </form>
                                                 </div>
                                             </div>
@@ -479,15 +270,12 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="fas fa-book fa-3x mb-3 text-muted"></i>
-                                        <h5 class="fw-light text-muted">No subjects found</h5>
-                                        <p class="text-muted mb-3">Add subjects to the system to get started</p>
-                                        <a href="{{ route('teacher-admin.subjects.create') }}" class="btn btn-primary mt-2">
-                                            <i class="fas fa-plus-circle me-1"></i> Add New Subject
-                                        </a>
-                                    </div>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-book text-muted mb-2" style="font-size: 1.5rem;"></i>
+                                    <p class="mb-0">No subjects found</p>
+                                    <a href="{{ route('teacher-admin.subjects.create') }}" class="btn btn-primary btn-sm mt-2">
+                                        <i class="fas fa-plus me-1"></i> Add New Subject
+                                    </a>
                                 </td>
                             </tr>
                         @endforelse
@@ -500,66 +288,56 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        // Search functionality
-        $("#searchInput").on("keyup", function() {
-            filterTable();
+$(document).ready(function() {
+    // Simple table filtering function
+    function filterTable() {
+        const searchValue = $("#searchInput").val().toLowerCase();
+        const gradeValue = $("#gradeLevelFilter").val();
+        const statusValue = $("#statusFilter").val();
+
+        $("#subjectsTable tbody tr").each(function() {
+            const $row = $(this);
+            let shouldShow = true;
+
+            // Search filter
+            if (searchValue) {
+                const textContent = $row.text().toLowerCase();
+                shouldShow = textContent.includes(searchValue);
+            }
+
+            // Grade filter
+            if (shouldShow && gradeValue) {
+                const gradeText = $row.find("td:nth-child(2)").text().trim();
+                shouldShow = gradeText.includes(gradeValue);
+            }
+
+            // Status filter
+            if (shouldShow && statusValue) {
+                const statusText = $row.find("td:nth-child(4)").text().trim();
+                shouldShow = statusText.includes(statusValue);
+            }
+
+            $row.toggle(shouldShow);
         });
+    }
 
-        // Grade level filter
-        $("#gradeLevelFilter, #statusFilter").on("change", function() {
-            filterTable();
-        });
-
-        // Reset filters
-        $("#resetFilters").on("click", function() {
-            $("#searchInput").val("");
-            $("#gradeLevelFilter, #statusFilter").val("");
-            filterTable();
-        });
-
-        function filterTable() {
-            const searchValue = $("#searchInput").val().toLowerCase();
-            const gradeValue = $("#gradeLevelFilter").val();
-            const statusValue = $("#statusFilter").val();
-
-            let visibleCount = 0;
-
-            $("#subjectsTable tbody tr").each(function() {
-                let shouldShow = true;
-
-                // Text search
-                if (searchValue) {
-                    shouldShow = $(this).text().toLowerCase().indexOf(searchValue) > -1;
-                }
-
-                // Grade filter
-                if (shouldShow && gradeValue) {
-                    const gradeText = $(this).find("td:nth-child(3)").text().trim();
-                    shouldShow = gradeText === gradeValue;
-                }
-
-                // Status filter
-                if (shouldShow && statusValue) {
-                    const statusText = $(this).find("td:nth-child(5)").text().trim();
-                    shouldShow = statusText === statusValue;
-                }
-
-                $(this).toggle(shouldShow);
-
-                if (shouldShow) visibleCount++;
-            });
-
-            // Update counter
-            $("#subjectCount").text(visibleCount + " subjects");
-        }
-
-        // Initialize tooltips
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl)
-        })
+    // Add input delay for search
+    let searchTimeout;
+    $("#searchInput").on("input", function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterTable, 300);
     });
+
+    // Apply filters on change
+    $("#gradeLevelFilter, #statusFilter").on("change", filterTable);
+
+    // Reset all filters
+    $("#resetFilters").on("click", function() {
+        $("#searchInput").val("");
+        $("#gradeLevelFilter, #statusFilter").val("");
+        filterTable();
+    });
+});
 </script>
 @endpush
 @endsection

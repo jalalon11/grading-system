@@ -404,11 +404,14 @@ class GradeController extends Controller
             $teacher = Auth::user();
             Log::info('Teacher accessing grade creation form', ['teacher_id' => $teacher->id, 'name' => $teacher->name]);
 
-            // Get sections where teacher is adviser or teaches a subject
-            $sections = Section::where('adviser_id', $teacher->id)
-                ->orWhereHas('subjects', function($query) use ($teacher) {
-                    $query->where('section_subject.teacher_id', $teacher->id);
+            // Get active sections where teacher is adviser or teaches a subject
+            $sections = Section::where(function($query) use ($teacher) {
+                    $query->where('adviser_id', $teacher->id)
+                        ->orWhereHas('subjects', function($subquery) use ($teacher) {
+                            $subquery->where('section_subject.teacher_id', $teacher->id);
+                        });
                 })
+                ->where('is_active', true)
                 ->get();
 
             Log::info('Sections retrieved', [
@@ -1749,11 +1752,14 @@ class GradeController extends Controller
             $teacher = Auth::user();
             Log::info('Teacher accessing new grades index', ['teacher_id' => $teacher->id, 'name' => $teacher->name]);
 
-            // Get teacher's sections (as adviser or subject teacher)
-            $sections = Section::where('adviser_id', $teacher->id)
-                ->orWhereHas('subjects', function($query) use ($teacher) {
-                    $query->where('section_subject.teacher_id', $teacher->id);
+            // Get active teacher's sections (as adviser or subject teacher)
+            $sections = Section::where(function($query) use ($teacher) {
+                    $query->where('adviser_id', $teacher->id)
+                        ->orWhereHas('subjects', function($subquery) use ($teacher) {
+                            $subquery->where('section_subject.teacher_id', $teacher->id);
+                        });
                 })
+                ->where('is_active', true)
                 ->get();
 
             // Get subject assignments for this teacher

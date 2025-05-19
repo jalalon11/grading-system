@@ -19,8 +19,10 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         try {
-            // Get sections associated with the current teacher
-            $sections = Section::where('adviser_id', Auth::id())->pluck('id');
+            // Get active sections associated with the current teacher
+            $sections = Section::where('adviser_id', Auth::id())
+                ->where('is_active', true)
+                ->pluck('id');
 
             // Get the status filter (active, disabled, all)
             $statusFilter = $request->query('status', 'active');
@@ -48,6 +50,7 @@ class StudentController extends Controller
             $assignedSectionIds = DB::table('section_subject')
                 ->where('teacher_id', $teacherId)
                 ->join('sections', 'section_subject.section_id', '=', 'sections.id')
+                ->where('sections.is_active', true) // Only include active sections
                 ->where(function($query) use ($teacherId) {
                     $query->where('sections.adviser_id', '!=', $teacherId)
                           ->orWhereNull('sections.adviser_id');
@@ -56,6 +59,7 @@ class StudentController extends Controller
                 ->unique();
 
             $assignedSections = Section::whereIn('id', $assignedSectionIds)
+                ->where('is_active', true) // Double-check that sections are active
                 ->get();
 
             // Get students from these assigned sections, including inactive ones
@@ -115,7 +119,9 @@ class StudentController extends Controller
      */
     public function create()
     {
-        $sections = Section::where('adviser_id', Auth::id())->get();
+        $sections = Section::where('adviser_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
 
         return view('teacher.students.create', compact('sections'));
     }
@@ -234,8 +240,10 @@ class StudentController extends Controller
             }
         }
 
-        // Default behavior - get sections associated with the current teacher
-        $sectionIds = Section::where('adviser_id', Auth::id())->pluck('id');
+        // Default behavior - get active sections associated with the current teacher
+        $sectionIds = Section::where('adviser_id', Auth::id())
+            ->where('is_active', true)
+            ->pluck('id');
 
         // Find the student and ensure they belong to one of the teacher's sections
         // Note: We don't filter by is_active here because we need to be able to view disabled students
