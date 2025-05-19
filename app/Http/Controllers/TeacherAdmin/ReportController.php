@@ -8,11 +8,27 @@ use App\Models\Section;
 use App\Models\Student;
 use App\Models\Grade;
 use App\Models\GradeApproval;
+use App\Models\Attendance;
+use App\Services\AttendanceSummaryService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
+    /**
+     * The attendance summary service instance.
+     */
+    protected $attendanceSummaryService;
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(AttendanceSummaryService $attendanceSummaryService)
+    {
+        $this->attendanceSummaryService = $attendanceSummaryService;
+    }
+
     /**
      * Display a listing of the reports.
      */
@@ -433,5 +449,285 @@ class ReportController extends Controller
         }
 
         return $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 1) : 0;
+    }
+
+    /**
+     * Display the attendance summary report form.
+     */
+    public function attendanceSummary(Request $request)
+    {
+        $teacher = Auth::user();
+
+        // Get all grade levels in the school
+        $gradeLevels = Section::where('school_id', $teacher->school_id)
+                            ->where('is_active', true)
+                            ->distinct()
+                            ->pluck('grade_level')
+                            ->sort()
+                            ->values();
+
+        // Get all sections in the school, organized by grade level
+        $query = Section::where('school_id', $teacher->school_id)
+                       ->where('is_active', true);
+
+        // Apply grade level filter if provided
+        if ($request->has('grade_level') && !empty($request->grade_level)) {
+            $query->where('grade_level', $request->grade_level);
+        }
+
+        $sections = $query->orderBy('grade_level')
+                         ->orderBy('name')
+                         ->get();
+
+        // Group sections by grade level for easier navigation
+        $sectionsByGradeLevel = $sections->groupBy('grade_level');
+
+        // Get available months with attendance records
+        $availableMonths = Attendance::join('students', 'attendances.student_id', '=', 'students.id')
+            ->join('sections', 'students.section_id', '=', 'sections.id')
+            ->where('sections.school_id', $teacher->school_id)
+            ->select(DB::raw('DISTINCT DATE_FORMAT(date, "%Y-%m") as month_value, DATE_FORMAT(date, "%M %Y") as month_name'))
+            ->orderBy('month_value', 'desc')
+            ->get();
+
+        return view('teacher_admin.reports.attendance_summary', compact('gradeLevels', 'sections', 'sectionsByGradeLevel', 'availableMonths'));
+    }
+
+    /**
+     * Generate the attendance summary report.
+     */
+    public function generateAttendanceSummary(Request $request)
+    {
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'grade_level' => 'nullable|string',
+            'section_id' => 'nullable|exists:sections,id',
+        ]);
+
+        $teacher = Auth::user();
+        $startDate = Carbon::parse($validated['start_date']);
+        $endDate = Carbon::parse($validated['end_date']);
+
+        // Get sections based on filters
+        $sectionsQuery = Section::where('school_id', $teacher->school_id)
+                              ->where('is_active', true);
+
+        if (!empty($validated['grade_level'])) {
+            $sectionsQuery->where('grade_level', $validated['grade_level']);
+        }
+
+        if (!empty($validated['section_id'])) {
+            $sectionsQuery->where('id', $validated['section_id']);
+        }
+
+        $sections = $sectionsQuery->orderBy('grade_level')
+                                ->orderBy('name')
+                                ->get();
+
+        // Get section IDs for attendance query
+        $sectionIds = $sections->pluck('id')->toArray();
+
+        // Get all attendance records for the date range and sections
+        $attendanceRecords = Attendance::whereIn('section_id', $sectionIds)
+                                     ->whereBetween('date', [$startDate, $endDate])
+                                     ->with(['student', 'student.section'])
+                                     ->get();
+
+        // Get all dates with attendance records in the range
+        $attendanceDates = Attendance::whereIn('section_id', $sectionIds)
+                                   ->whereBetween('date', [$startDate, $endDate])
+                                   ->select(DB::raw('DISTINCT date'))
+                                   ->orderBy('date')
+                                   ->pluck('date')
+                                   ->map(function ($date) {
+                                       return Carbon::parse($date);
+                                   });
+
+        // Get all active students in these sections
+        $students = Student::whereIn('section_id', $sectionIds)
+                         ->where('is_active', true)
+                         ->with('section')
+                         ->get();
+
+        // Initialize summary data structure
+        $summary = [
+            'date_range' => [
+                'start' => $startDate->format('M d, Y'),
+                'end' => $endDate->format('M d, Y'),
+            ],
+            'total_students' => $students->count(),
+            'total_school_days' => $attendanceDates->count(),
+            'overall_stats' => [
+                'present' => 0,
+                'absent' => 0,
+                'late' => 0,
+                'excused' => 0,
+                'half_day' => 0,
+                'total_attendance_records' => 0,
+                'attendance_rate' => 0,
+            ],
+            'grade_level_stats' => [],
+            'section_stats' => [],
+            'daily_stats' => [],
+            'students_with_concerns' => [],
+            'low_attendance_days' => [],
+        ];
+
+        // Process attendance by date
+        foreach ($attendanceDates as $date) {
+            $dateString = $date->toDateString();
+            $formattedDate = $date->format('D, M d');
+
+            // Get attendance records for this date
+            $dateAttendance = $attendanceRecords->where('date', $dateString);
+
+            // Initialize daily stats
+            $summary['daily_stats'][$dateString] = [
+                'date' => $formattedDate,
+                'present' => $dateAttendance->where('status', 'present')->count(),
+                'absent' => $dateAttendance->where('status', 'absent')->count(),
+                'late' => $dateAttendance->where('status', 'late')->count(),
+                'excused' => $dateAttendance->where('status', 'excused')->count(),
+                'half_day' => $dateAttendance->where('status', 'half_day')->count(),
+                'total_records' => $dateAttendance->count(),
+                'attendance_rate' => 0,
+            ];
+
+            // Calculate attendance rate for the day
+            $presentCount = $summary['daily_stats'][$dateString]['present'];
+            $totalRecords = $summary['daily_stats'][$dateString]['total_records'];
+
+            if ($totalRecords > 0) {
+                $summary['daily_stats'][$dateString]['attendance_rate'] = round(($presentCount / $totalRecords) * 100, 1);
+            }
+
+            // Check if this is a low attendance day (below 80%)
+            if ($totalRecords >= 10 && $summary['daily_stats'][$dateString]['attendance_rate'] < 80) {
+                $summary['low_attendance_days'][] = [
+                    'date' => $formattedDate,
+                    'attendance_rate' => $summary['daily_stats'][$dateString]['attendance_rate'],
+                    'present' => $presentCount,
+                    'total' => $totalRecords,
+                ];
+            }
+        }
+
+        // Process attendance by grade level
+        $gradeAttendance = $attendanceRecords->groupBy(function ($record) {
+            return $record->student->section->grade_level;
+        });
+
+        foreach ($gradeAttendance as $gradeLevel => $records) {
+            $presentCount = $records->where('status', 'present')->count();
+            $totalRecords = $records->count();
+
+            $summary['grade_level_stats'][$gradeLevel] = [
+                'present' => $presentCount,
+                'absent' => $records->where('status', 'absent')->count(),
+                'late' => $records->where('status', 'late')->count(),
+                'excused' => $records->where('status', 'excused')->count(),
+                'half_day' => $records->where('status', 'half_day')->count(),
+                'total_records' => $totalRecords,
+                'attendance_rate' => $totalRecords > 0 ? round(($presentCount / $totalRecords) * 100, 1) : 0,
+            ];
+        }
+
+        // Process attendance by section
+        $sectionAttendance = $attendanceRecords->groupBy('section_id');
+
+        foreach ($sections as $section) {
+            $records = $sectionAttendance->get($section->id, collect());
+            $presentCount = $records->where('status', 'present')->count();
+            $totalRecords = $records->count();
+
+            $summary['section_stats'][$section->id] = [
+                'name' => $section->name,
+                'grade_level' => $section->grade_level,
+                'present' => $presentCount,
+                'absent' => $records->where('status', 'absent')->count(),
+                'late' => $records->where('status', 'late')->count(),
+                'excused' => $records->where('status', 'excused')->count(),
+                'half_day' => $records->where('status', 'half_day')->count(),
+                'total_records' => $totalRecords,
+                'attendance_rate' => $totalRecords > 0 ? round(($presentCount / $totalRecords) * 100, 1) : 0,
+            ];
+        }
+
+        // Process student attendance to identify concerns
+        $studentAttendance = $attendanceRecords->groupBy('student_id');
+
+        foreach ($students as $student) {
+            $records = $studentAttendance->get($student->id, collect());
+            $absentCount = $records->where('status', 'absent')->count();
+            $lateCount = $records->where('status', 'late')->count();
+            $totalRecords = $records->count();
+
+            // Identify students with attendance concerns (more than 20% absences or more than 30% late)
+            $absentRate = $totalRecords > 0 ? ($absentCount / $totalRecords) * 100 : 0;
+            $lateRate = $totalRecords > 0 ? ($lateCount / $totalRecords) * 100 : 0;
+
+            if (($absentRate > 20 || $lateRate > 30) && $totalRecords >= 5) {
+                $summary['students_with_concerns'][] = [
+                    'id' => $student->id,
+                    'name' => $student->last_name . ', ' . $student->first_name,
+                    'section' => $student->section->name,
+                    'grade_level' => $student->section->grade_level,
+                    'absent_count' => $absentCount,
+                    'late_count' => $lateCount,
+                    'total_records' => $totalRecords,
+                    'absent_rate' => round($absentRate, 1),
+                    'late_rate' => round($lateRate, 1),
+                ];
+            }
+        }
+
+        // Calculate overall statistics
+        $summary['overall_stats'] = [
+            'present' => $attendanceRecords->where('status', 'present')->count(),
+            'absent' => $attendanceRecords->where('status', 'absent')->count(),
+            'late' => $attendanceRecords->where('status', 'late')->count(),
+            'excused' => $attendanceRecords->where('status', 'excused')->count(),
+            'half_day' => $attendanceRecords->where('status', 'half_day')->count(),
+            'total_attendance_records' => $attendanceRecords->count(),
+        ];
+
+        // Calculate overall attendance rate
+        if ($summary['overall_stats']['total_attendance_records'] > 0) {
+            $summary['overall_stats']['attendance_rate'] = round(
+                ($summary['overall_stats']['present'] / $summary['overall_stats']['total_attendance_records']) * 100,
+                1
+            );
+        }
+
+        // Sort sections by grade level and name
+        $summary['section_stats'] = collect($summary['section_stats'])
+            ->sortBy([
+                ['grade_level', 'asc'],
+                ['name', 'asc']
+            ])
+            ->toArray();
+
+        // Sort grade levels
+        ksort($summary['grade_level_stats']);
+
+        // Sort students with concerns by absent rate (descending)
+        $summary['students_with_concerns'] = collect($summary['students_with_concerns'])
+            ->sortByDesc('absent_rate')
+            ->values()
+            ->toArray();
+
+        // Sort low attendance days by attendance rate (ascending)
+        $summary['low_attendance_days'] = collect($summary['low_attendance_days'])
+            ->sortBy('attendance_rate')
+            ->values()
+            ->toArray();
+
+        return view('teacher_admin.reports.attendance_summary_report', [
+            'summary' => $summary,
+            'sections' => $sections,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
     }
 }

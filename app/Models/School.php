@@ -33,6 +33,7 @@ class School extends Model
         'billing_cycle',
         'monthly_price',
         'yearly_price',
+        'last_details_update_at',
     ];
 
     /**
@@ -45,6 +46,7 @@ class School extends Model
         'is_active' => 'boolean',
         'trial_ends_at' => 'datetime',
         'subscription_ends_at' => 'datetime',
+        'last_details_update_at' => 'datetime',
         'monthly_price' => 'decimal:2',
         'yearly_price' => 'decimal:2',
     ];
@@ -288,5 +290,41 @@ class School extends Model
             $minutesToShow = max(1, (int)$diffInMinutes);
             return $minutesToShow . ' ' . ($minutesToShow == 1 ? 'minute' : 'minutes');
         }
+    }
+
+    /**
+     * Check if school details can be updated (once every 60 days)
+     */
+    public function canUpdateDetails(): bool
+    {
+        // If last_details_update_at is null, it means the school has never been updated
+        if ($this->last_details_update_at === null) {
+            return true;
+        }
+
+        // Check if 60 days have passed since the last update
+        return now()->diffInDays($this->last_details_update_at) >= 60;
+    }
+
+    /**
+     * Get the number of days remaining until the school details can be updated again
+     */
+    public function getDaysUntilNextUpdateAttribute(): int
+    {
+        // If last_details_update_at is null, it means the school has never been updated
+        if ($this->last_details_update_at === null) {
+            return 0;
+        }
+
+        // Calculate days passed since last update
+        $daysPassed = now()->diffInDays($this->last_details_update_at);
+
+        // If 60 or more days have passed, return 0 (can update now)
+        if ($daysPassed >= 60) {
+            return 0;
+        }
+
+        // Otherwise, return the number of days remaining
+        return 60 - $daysPassed;
     }
 }

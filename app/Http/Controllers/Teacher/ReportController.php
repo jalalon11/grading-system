@@ -27,12 +27,14 @@ class ReportController extends Controller
     {
         $teacher = Auth::user();
 
-        // Get sections where the teacher is assigned to any subject
+        // Get active sections where the teacher is assigned to any subject
         $sections = Section::whereHas('subjects', function($query) use ($teacher) {
             $query->whereHas('teachers', function($q) use ($teacher) {
                 $q->where('users.id', $teacher->id);
             });
-        })->get();
+        })
+        ->where('is_active', true)
+        ->get();
 
         // Initially we don't need to load subjects as they'll be loaded via AJAX
         return view('teacher.reports.class_record', compact('sections'));
@@ -410,8 +412,10 @@ class ReportController extends Controller
     {
         $teacher = Auth::user();
 
-        // Get ONLY sections where the teacher is the adviser
-        $sections = Section::where('adviser_id', $teacher->id)->get();
+        // Get ONLY active sections where the teacher is the adviser
+        $sections = Section::where('adviser_id', $teacher->id)
+            ->where('is_active', true)
+            ->get();
 
         // Log for debugging
         Log::info('Sections for grade slips (adviser only)', [

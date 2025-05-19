@@ -1214,6 +1214,12 @@
                                             <i class="fas fa-user-circle me-2 text-primary"></i>
                                             <span>{{ __('My Profile') }}</span>
                                         </a>
+                                        @if(auth()->user()->role === 'teacher')
+                                            <a class="dropdown-item d-flex align-items-center" href="{{ auth()->user()->is_teacher_admin ? route('teacher-admin.help.index') : route('teacher.help.index') }}">
+                                                <i class="fas fa-question-circle me-2 text-info"></i>
+                                                <span>{{ __('Help') }}</span>
+                                            </a>
+                                        @endif
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item d-flex align-items-center" href="{{ route('logout') }}"
                                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

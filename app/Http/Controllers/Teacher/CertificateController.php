@@ -21,8 +21,10 @@ class CertificateController extends Controller
     {
         $teacher = Auth::user();
 
-        // Get ONLY sections where the teacher is the adviser
-        $sections = Section::where('adviser_id', $teacher->id)->get();
+        // Get ONLY active sections where the teacher is the adviser
+        $sections = Section::where('adviser_id', $teacher->id)
+            ->where('is_active', true)
+            ->get();
 
         // Log for debugging
         Log::info('Sections for certificates (adviser only)', [
@@ -46,7 +48,9 @@ class CertificateController extends Controller
         ]);
 
         $teacher = Auth::user();
-        $section = Section::findOrFail($validated['section_id']);
+        $section = Section::where('id', $validated['section_id'])
+            ->where('is_active', true)
+            ->firstOrFail();
 
         // Check if teacher is the adviser of this section
         $isAdviser = $section->adviser_id == $teacher->id;
@@ -336,7 +340,9 @@ class CertificateController extends Controller
 
         $teacher = Auth::user();
         $student = Student::findOrFail($validated['student_id']);
-        $section = Section::findOrFail($validated['section_id']);
+        $section = Section::where('id', $validated['section_id'])
+            ->where('is_active', true)
+            ->firstOrFail();
 
         // Check if teacher is the adviser of this section
         $isAdviser = $section->adviser_id == $teacher->id;
@@ -402,7 +408,9 @@ class CertificateController extends Controller
         ]);
 
         $teacher = Auth::user();
-        $section = Section::findOrFail($validated['section_id']);
+        $section = Section::where('id', $validated['section_id'])
+            ->where('is_active', true)
+            ->firstOrFail();
 
         // Check if teacher is the adviser of this section
         $isAdviser = $section->adviser_id == $teacher->id;

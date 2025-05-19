@@ -132,6 +132,14 @@
     <div class="row mb-4">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-school text-primary me-2"></i> School Information
+                    </h5>
+                    <a href="{{ route('teacher-admin.school.edit') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i> Edit School Info
+                    </a>
+                </div>
                 <div class="card-body p-4">
                     <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start mb-4">
                         <div class="school-logo-container me-md-4 mb-3 mb-md-0 text-center">
@@ -171,6 +179,21 @@
                                     <span class="badge bg-primary me-1">{{ $grade }}</span>
                                 @endforeach
                             </div>
+
+                            @if($school->last_details_update_at)
+                                <div class="mt-3 small">
+                                    <p class="mb-1 text-muted">
+                                        <i class="fas fa-clock me-1"></i> Last updated: {{ $school->last_details_update_at->setTimezone('Asia/Manila')->format('F d, Y') }}
+                                    </p>
+                                    @if(!$school->canUpdateDetails())
+                                        <div class="alert alert-info py-2 px-3 mb-0 small">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            School information can only be updated once every 60 days.
+                                            You can update again in {{ $school->days_until_next_update }} {{ Str::plural('day', $school->days_until_next_update) }}.
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

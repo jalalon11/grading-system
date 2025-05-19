@@ -32,7 +32,9 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
-        $sections = Section::where('adviser_id', Auth::id())->get();
+        $sections = Section::where('adviser_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
 
         $query = Attendance::query()
             ->join('students', 'attendances.student_id', '=', 'students.id')
@@ -200,7 +202,9 @@ class AttendanceController extends Controller
      */
     public function create()
     {
-        $sections = Section::where('adviser_id', Auth::id())->get();
+        $sections = Section::where('adviser_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
 
         // Calculate the number of school days (unique dates with attendance records)
         $schoolDays = Attendance::join('sections', 'attendances.section_id', '=', 'sections.id')
@@ -350,6 +354,7 @@ class AttendanceController extends Controller
 
         $section = Section::where('id', $id)
                           ->where('adviser_id', Auth::id())
+                          ->where('is_active', true)
                           ->firstOrFail();
 
         // Get all students in this section, including inactive ones
@@ -422,6 +427,7 @@ class AttendanceController extends Controller
 
         $section = Section::where('id', $id)
                           ->where('adviser_id', Auth::id())
+                          ->where('is_active', true)
                           ->firstOrFail();
 
         // Get only active students in this section for editing
@@ -557,8 +563,10 @@ class AttendanceController extends Controller
         $sectionId = $request->filled('section_id') ? $request->section_id : null;
         $weekDate = $request->filled('week') ? $request->week : null;
 
-        // Get sections where the teacher is the adviser
-        $sections = Section::where('adviser_id', Auth::id())->get();
+        // Get active sections where the teacher is the adviser
+        $sections = Section::where('adviser_id', Auth::id())
+            ->where('is_active', true)
+            ->get();
 
         // Get all weeks with attendance records
         $availableWeeks = $this->attendanceSummaryService->getWeeksWithAttendance(

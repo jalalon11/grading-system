@@ -268,6 +268,7 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
         Route::get('/sections/{section}/students', function($section) {
             $section = Section::where('id', $section)
                 ->where('adviser_id', Auth::id())
+                ->where('is_active', true)
                 ->firstOrFail();
 
             $students = Student::where('section_id', $section->id)
@@ -333,6 +334,10 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
 
         // Learning Resource Materials
         Route::get('/resources', [TeacherResourceController::class, 'index'])->name('resources.index');
+
+        // Help Routes
+        Route::get('/help', [\App\Http\Controllers\Teacher\HelpController::class, 'index'])->name('help.index');
+        Route::get('/help/tutorials/{topic}', [\App\Http\Controllers\Teacher\HelpController::class, 'tutorial'])->name('help.tutorial');
     });
 
     // Teacher Admin Routes
@@ -369,9 +374,14 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             Route::get('/reports/consolidated-grades', [TeacherAdminReportController::class, 'consolidatedGrades'])->name('reports.consolidated-grades');
             Route::post('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades');
             Route::get('/reports/generate-consolidated-grades', [TeacherAdminReportController::class, 'generateConsolidatedGrades'])->name('reports.generate-consolidated-grades-get');
+            Route::get('/reports/attendance-summary', [TeacherAdminReportController::class, 'attendanceSummary'])->name('reports.attendance-summary');
+            Route::post('/reports/generate-attendance-summary', [TeacherAdminReportController::class, 'generateAttendanceSummary'])->name('reports.generate-attendance-summary');
+            Route::get('/reports/generate-attendance-summary', [TeacherAdminReportController::class, 'generateAttendanceSummary'])->name('reports.generate-attendance-summary-get');
 
             // School Overview
             Route::get('/school', [TeacherAdminSchoolController::class, 'index'])->name('school.index');
+            Route::get('/school/edit', [TeacherAdminSchoolController::class, 'edit'])->name('school.edit');
+            Route::put('/school/update', [TeacherAdminSchoolController::class, 'update'])->name('school.update');
 
             // Payment Management
             Route::get('/payments', [TeacherAdminPaymentController::class, 'index'])->name('payments.index');
@@ -397,6 +407,10 @@ Route::middleware(['auth', CheckSchoolStatus::class])->group(function () {
             Route::post('/teacher-admin/api/support/messages/{message}/read', [TeacherAdminSupportController::class, 'markAsRead']);
             Route::get('/teacher-admin/api/support/tickets/{id}/messages', [TeacherAdminSupportController::class, 'getMessages']);
             Route::get('/teacher-admin/api/support/messages/read-status', [TeacherAdminSupportController::class, 'checkReadStatus']);
+
+            // Help Routes
+            Route::get('/help', [\App\Http\Controllers\TeacherAdmin\HelpController::class, 'index'])->name('help.index');
+            Route::get('/help/tutorials/{topic}', [\App\Http\Controllers\TeacherAdmin\HelpController::class, 'tutorial'])->name('help.tutorial');
         });
 
 

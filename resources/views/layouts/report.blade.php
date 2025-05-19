@@ -1,3 +1,6 @@
+@php
+use Illuminate\Support\Facades\Route;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -50,6 +53,15 @@
         .logo-left, .logo-right {
             width: 15%;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-left img, .logo-right img {
+            max-width: 80px;
+            max-height: 80px;
+            object-fit: contain;
         }
 
         .title-center {
@@ -171,6 +183,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
+                        @if(!str_contains(Route::currentRouteName(), 'attendance'))
                         <form id="transmutationForm" class="d-flex align-items-center">
                             <label for="transmutation_table" class="form-label fw-semibold me-2 mb-0">Transmutation Table:</label>
                             <select class="form-select form-select-sm shadow-sm" id="transmutation_table" name="transmutation_table" onchange="updateTransmutedGrades()" style="width: 300px;">
@@ -180,6 +193,7 @@
                                 <option value="4">Table 4: All other SHS Subjects</option>
                             </select>
                         </form>
+                        @endif
                     </div>
                     <div>
                         <button onclick="window.print()" class="btn btn-primary shadow-sm">
